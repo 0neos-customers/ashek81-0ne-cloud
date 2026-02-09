@@ -1,0 +1,7 @@
+{
+  "extends": "@0ne/config/tsconfig",
+  "compilerOptions": {
+    "outDir": "./dist"
+  },
+  "include": ["src/**/*"]
+}

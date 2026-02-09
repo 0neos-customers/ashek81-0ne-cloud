@@ -1,0 +1,87 @@
+{
+  "meta": {
+    "description": "0ne Everything App typography system",
+    "note": "Baskervville is experimental for app UI - may swap for Inter or similar if legibility suffers"
+  },
+  "fonts": {
+    "heading": {
+      "family": "Baskervville",
+      "weights": ["400", "700"],
+      "style": "italic",
+      "source": "Google Fonts",
+      "usage": "Page titles, section headers, emphasis",
+      "fallback": "Georgia, serif",
+      "alternativeIfNeeded": "Inter or DM Sans for better app legibility"
+    },
+    "body": {
+      "family": "Montserrat",
+      "weights": ["300", "400", "500", "600", "700", "900"],
+      "source": "Google Fonts",
+      "usage": "Body text, labels, buttons, navigation",
+      "fallback": "system-ui, sans-serif"
+    },
+    "mono": {
+      "family": "JetBrains Mono",
+      "weights": ["400", "500"],
+      "source": "Google Fonts",
+      "usage": "Code, IDs, technical data, numbers in tables",
+      "fallback": "monospace"
+    }
+  },
+  "scale": {
+    "xs": "0.75rem",
+    "sm": "0.875rem",
+    "base": "1rem",
+    "lg": "1.125rem",
+    "xl": "1.25rem",
+    "2xl": "1.5rem",
+    "3xl": "1.875rem",
+    "4xl": "2.25rem",
+    "5xl": "3rem"
+  },
+  "lineHeight": {
+    "tight": "1.25",
+    "normal": "1.5",
+    "relaxed": "1.75"
+  },
+  "patterns": {
+    "pageTitle": {
+      "font": "heading",
+      "size": "3xl",
+      "weight": "700",
+      "style": "italic",
+      "color": "text"
+    },
+    "sectionHeader": {
+      "font": "heading",
+      "size": "xl",
+      "weight": "400",
+      "style": "italic",
+      "color": "text"
+    },
+    "cardTitle": {
+      "font": "body",
+      "size": "lg",
+      "weight": "600",
+      "color": "text"
+    },
+    "body": {
+      "font": "body",
+      "size": "base",
+      "weight": "400",
+      "color": "text"
+    },
+    "label": {
+      "font": "body",
+      "size": "sm",
+      "weight": "500",
+      "color": "textMuted"
+    },
+    "metric": {
+      "font": "mono",
+      "size": "2xl",
+      "weight": "500",
+      "color": "text"
+    }
+  }
+}

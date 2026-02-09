@@ -1,0 +1,138 @@
+{
+  "metrics": {
+    "revenue": {
+      "current": 47250,
+      "previous": 42000,
+      "change": 12.5,
+      "trend": "up",
+      "sparkline": [38000, 41000, 39500, 42000, 44000, 43500, 47250]
+    },
+    "leads": {
+      "current": 342,
+      "previous": 316,
+      "change": 8.2,
+      "trend": "up",
+      "sparkline": [280, 295, 310, 316, 325, 338, 342]
+    },
+    "clients": {
+      "current": 28,
+      "previous": 31,
+      "change": -9.7,
+      "trend": "down",
+      "sparkline": [25, 27, 29, 31, 30, 29, 28]
+    },
+    "fundedAmount": {
+      "current": 1250000,
+      "previous": 1080000,
+      "change": 15.7,
+      "trend": "up",
+      "sparkline": [920000, 980000, 1020000, 1080000, 1150000, 1200000, 1250000]
+    },
+    "costPerLead": {
+      "current": 12.45,
+      "previous": 14.20,
+      "change": -12.3,
+      "trend": "up",
+      "sparkline": [15.50, 14.80, 14.20, 13.90, 13.10, 12.80, 12.45]
+    },
+    "costPerClient": {
+      "current": 152.30,
+      "previous": 145.00,
+      "change": 5.0,
+      "trend": "down",
+      "sparkline": [140, 142, 145, 148, 150, 151, 152.30]
+    }
+  },
+  "funnel": {
+    "stages": [
+      { "id": "leads", "name": "Leads", "count": 1250, "color": "#3b82f6", "conversionRate": null },
+      { "id": "hand_raisers", "name": "Hand Raisers", "count": 450, "color": "#8b5cf6", "conversionRate": 36.0 },
+      { "id": "qualified", "name": "Qualified", "count": 180, "color": "#06b6d4", "conversionRate": 40.0 },
+      { "id": "vip", "name": "VIP", "count": 45, "color": "#84cc16", "conversionRate": 25.0 },
+      { "id": "premium", "name": "Premium", "count": 28, "color": "#f59e0b", "conversionRate": 62.2 },
+      { "id": "funded", "name": "Funded", "count": 12, "color": "#10b981", "conversionRate": 42.9 }
+    ],
+    "overallConversion": 0.96
+  },
+  "trends": {
+    "weekly": [
+      { "date": "2026-01-06", "leads": 45, "handRaisers": 12, "qualified": 5, "clients": 2, "revenue": 5200 },
+      { "date": "2026-01-13", "leads": 52, "handRaisers": 15, "qualified": 6, "clients": 3, "revenue": 6800 },
+      { "date": "2026-01-20", "leads": 48, "handRaisers": 18, "qualified": 7, "clients": 4, "revenue": 7200 },
+      { "date": "2026-01-27", "leads": 65, "handRaisers": 22, "qualified": 9, "clients": 5, "revenue": 8500 },
+      { "date": "2026-02-03", "leads": 72, "handRaisers": 28, "qualified": 11, "clients": 6, "revenue": 9800 }
+    ],
+    "monthly": [
+      { "date": "2025-09", "leads": 180, "clients": 8, "revenue": 28000, "adSpend": 2400 },
+      { "date": "2025-10", "leads": 210, "clients": 12, "revenue": 35000, "adSpend": 2800 },
+      { "date": "2025-11", "leads": 245, "clients": 15, "revenue": 38000, "adSpend": 3200 },
+      { "date": "2025-12", "leads": 290, "clients": 22, "revenue": 42000, "adSpend": 3600 },
+      { "date": "2026-01", "leads": 342, "clients": 28, "revenue": 47250, "adSpend": 4260 }
+    ]
+  },
+  "cohorts": {
+    "byWeek": [
+      {
+        "cohort": "2026-W01",
+        "startDate": "2026-01-06",
+        "initialLeads": 45,
+        "week1": { "handRaisers": 8, "qualified": 2, "clients": 0 },
+        "week2": { "handRaisers": 12, "qualified": 4, "clients": 1 },
+        "week3": { "handRaisers": 14, "qualified": 5, "clients": 2 },
+        "week4": { "handRaisers": 15, "qualified": 6, "clients": 3 }
+      },
+      {
+        "cohort": "2026-W02",
+        "startDate": "2026-01-13",
+        "initialLeads": 52,
+        "week1": { "handRaisers": 10, "qualified": 3, "clients": 0 },
+        "week2": { "handRaisers": 15, "qualified": 5, "clients": 1 },
+        "week3": { "handRaisers": 18, "qualified": 7, "clients": 2 }
+      },
+      {
+        "cohort": "2026-W03",
+        "startDate": "2026-01-20",
+        "initialLeads": 48,
+        "week1": { "handRaisers": 9, "qualified": 2, "clients": 0 },
+        "week2": { "handRaisers": 14, "qualified": 5, "clients": 1 }
+      },
+      {
+        "cohort": "2026-W04",
+        "startDate": "2026-01-27",
+        "initialLeads": 65,
+        "week1": { "handRaisers": 12, "qualified": 4, "clients": 1 }
+      }
+    ]
+  },
+  "expenses": {
+    "categories": [
+      { "id": "ads", "name": "Advertising", "amount": 4260, "change": 18.3, "trend": "up" },
+      { "id": "tools", "name": "Software/Tools", "amount": 890, "change": 2.1, "trend": "neutral" },
+      { "id": "content", "name": "Content Creation", "amount": 1200, "change": -5.0, "trend": "down" },
+      { "id": "team", "name": "Team/Contractors", "amount": 3500, "change": 0, "trend": "neutral" }
+    ],
+    "byChannel": [
+      { "channel": "Facebook Ads", "spend": 2800, "leads": 180, "cpl": 15.56, "clients": 8, "cpc": 350 },
+      { "channel": "Google Ads", "spend": 960, "leads": 85, "cpl": 11.29, "clients": 4, "cpc": 240 },
+      { "channel": "YouTube Ads", "spend": 500, "leads": 42, "cpl": 11.90, "clients": 2, "cpc": 250 },
+      { "channel": "Organic/SEO", "spend": 0, "leads": 35, "cpl": 0, "clients": 14, "cpc": 0 }
+    ],
+    "monthly": [
+      { "month": "2025-09", "ads": 2400, "tools": 850, "content": 1100, "team": 3500, "total": 7850 },
+      { "month": "2025-10", "ads": 2800, "tools": 860, "content": 1150, "team": 3500, "total": 8310 },
+      { "month": "2025-11", "ads": 3200, "tools": 870, "content": 1200, "team": 3500, "total": 8770 },
+      { "month": "2025-12", "ads": 3600, "tools": 880, "content": 1250, "team": 3500, "total": 9230 },
+      { "month": "2026-01", "ads": 4260, "tools": 890, "content": 1200, "team": 3500, "total": 9850 }
+    ]
+  },
+  "recentActivity": [
+    { "id": 1, "type": "lead", "name": "Marcus Johnson", "source": "Facebook Ad", "date": "2026-02-04T14:32:00Z", "value": null },
+    { "id": 2, "type": "hand_raiser", "name": "Sarah Chen", "source": "Workshop", "date": "2026-02-04T12:15:00Z", "value": null },
+    { "id": 3, "type": "funded", "name": "Robert Williams", "source": "Referral", "date": "2026-02-04T10:45:00Z", "value": 125000 },
+    { "id": 4, "type": "vip", "name": "Jennifer Lopez", "source": "Facebook Ad", "date": "2026-02-03T16:20:00Z", "value": 997 },
+    { "id": 5, "type": "lead", "name": "David Kim", "source": "Google Ad", "date": "2026-02-03T14:10:00Z", "value": null },
+    { "id": 6, "type": "qualified", "name": "Amanda Torres", "source": "Organic", "date": "2026-02-03T11:30:00Z", "value": null },
+    { "id": 7, "type": "premium", "name": "Michael Brown", "source": "Workshop", "date": "2026-02-02T15:45:00Z", "value": 4997 },
+    { "id": 8, "type": "lead", "name": "Lisa Anderson", "source": "YouTube Ad", "date": "2026-02-02T09:20:00Z", "value": null }
+  ]
+}

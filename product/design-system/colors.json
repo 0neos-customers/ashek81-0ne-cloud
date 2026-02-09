@@ -1,0 +1,95 @@
+{
+  "meta": {
+    "description": "0ne Everything App color palette",
+    "note": "These should be admin-configurable in settings"
+  },
+  "colors": {
+    "primary": {
+      "name": "Orange",
+      "value": "#F26522",
+      "tailwind": "orange-500",
+      "usage": "Primary actions, links, accents, focus states"
+    },
+    "primaryHover": {
+      "name": "Orange Dark",
+      "value": "#D65A1E",
+      "tailwind": "orange-600",
+      "usage": "Hover states for primary elements"
+    },
+    "text": {
+      "name": "Black",
+      "value": "#000000",
+      "tailwind": "black",
+      "usage": "Primary text, headings"
+    },
+    "textMuted": {
+      "name": "Gray",
+      "value": "#6B7280",
+      "tailwind": "gray-500",
+      "usage": "Secondary text, labels, captions"
+    },
+    "error": {
+      "name": "Red",
+      "value": "#FF0000",
+      "tailwind": "red-500",
+      "usage": "Errors, destructive actions, alerts"
+    },
+    "success": {
+      "name": "Green",
+      "value": "#22C55E",
+      "tailwind": "green-500",
+      "usage": "Success states, positive metrics"
+    },
+    "warning": {
+      "name": "Amber",
+      "value": "#F59E0B",
+      "tailwind": "amber-500",
+      "usage": "Warnings, caution states"
+    },
+    "background": {
+      "name": "Cream",
+      "value": "#FDF6ED",
+      "tailwind": "custom-cream",
+      "usage": "Primary background (main canvas)"
+    },
+    "surface": {
+      "name": "White",
+      "value": "#FFFFFF",
+      "tailwind": "white",
+      "usage": "Cards, modals, elevated surfaces"
+    },
+    "border": {
+      "name": "Gray Light",
+      "value": "#E5E7EB",
+      "tailwind": "gray-200",
+      "usage": "Borders, dividers"
+    }
+  },
+  "darkMode": {
+    "background": {
+      "name": "Slate Dark",
+      "value": "#0F172A",
+      "tailwind": "slate-900"
+    },
+    "surface": {
+      "name": "Slate",
+      "value": "#1E293B",
+      "tailwind": "slate-800"
+    },
+    "text": {
+      "name": "White",
+      "value": "#FFFFFF",
+      "tailwind": "white"
+    },
+    "textMuted": {
+      "name": "Slate Light",
+      "value": "#94A3B8",
+      "tailwind": "slate-400"
+    },
+    "border": {
+      "name": "Slate Border",
+      "value": "#334155",
+      "tailwind": "slate-700"
+    }
+  }
+}

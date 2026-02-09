@@ -1,0 +1,22 @@
+{
+  "name": "@0ne/auth",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./permissions": "./src/permissions.ts",
+    "./middleware": "./src/middleware.ts"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^6.37.2"
+  },
+  "devDependencies": {
+    "@0ne/config": "workspace:*",
+    "typescript": "^5.7.0"
+  }
+}

@@ -1,0 +1,217 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Tell Tailwind to scan the UI package for class names */
+@source "../../../../packages/ui/src/**/*.{ts,tsx}";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* Colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Sidebar */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Charts */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Fonts */
+  --font-heading: var(--font-heading);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+
+  /* Radius */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+}
+
+/*
+ * 0ne Design System
+ * Inspired by Monarch's clean fintech UI
+ * Primary: #FF692D (vibrant orange)
+ * Background: #F6F5F3 (warm cream)
+ * Text: #22201D (near-black)
+ */
+
+:root {
+  --radius: 0.375rem; /* 6px - Monarch's border radius */
+
+  /* Background: Warm Cream */
+  --background: #F6F5F3;
+  --foreground: #22201D;
+
+  /* Cards: White with subtle shadow */
+  --card: #FFFFFF;
+  --card-foreground: #22201D;
+  --popover: #FFFFFF;
+  --popover-foreground: #22201D;
+
+  /* Primary: Monarch Orange */
+  --primary: #FF692D;
+  --primary-foreground: #FEFCFB;
+
+  /* Secondary */
+  --secondary: #F6F5F3;
+  --secondary-foreground: #22201D;
+
+  /* Muted */
+  --muted: #ECEAE6;
+  --muted-foreground: #6B6966;
+
+  /* Accent */
+  --accent: #FFF4EE;
+  --accent-foreground: #E85A1E;
+
+  /* Destructive */
+  --destructive: #DC2626;
+
+  /* Borders */
+  --border: #E5E3DF;
+  --input: #E5E3DF;
+  --ring: #FF692D;
+
+  /* Charts */
+  --chart-1: #FF692D;
+  --chart-2: #22C55E;
+  --chart-3: #3B82F6;
+  --chart-4: #F59E0B;
+  --chart-5: #8B5CF6;
+
+  /* Sidebar: Dark charcoal with orange accents */
+  --sidebar: #1C1B19;
+  --sidebar-foreground: #FAFAF9;
+  --sidebar-primary: #FF692D;
+  --sidebar-primary-foreground: #FEFCFB;
+  --sidebar-accent: #2A2927;
+  --sidebar-accent-foreground: #FAFAF9;
+  --sidebar-muted: #FF692D;
+  --sidebar-border: #3A3936;
+  --sidebar-ring: #FF692D;
+}
+
+.dark {
+  /* Background: Dark */
+  --background: #121110;
+  --foreground: #FAFAF9;
+
+  /* Cards */
+  --card: #1C1B19;
+  --card-foreground: #FAFAF9;
+  --popover: #1C1B19;
+  --popover-foreground: #FAFAF9;
+
+  /* Primary: Orange */
+  --primary: #FF692D;
+  --primary-foreground: #FEFCFB;
+
+  /* Secondary */
+  --secondary: #2A2927;
+  --secondary-foreground: #FAFAF9;
+
+  /* Muted */
+  --muted: #2A2927;
+  --muted-foreground: #A8A5A0;
+
+  /* Accent */
+  --accent: #3D2416;
+  --accent-foreground: #FF8A5C;
+
+  /* Destructive */
+  --destructive: #EF4444;
+
+  /* Borders */
+  --border: #3A3936;
+  --input: #3A3936;
+  --ring: #FF692D;
+
+  /* Charts */
+  --chart-1: #FF692D;
+  --chart-2: #4ADE80;
+  --chart-3: #60A5FA;
+  --chart-4: #FBBF24;
+  --chart-5: #A78BFA;
+
+  /* Sidebar: Same dark charcoal */
+  --sidebar: #121110;
+  --sidebar-foreground: #FAFAF9;
+  --sidebar-primary: #FF692D;
+  --sidebar-primary-foreground: #FEFCFB;
+  --sidebar-accent: #2A2927;
+  --sidebar-accent-foreground: #FAFAF9;
+  --sidebar-muted: #FF692D;
+  --sidebar-border: #3A3936;
+  --sidebar-ring: #FF692D;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body), system-ui, sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading), Georgia, serif;
+  }
+  code, pre, .font-mono {
+    font-family: var(--font-mono), monospace;
+  }
+}
+
+/* Utility classes */
+.font-heading {
+  font-family: var(--font-heading), Georgia, serif;
+}
+.font-body {
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+.font-mono {
+  font-family: var(--font-mono), monospace;
+}
+
+/* Card shadows - subtle like Monarch */
+.card-shadow {
+  box-shadow: 0px 1px 2px rgba(34, 32, 29, 0.05);
+}
+
+.card-shadow-md {
+  box-shadow: 0px 2px 8px rgba(34, 32, 29, 0.08);
+}
+
+.card-shadow-lg {
+  box-shadow: 0px 4px 16px rgba(34, 32, 29, 0.1);
+}
