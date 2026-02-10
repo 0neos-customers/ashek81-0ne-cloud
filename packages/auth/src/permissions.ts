@@ -1,6 +1,6 @@
 import { clerkClient, currentUser } from '@clerk/nextjs/server'
 
-export type AppId = 'kpi' | 'prospector' | 'skoolSync'
+export type AppId = 'kpi' | 'prospector' | 'skoolSync' | 'skoolScheduler' | 'ghlMedia'
 
 export interface UserPermissions {
   apps: Record<AppId, boolean>
@@ -12,6 +12,8 @@ export const DEFAULT_PERMISSIONS: UserPermissions = {
     kpi: false,
     prospector: false,
     skoolSync: false,
+    skoolScheduler: false,
+    ghlMedia: false,
   },
   isAdmin: false,
 }

@@ -230,11 +230,13 @@ export async function GET(request: Request) {
 
     console.log(`[KPI Overview] About visits for ${startDate} to ${endDate}: ${filteredAboutVisits} (${aboutPageDaily?.length || 0} days)`)
 
-    // Fetch date-filtered member counts
+    // Fetch date-filtered member counts for current and previous periods
     // When sources are provided, query skool_members directly
     // Otherwise use pre-aggregated skool_members_daily
     let filteredMemberCount = 0
     let newMembersInPeriod = 0
+    let previousPeriodMemberCount = 0
+    let previousPeriodNewMembers = 0
 
     if (sources.length > 0) {
       // Source filtering - query skool_members directly
@@ -280,6 +282,43 @@ export async function GET(request: Request) {
       filteredMemberCount = totalCount || 0
 
       console.log(`[KPI Overview] Members for ${startDate} to ${endDate} (sources: ${sources.join(',')}): ${filteredMemberCount} total, ${newMembersInPeriod} new`)
+
+      // Get previous period data for comparison
+      let prevNewMembersQuery = supabase
+        .from('skool_members')
+        .select('id', { count: 'exact', head: true })
+        .eq('group_slug', 'fruitful')
+        .gte('member_since', `${previousStartDate}T00:00:00Z`)
+        .lt('member_since', `${startDate}T00:00:00Z`)
+
+      if (includesUnknown && regularSources.length > 0) {
+        prevNewMembersQuery = prevNewMembersQuery.or(`attribution_source.in.(${regularSources.join(',')}),attribution_source.is.null`)
+      } else if (includesUnknown) {
+        prevNewMembersQuery = prevNewMembersQuery.is('attribution_source', null)
+      } else {
+        prevNewMembersQuery = prevNewMembersQuery.in('attribution_source', regularSources)
+      }
+
+      const { count: prevNewCount } = await prevNewMembersQuery
+      previousPeriodNewMembers = prevNewCount || 0
+
+      // Get member count at start of current period (= end of previous period)
+      let prevTotalQuery = supabase
+        .from('skool_members')
+        .select('id', { count: 'exact', head: true })
+        .eq('group_slug', 'fruitful')
+        .lt('member_since', `${startDate}T00:00:00Z`)
+
+      if (includesUnknown && regularSources.length > 0) {
+        prevTotalQuery = prevTotalQuery.or(`attribution_source.in.(${regularSources.join(',')}),attribution_source.is.null`)
+      } else if (includesUnknown) {
+        prevTotalQuery = prevTotalQuery.is('attribution_source', null)
+      } else {
+        prevTotalQuery = prevTotalQuery.in('attribution_source', regularSources)
+      }
+
+      const { count: prevTotalCount } = await prevTotalQuery
+      previousPeriodMemberCount = prevTotalCount || 0
     } else {
       // No source filter - use pre-aggregated skool_members_daily
       const { data: membersDailyData } = await supabase
@@ -299,6 +338,25 @@ export async function GET(request: Request) {
       newMembersInPeriod = membersDailyData?.reduce((sum, row) => sum + (row.new_members || 0), 0) || 0
 
       console.log(`[KPI Overview] Members for ${startDate} to ${endDate}: ${filteredMemberCount} (${newMembersInPeriod} new)`)
+
+      // Get previous period member data from skool_members_daily
+      const { data: prevMembersDailyData } = await supabase
+        .from('skool_members_daily')
+        .select('date, total_members, new_members')
+        .eq('group_slug', 'fruitful')
+        .gte('date', previousStartDate)
+        .lt('date', startDate)
+        .order('date', { ascending: true })
+
+      // Previous period member count at end of period
+      previousPeriodMemberCount = prevMembersDailyData && prevMembersDailyData.length > 0
+        ? prevMembersDailyData[prevMembersDailyData.length - 1].total_members
+        : 0
+
+      // New members in previous period
+      previousPeriodNewMembers = prevMembersDailyData?.reduce((sum, row) => sum + (row.new_members || 0), 0) || 0
+
+      console.log(`[KPI Overview] Previous period (${previousStartDate} to ${startDate}): ${previousPeriodMemberCount} total, ${previousPeriodNewMembers} new`)
     }
 
     // Calculate conversion rate from about visits to new members for this period
@@ -441,9 +499,20 @@ export async function GET(request: Request) {
         ? {
             // Total members at end of period (for display in cards)
             totalMembers: filteredMemberCount || skoolMetrics.members_total || 0,
+            // Previous period member count for comparison
+            previousTotalMembers: previousPeriodMemberCount,
+            // Member change percentage (total members growth)
+            totalMembersChange: Number(calculateChange(
+              filteredMemberCount || skoolMetrics.members_total || 0,
+              previousPeriodMemberCount
+            ).toFixed(1)),
             // New members during the period (for funnel flow)
             members: newMembersInPeriod,
             newMembersInPeriod,
+            // Previous period new members for comparison
+            previousNewMembers: previousPeriodNewMembers,
+            // New members change percentage
+            newMembersChange: Number(calculateChange(newMembersInPeriod, previousPeriodNewMembers).toFixed(1)),
             activeMembers: skoolMetrics.members_active || 0,
             aboutPageVisits: filteredAboutVisits || skoolMetrics.about_page_visits || 0,
             // Use calculated conversion rate (new members / about visits)

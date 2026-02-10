@@ -37,7 +37,15 @@ export interface SkoolMetrics {
   members: number
   /** Total members at end of period (for display cards) */
   totalMembers: number
+  /** Previous period total members (for comparison) */
+  previousTotalMembers?: number
+  /** Total members change percentage vs previous period */
+  totalMembersChange?: number
   newMembersInPeriod: number
+  /** Previous period new members (for comparison) */
+  previousNewMembers?: number
+  /** New members change percentage vs previous period */
+  newMembersChange?: number
   activeMembers: number
   aboutPageVisits: number
   /** Calculated conversion rate: newMembers / aboutVisits */
@@ -92,6 +100,15 @@ export interface FunnelContact {
   updatedAt: string
 }
 
+export interface ContactAtStage {
+  id: string
+  name: string
+  email: string
+  source: string
+  daysInStage: number
+  enteredAt: string
+}
+
 export interface FunnelData {
   funnel: {
     stages: FunnelStage[]
@@ -110,6 +127,7 @@ export interface FunnelData {
     campaigns: { name: string; count: number }[]
     stages: { id: string; name: string }[]
   }
+  contactsByStage?: ContactAtStage[]
 }
 
 export interface CohortProgression {
@@ -617,6 +635,61 @@ export function useFunnelData(options: UseKPIDataOptions & {
 }
 
 /**
+ * Hook for fetching contacts at a specific funnel stage
+ * Returns top N contacts with name, email, source, days in stage
+ */
+export function useContactsByStage(options: {
+  stage: string | null
+  sources?: string[]
+  contactsLimit?: number
+  dateRange?: DateRange
+  enabled?: boolean
+} = { stage: null }): UseKPIDataReturn<ContactAtStage[]> {
+  const { stage, sources = [], contactsLimit = 50, dateRange, enabled = true } = options
+  const [data, setData] = useState<ContactAtStage[] | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+
+  // Memoize date strings
+  const startDate = dateRange ? formatDate(dateRange.from) : undefined
+  const endDate = dateRange ? formatDate(dateRange.to) : undefined
+
+  const fetchData = useCallback(async () => {
+    // Don't fetch if no stage is selected or disabled
+    if (!stage || !enabled) {
+      setData([])
+      setIsLoading(false)
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const result = await fetchKPIData<FunnelData>('funnel', {
+        stage,
+        sources,
+        contactsLimit,
+        startDate,
+        endDate,
+      })
+      setData(result.contactsByStage || [])
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Unknown error'))
+      setData([])
+    } finally {
+      setIsLoading(false)
+    }
+  }, [stage, sources, contactsLimit, startDate, endDate, enabled])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  return { data, isLoading, error, refetch: fetchData }
+}
+
+/**
  * Hook for fetching Cohorts data
  */
 export function useCohortsData(options: UseKPIDataOptions & {
@@ -753,6 +826,17 @@ export async function updateExpense(expense: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(expense),
+  })
+
+  return response.json()
+}
+
+/**
+ * Delete an expense by ID
+ */
+export async function deleteExpense(id: string): Promise<{ success: boolean; error?: string }> {
+  const response = await fetch(`/api/kpi/expenses?id=${encodeURIComponent(id)}`, {
+    method: 'DELETE',
   })
 
   return response.json()
@@ -1160,6 +1244,67 @@ export function useUnitEconomics(options: {
       setIsLoading(false)
     }
   }, [startDate, endDate, period, useSampleData])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  return { data, isLoading, error, refetch: fetchData }
+}
+
+// =============================================================================
+// RECENT ACTIVITY
+// =============================================================================
+
+export interface RecentActivityItem {
+  id: string
+  name: string
+  action: string
+  stage: string
+  source: string | null
+  timestamp: string
+  timeAgo: string
+}
+
+export interface RecentActivityData {
+  activity: RecentActivityItem[]
+}
+
+/**
+ * Hook for fetching recent funnel activity
+ * Returns last N stage changes with contact details
+ */
+export function useRecentActivity(options: {
+  limit?: number
+  enabled?: boolean
+} = {}): UseKPIDataReturn<RecentActivityItem[]> {
+  const { limit = 10, enabled = true } = options
+  const [data, setData] = useState<RecentActivityItem[] | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  const fetchData = useCallback(async () => {
+    if (!enabled) {
+      setData([])
+      setIsLoading(false)
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const result = await fetchKPIData<RecentActivityData>('recent-activity', {
+        limit,
+      })
+      setData(result.activity || [])
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Unknown error'))
+      setData([])
+    } finally {
+      setIsLoading(false)
+    }
+  }, [limit, enabled])
 
   useEffect(() => {
     fetchData()

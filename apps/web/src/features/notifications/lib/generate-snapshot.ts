@@ -229,9 +229,30 @@ async function fetchAdSpend(): Promise<{
   spend: number
   costPerLead: number
 }> {
-  // Ad spend would typically come from an ads API integration
-  // For now returning placeholder - can be extended later
-  return { spend: 0, costPerLead: 0 }
+  const supabase = createServerClient()
+
+  // Get current month dates
+  const now = new Date()
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    .toISOString()
+    .split('T')[0]
+  const today = now.toISOString().split('T')[0]
+
+  // Aggregate ad spend from ad_metrics table (MTD)
+  const { data: adMetrics } = await supabase
+    .from('ad_metrics')
+    .select('spend')
+    .gte('date', startOfMonth)
+    .lte('date', today)
+
+  const totalSpend =
+    adMetrics?.reduce((sum, m) => sum + Number(m.spend || 0), 0) || 0
+
+  // Get leads count for cost per lead calculation
+  const leads = await fetchLeadsMetrics()
+  const costPerLead = leads.count > 0 ? totalSpend / leads.count : 0
+
+  return { spend: totalSpend, costPerLead }
 }
 
 // =============================================================================

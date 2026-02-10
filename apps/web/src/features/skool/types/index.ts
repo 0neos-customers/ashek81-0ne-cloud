@@ -326,3 +326,60 @@ export interface SkoolMessageDisplay {
   sentAt: Date
   isOutbound: boolean
 }
+
+// =============================================================================
+// POST TYPES (for community posts)
+// =============================================================================
+
+/**
+ * Parameters for creating a community post
+ */
+export interface CreatePostParams {
+  /** Group slug (e.g., 'fruitful') */
+  groupSlug: string
+  /** Post title */
+  title: string
+  /** Post body content (supports markdown) */
+  body: string
+  /** Skool's internal category/label ID (optional) */
+  categoryId?: string
+  /** File IDs from uploads (for image attachments) */
+  attachmentIds?: string[]
+  /** Video URLs (YouTube, Vimeo, Loom) */
+  videoLinks?: string[]
+}
+
+/**
+ * Result from creating a post
+ */
+export interface CreatePostResult {
+  success: boolean
+  postId?: string
+  postUrl?: string
+  error?: string
+  rawResponse?: unknown
+}
+
+/**
+ * Result from uploading a file
+ */
+export interface UploadResult {
+  fileId: string
+  url?: string
+}
+
+/**
+ * Error from upload operation
+ */
+export interface UploadError {
+  error: string
+  details?: unknown
+}
+
+/**
+ * Skool community category/label
+ */
+export interface SkoolCategory {
+  id: string
+  name: string
+}

@@ -11,6 +11,7 @@ import {
   Users,
   Link2,
   ChevronDown,
+  FolderOpen,
   RefreshCw,
   type LucideIcon
 } from 'lucide-react'
@@ -49,6 +50,20 @@ const allAppsNavigation: NavItem[] = [
   },
   { name: 'Prospector', href: '/prospector', icon: Users, appId: 'prospector' },
   { name: 'Skool Sync', href: '/skool-sync', icon: Link2, appId: 'skoolSync' },
+  {
+    name: 'Skool Scheduler',
+    href: '/skool',
+    icon: RefreshCw,
+    appId: 'skoolScheduler',
+    children: getAppNavigation('skoolScheduler').map(item => ({ name: item.name, href: item.href }))
+  },
+  {
+    name: 'GHL Media',
+    href: '/media',
+    icon: FolderOpen,
+    appId: 'ghlMedia',
+    children: getAppNavigation('ghlMedia').map(item => ({ name: item.name, href: item.href }))
+  },
 ]
 
 const accountNavigation: NavItem[] = [
@@ -96,11 +111,13 @@ export function Sidebar({ navigation }: SidebarProps) {
     const active = isActive(item.href)
     const hasChildren = item.children && item.children.length > 0
     const isExpanded = expandedItems.includes(item.href)
+    // Only show as expandable if it has children AND we want to show them
+    const isExpandable = hasChildren && showChildren
 
     return (
       <div key={item.name}>
         <div className="flex items-center">
-          {hasChildren ? (
+          {isExpandable ? (
             <button
               onClick={() => toggleExpanded(item.href)}
               className={cn(
@@ -140,7 +157,7 @@ export function Sidebar({ navigation }: SidebarProps) {
         </div>
 
         {/* Submenu */}
-        {hasChildren && showChildren && isExpanded && (
+        {isExpandable && isExpanded && (
           <div className="ml-4 mt-1 space-y-1 border-l border-sidebar-border pl-4">
             {item.children!.map((child) => {
               const childActive = pathname === child.href

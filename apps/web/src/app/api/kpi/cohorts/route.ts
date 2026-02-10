@@ -154,6 +154,11 @@ export async function GET(request: Request) {
       // Calculate progression for each milestone day
       const progression: CohortRow['progression'] = {} as CohortRow['progression']
 
+      // Get GHL contact IDs for this cohort to query transactions
+      const cohortGhlContactIds = cohortContacts
+        .map((c) => c.ghl_contact_id)
+        .filter(Boolean)
+
       for (const day of COHORT_DAYS) {
         // For each day milestone, count how many leads have reached that age
         const milestoneDate = new Date(cohortStartDate)
@@ -170,21 +175,33 @@ export async function GET(request: Request) {
           return leadAge >= day
         })
 
-        // Get average EPL and LTV for this cohort at this day
-        // Note: In a real implementation, you'd query cohort_snapshots
-        // or calculate from events/revenue tables
-        let totalEpl = 0
-        let totalLtv = 0
+        // Calculate EPL by querying ghl_transactions for revenue
+        // EPL = Total Revenue within milestone window / Cohort Size
+        let totalRevenue = 0
+        const cohortSize = cohortContacts.length
 
-        // For now, use placeholder calculation based on lead_age
-        // In production, this would pull from snapshot data or calculate from revenue
-        const avgEpl = eligibleContacts.length > 0 ? 0 : 0 // Placeholder
-        const avgLtv = eligibleContacts.length > 0 ? 0 : 0 // Placeholder
+        if (cohortGhlContactIds.length > 0) {
+          // Query transactions for these contacts up to the milestone date
+          const { data: transactions } = await supabase
+            .from('ghl_transactions')
+            .select('amount')
+            .in('ghl_contact_id', cohortGhlContactIds)
+            .eq('status', 'succeeded')
+            .lte('transaction_date', milestoneDate.toISOString())
+
+          // Sum up successful transaction amounts
+          totalRevenue = transactions?.reduce((sum, t) => sum + (Number(t.amount) || 0), 0) || 0
+        }
+
+        // EPL = Total Revenue / Cohort Size (total contacts, not just eligible)
+        const avgEpl = cohortSize > 0 ? totalRevenue / cohortSize : 0
+        // LTV = EPL for now (MRR attribution is complex - requires subscription tracking)
+        const avgLtv = avgEpl
 
         progression[day] = {
           leads: eligibleContacts.length,
-          epl: avgEpl,
-          ltv: avgLtv,
+          epl: Math.round(avgEpl * 100) / 100, // Round to 2 decimal places
+          ltv: Math.round(avgLtv * 100) / 100,
         }
       }
 
@@ -200,10 +217,31 @@ export async function GET(request: Request) {
     cohorts.sort((a, b) => b.startDate.localeCompare(a.startDate))
 
     // Calculate overall EPL/LTV averages across all cohorts
+    // Average the EPL values from the latest available milestone across all cohorts
+    let totalEplSum = 0
+    let eplCount = 0
+    let totalLtvSum = 0
+    let ltvCount = 0
+
+    for (const cohort of cohorts) {
+      // Find the highest day milestone with data for this cohort
+      const days = Object.keys(cohort.progression).map(Number).sort((a, b) => b - a)
+      if (days.length > 0) {
+        const latestDay = days[0]
+        const latestProgression = cohort.progression[latestDay as keyof typeof cohort.progression]
+        if (latestProgression) {
+          totalEplSum += latestProgression.epl
+          eplCount++
+          totalLtvSum += latestProgression.ltv
+          ltvCount++
+        }
+      }
+    }
+
     const overallMetrics = {
       totalLeads: contacts?.length || 0,
-      averageEpl: 0, // Would calculate from real data
-      averageLtv: 0, // Would calculate from real data
+      averageEpl: eplCount > 0 ? Math.round((totalEplSum / eplCount) * 100) / 100 : 0,
+      averageLtv: ltvCount > 0 ? Math.round((totalLtvSum / ltvCount) * 100) / 100 : 0,
       cohortDays: COHORT_DAYS,
     }
 

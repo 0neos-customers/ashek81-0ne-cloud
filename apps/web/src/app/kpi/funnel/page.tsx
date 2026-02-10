@@ -18,7 +18,7 @@ import { FunnelFlow, type FunnelFlowData } from '@/features/kpi/components/Funne
 import { FunnelChart } from '@/features/kpi/charts/FunnelChart'
 import { FilterBar } from '@/features/kpi/components/FilterBar'
 import { DataTable, type Column } from '@/features/kpi/components/DataTable'
-import { useKPIOverview } from '@/features/kpi/hooks/use-kpi-data'
+import { useKPIOverview, useContactsByStage, type ContactAtStage } from '@/features/kpi/hooks/use-kpi-data'
 import { usePersistedFilters } from '@/features/kpi/hooks/use-persisted-filters'
 import { buildFunnelFlowData, SAMPLE_FUNNEL_FLOW_DATA } from '@/features/kpi/lib/funnel-utils'
 import { Loader2 } from 'lucide-react'
@@ -70,39 +70,7 @@ const stageBreakdowns: StageBreakdown[] = [
   { id: '6', stage: 'funded', stageLabel: 'Funded', count: 12, prevCount: 10, change: 20.0, conversionRate: 42.9, avgDaysInStage: 45.3 },
 ]
 
-// Mock contacts at each stage
-interface ContactAtStage {
-  id: string
-  name: string
-  email: string
-  source: string
-  daysInStage: number
-  enteredAt: string
-}
-
-const mockContactsInStage: Record<FunnelStage, ContactAtStage[]> = {
-  lead: [
-    { id: '1', name: 'Marcus Johnson', email: 'marcus@example.com', source: 'Facebook Ad', daysInStage: 2, enteredAt: '2026-02-02' },
-    { id: '2', name: 'Lisa Anderson', email: 'lisa@example.com', source: 'YouTube Ad', daysInStage: 3, enteredAt: '2026-02-01' },
-    { id: '3', name: 'David Kim', email: 'david@example.com', source: 'Google Ad', daysInStage: 1, enteredAt: '2026-02-03' },
-  ],
-  hand_raiser: [
-    { id: '4', name: 'Sarah Chen', email: 'sarah@example.com', source: 'Workshop', daysInStage: 1, enteredAt: '2026-02-03' },
-    { id: '5', name: 'Amanda Torres', email: 'amanda@example.com', source: 'Organic', daysInStage: 4, enteredAt: '2026-01-31' },
-  ],
-  qualified: [
-    { id: '6', name: 'James Wilson', email: 'james@example.com', source: 'Referral', daysInStage: 5, enteredAt: '2026-01-30' },
-  ],
-  vip: [
-    { id: '7', name: 'Jennifer Lopez', email: 'jennifer@example.com', source: 'Facebook Ad', daysInStage: 2, enteredAt: '2026-02-02' },
-  ],
-  premium: [
-    { id: '8', name: 'Michael Brown', email: 'michael@example.com', source: 'Workshop', daysInStage: 8, enteredAt: '2026-01-27' },
-  ],
-  funded: [
-    { id: '9', name: 'Robert Williams', email: 'robert@example.com', source: 'Referral', daysInStage: 45, enteredAt: '2025-12-21' },
-  ],
-}
+// ContactAtStage type is imported from use-kpi-data
 
 const stageColumns: Column<StageBreakdown>[] = [
   {
@@ -181,6 +149,18 @@ export default function FunnelPage() {
     dateRange,
     period,
     sources: sources as string[],
+  })
+
+  // Fetch contacts at the selected stage
+  const {
+    data: stageContacts,
+    isLoading: isLoadingContacts,
+  } = useContactsByStage({
+    stage: selectedStage,
+    sources: sources as string[],
+    dateRange,
+    contactsLimit: 50,
+    enabled: isLoaded && !isLoading, // Only fetch after main data loads
   })
 
   // Build funnel flow data from live API using shared utility
@@ -369,13 +349,20 @@ export default function FunnelPage() {
               {(['lead', 'hand_raiser', 'qualified', 'vip', 'premium', 'funded'] as FunnelStage[]).map(
                 (stage) => (
                   <TabsContent key={stage} value={stage}>
-                    <DataTable
-                      columns={contactColumns}
-                      data={mockContactsInStage[stage]}
-                      keyField="id"
-                      pageSize={5}
-                      emptyMessage={`No contacts at ${stage.replace('_', ' ')} stage`}
-                    />
+                    {isLoadingContacts && selectedStage === stage ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        <span className="ml-2 text-sm text-muted-foreground">Loading contacts...</span>
+                      </div>
+                    ) : (
+                      <DataTable
+                        columns={contactColumns}
+                        data={selectedStage === stage ? (stageContacts || []) : []}
+                        keyField="id"
+                        pageSize={10}
+                        emptyMessage={`No contacts at ${stage.replace('_', ' ')} stage`}
+                      />
+                    )}
                   </TabsContent>
                 )
               )}

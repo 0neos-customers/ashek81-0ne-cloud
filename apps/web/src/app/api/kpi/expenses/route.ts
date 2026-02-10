@@ -591,3 +591,68 @@ export async function PATCH(request: Request) {
     )
   }
 }
+
+// DELETE - Delete an expense by ID
+export async function DELETE(request: Request) {
+  const { userId } = await auth()
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Missing required query parameter: id' },
+        { status: 400 }
+      )
+    }
+
+    const supabase = createServerClient()
+
+    // Check if expense exists and is not a system expense
+    const { data: existing, error: fetchError } = await supabase
+      .from('expenses')
+      .select('id, is_system')
+      .eq('id', id)
+      .single()
+
+    if (fetchError || !existing) {
+      return NextResponse.json(
+        { error: 'Expense not found' },
+        { status: 404 }
+      )
+    }
+
+    if (existing.is_system) {
+      return NextResponse.json(
+        { error: 'System expenses cannot be deleted' },
+        { status: 403 }
+      )
+    }
+
+    // Delete the expense
+    const { error } = await supabase
+      .from('expenses')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.error('Delete expense error:', error)
+      return NextResponse.json(
+        { error: 'Failed to delete expense', details: error.message },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Delete expense error:', error)
+    return NextResponse.json(
+      { error: 'Failed to delete expense', details: String(error) },
+      { status: 500 }
+    )
+  }
+}

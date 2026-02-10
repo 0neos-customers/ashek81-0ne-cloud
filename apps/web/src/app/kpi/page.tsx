@@ -13,7 +13,7 @@ import { ExpenseCategoryFilter } from '@/features/kpi/components/ExpenseCategory
 import { AboutPageAnalytics } from '@/features/kpi/components/AboutPageAnalytics'
 import { buildFunnelFlowData, SAMPLE_FUNNEL_FLOW_DATA } from '@/features/kpi/lib/funnel-utils'
 import { DollarSign, Users, TrendingUp, TrendingDown, Percent, Calculator, Clock, UserPlus, Loader2 } from 'lucide-react'
-import { useKPIOverview, useExpensesData, useRevenueData, useUnitEconomics } from '@/features/kpi/hooks/use-kpi-data'
+import { useKPIOverview, useExpensesData, useRevenueData, useUnitEconomics, useRecentActivity } from '@/features/kpi/hooks/use-kpi-data'
 import { usePersistedFilters } from '@/features/kpi/hooks/use-persisted-filters'
 
 // Sample data - Row 1: Revenue metrics
@@ -110,21 +110,37 @@ const recentActivity = [
   { id: 5, type: 'lead', name: 'David Kim', source: 'Google Ad', time: 'Yesterday' },
 ]
 
+// Stage colors matching config.ts STAGE_COLORS
 const typeColors: Record<string, string> = {
+  member: 'bg-slate-100 text-slate-700',
+  hand_raiser: 'bg-blue-100 text-blue-700',
+  qualified_premium: 'bg-pink-100 text-pink-700',
+  qualified_vip: 'bg-violet-100 text-violet-700',
+  offer_made_premium: 'bg-pink-100 text-pink-700',
+  offer_made_vip: 'bg-violet-100 text-violet-700',
+  offer_seen: 'bg-orange-100 text-orange-700',
+  vip: 'bg-orange-100 text-orange-700',
+  premium: 'bg-green-100 text-green-700',
+  // Legacy mappings for sample data
   lead: 'bg-blue-100 text-blue-700',
-  hand_raiser: 'bg-purple-100 text-purple-700',
   qualified: 'bg-cyan-100 text-cyan-700',
-  vip: 'bg-lime-100 text-lime-700',
-  premium: 'bg-amber-100 text-amber-700',
   funded: 'bg-emerald-100 text-emerald-700',
 }
 
+// Stage labels matching config.ts STAGE_LABELS
 const typeLabels: Record<string, string> = {
-  lead: 'Lead',
+  member: 'Member',
   hand_raiser: 'Hand Raiser',
-  qualified: 'Qualified',
+  qualified_premium: 'Qualified (Premium)',
+  qualified_vip: 'Qualified (VIP)',
+  offer_made_premium: 'Offer Made (Premium)',
+  offer_made_vip: 'Offer Made (VIP)',
+  offer_seen: 'Offer Seen',
   vip: 'VIP',
   premium: 'Premium',
+  // Legacy mappings for sample data
+  lead: 'Lead',
+  qualified: 'Qualified',
   funded: 'Funded',
 }
 
@@ -167,6 +183,11 @@ export default function KPIDashboardPage() {
   const { data: unitEconomicsData, isLoading: isUnitEconomicsLoading } = useUnitEconomics({
     dateRange,
     period,
+  })
+
+  // Fetch recent activity data
+  const { data: recentActivityData, isLoading: isRecentActivityLoading } = useRecentActivity({
+    limit: 10,
   })
 
   // Build expense categories from API data
@@ -229,12 +250,32 @@ export default function KPIDashboardPage() {
     const totalRevenue = revenueData?.total?.current || 0
     const grossProfit = totalRevenue - totalExpensesAmount
 
+    // Calculate member change based on API data
+    const totalMembersChange = kpiData.skool?.totalMembersChange || 0
+    const newMembersChange = kpiData.skool?.newMembersChange || 0
+
     return {
       ...metrics,
-      totalMembers: { current: totalMembersCount, change: 0, trend: 'up' as const },
-      freeMembers: { current: totalMembersCount - premiumCount - vipCount, change: 0, trend: 'up' as const },
-      premiumMembers: { current: premiumCount, change: 0, trend: 'up' as const },
-      vipMembers: { current: vipCount, change: 0, trend: 'up' as const },
+      totalMembers: {
+        current: totalMembersCount,
+        change: totalMembersChange,
+        trend: totalMembersChange > 0 ? 'up' as const : totalMembersChange < 0 ? 'down' as const : 'neutral' as const,
+      },
+      freeMembers: {
+        current: totalMembersCount - premiumCount - vipCount,
+        change: totalMembersChange, // Use same change as total for now
+        trend: totalMembersChange > 0 ? 'up' as const : totalMembersChange < 0 ? 'down' as const : 'neutral' as const,
+      },
+      premiumMembers: {
+        current: premiumCount,
+        change: 0, // Premium/VIP changes would need separate tracking
+        trend: 'neutral' as const,
+      },
+      vipMembers: {
+        current: vipCount,
+        change: 0, // Premium/VIP changes would need separate tracking
+        trend: 'neutral' as const,
+      },
       cac: { current: cac, change: 0, trend: 'neutral' as const },
       grossProfit: { current: grossProfit, change: 0, trend: grossProfit > 0 ? 'up' as const : 'down' as const },
     }
@@ -515,7 +556,7 @@ export default function KPIDashboardPage() {
               <h2 className="text-base font-semibold">Weekly Trends</h2>
               <p className="text-sm text-muted-foreground">Lead and client acquisition over time</p>
             </div>
-            <TrendChart data={trendData} />
+            <TrendChart data={kpiData?.trends?.weekly || trendData} />
           </div>
         </div>
 
@@ -542,32 +583,37 @@ export default function KPIDashboardPage() {
             <h2 className="text-base font-semibold">Recent Activity</h2>
             <p className="text-sm text-muted-foreground">Latest funnel movements</p>
           </div>
-          <div className="divide-y divide-border">
-            {recentActivity.map((activity) => (
-              <div key={activity.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
-                <div className="flex items-center gap-3">
-                  <span className={cn(
-                    'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-                    typeColors[activity.type]
-                  )}>
-                    {typeLabels[activity.type]}
-                  </span>
-                  <div>
-                    <p className="text-sm font-medium">{activity.name}</p>
-                    <p className="text-xs text-muted-foreground">{activity.source}</p>
+          {isRecentActivityLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : recentActivityData && recentActivityData.length > 0 ? (
+            <div className="divide-y divide-border">
+              {recentActivityData.map((activity) => (
+                <div key={activity.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                  <div className="flex items-center gap-3">
+                    <span className={cn(
+                      'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                      typeColors[activity.stage] || 'bg-gray-100 text-gray-700'
+                    )}>
+                      {typeLabels[activity.stage] || activity.stage}
+                    </span>
+                    <div>
+                      <p className="text-sm font-medium">{activity.name}</p>
+                      <p className="text-xs text-muted-foreground">{activity.source || 'Unknown source'}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-muted-foreground">{activity.timeAgo}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  {activity.value && (
-                    <p className="text-sm font-medium text-green-600">
-                      ${activity.value.toLocaleString()}
-                    </p>
-                  )}
-                  <p className="text-xs text-muted-foreground">{activity.time}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              No recent activity found
+            </div>
+          )}
         </div>
       </div>
     </AppShell>

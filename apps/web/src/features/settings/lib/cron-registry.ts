@@ -93,6 +93,14 @@ export const CRON_REGISTRY: CronJob[] = [
     endpoint: '/api/cron/sync-meta',
     syncType: 'meta',
   },
+  {
+    id: 'skool-post-scheduler',
+    name: 'Skool Posts',
+    description: 'Publish scheduled community posts',
+    schedule: 'Every 15 minutes',
+    endpoint: '/api/cron/skool-post-scheduler',
+    syncType: 'skool_posts',
+  },
 ]
 
 // =============================================================================

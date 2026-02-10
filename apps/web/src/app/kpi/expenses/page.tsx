@@ -22,7 +22,7 @@ import { DataTable, type Column } from '@/features/kpi/components/DataTable'
 import { MetricCard } from '@/features/kpi/components/MetricCard'
 import { TrendChart } from '@/features/kpi/charts/TrendChart'
 import { usePersistedFilters } from '@/features/kpi/hooks/use-persisted-filters'
-import { useExpensesData, addExpense, updateExpense, type ExpenseCategory } from '@/features/kpi/hooks/use-kpi-data'
+import { useExpensesData, addExpense, updateExpense, deleteExpense, type ExpenseCategory } from '@/features/kpi/hooks/use-kpi-data'
 import { Plus, DollarSign, TrendingUp, PiggyBank, Target, Pencil, Trash2, Loader2, Lock, Zap, Palette, Receipt } from 'lucide-react'
 import { CategoryDialog } from '@/features/kpi/components/CategoryDialog'
 import { ExpenseDialog, type ExpenseFormData } from '@/features/kpi/components/ExpenseDialog'
@@ -304,8 +304,18 @@ export default function ExpensesPage() {
   }
 
   const handleDeleteExpense = async (id: string) => {
-    // TODO: Add delete API call
-    toast.error('Delete not yet implemented')
+    try {
+      const result = await deleteExpense(id)
+      if (result.success) {
+        toast.success('Expense deleted successfully')
+        refetch()
+      } else {
+        throw new Error(result.error || 'Failed to delete expense')
+      }
+    } catch (error) {
+      console.error('Error deleting expense:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to delete expense')
+    }
   }
 
   const handleToggleActive = async (id: string, isActive: boolean) => {

@@ -10,6 +10,16 @@ import {
 
 export const dynamic = 'force-dynamic'
 
+// Contact type for stage-based queries
+interface ContactAtStage {
+  id: string
+  name: string
+  email: string
+  source: string
+  daysInStage: number
+  enteredAt: string
+}
+
 export async function GET(request: Request) {
   const { userId } = await auth()
   if (!userId) {
@@ -24,6 +34,7 @@ export async function GET(request: Request) {
     const sources = sourcesParam ? sourcesParam.split(',').filter(Boolean) : []
     const campaign = searchParams.get('campaign') || null
     const stage = searchParams.get('stage') || null
+    const contactsLimit = parseInt(searchParams.get('contactsLimit') || '50')
     const limit = parseInt(searchParams.get('limit') || '100')
     const offset = parseInt(searchParams.get('offset') || '0')
     // Date range filters
@@ -200,6 +211,75 @@ export async function GET(request: Request) {
     const totalMembers = stageCounts.member
     const totalClients = stageCounts.vip + stageCounts.premium
 
+    // Get contacts by stage if a specific stage is requested
+    // Returns top N contacts at the specified stage with name, email, source, daysInStage
+    let contactsByStage: ContactAtStage[] = []
+    if (stage) {
+      // First get contacts at the requested stage
+      let stageContactsQuery = supabase
+        .from('contacts')
+        .select('id, skool_user_id, created_at, became_hand_raiser_at, became_qualified_at, became_client_at')
+        .eq('current_stage', stage)
+        .order('created_at', { ascending: false })
+        .limit(contactsLimit)
+
+      // Apply source filter if specified
+      if (skoolUserIds !== null && skoolUserIds.length > 0) {
+        stageContactsQuery = stageContactsQuery.in('skool_user_id', skoolUserIds)
+      }
+
+      const { data: stageContacts } = await stageContactsQuery
+
+      if (stageContacts && stageContacts.length > 0) {
+        // Get the skool user IDs to fetch member details
+        const contactSkoolIds = stageContacts
+          .map((c) => c.skool_user_id)
+          .filter(Boolean) as string[]
+
+        // Fetch member info from skool_members
+        const { data: skoolMembers } = await supabase
+          .from('skool_members')
+          .select('skool_user_id, display_name, email, attribution_source')
+          .in('skool_user_id', contactSkoolIds)
+
+        // Create a map for quick lookup
+        const memberMap = new Map(
+          skoolMembers?.map((m) => [m.skool_user_id, m]) || []
+        )
+
+        // Build the response
+        const now = new Date()
+        contactsByStage = stageContacts.map((contact) => {
+          const member = memberMap.get(contact.skool_user_id || '')
+
+          // Determine when they entered this stage
+          let enteredAt = contact.created_at
+          if (stage === 'hand_raiser' && contact.became_hand_raiser_at) {
+            enteredAt = contact.became_hand_raiser_at
+          } else if (stage === 'qualified' && contact.became_qualified_at) {
+            enteredAt = contact.became_qualified_at
+          } else if ((stage === 'vip' || stage === 'premium') && contact.became_client_at) {
+            enteredAt = contact.became_client_at
+          }
+
+          // Calculate days in stage
+          const enteredDate = new Date(enteredAt)
+          const daysInStage = Math.floor(
+            (now.getTime() - enteredDate.getTime()) / (1000 * 60 * 60 * 24)
+          )
+
+          return {
+            id: contact.id,
+            name: member?.display_name || 'Unknown',
+            email: member?.email || '',
+            source: member?.attribution_source || 'Unknown',
+            daysInStage,
+            enteredAt: enteredDate.toISOString().split('T')[0],
+          }
+        })
+      }
+    }
+
     const response = {
       funnel: {
         stages: funnelStages,
@@ -235,6 +315,8 @@ export async function GET(request: Request) {
           name: STAGE_LABELS[s],
         })),
       },
+      // Contacts at the specified stage (only returned if stage param is set)
+      contactsByStage: stage ? contactsByStage : undefined,
     }
 
     return NextResponse.json(response)

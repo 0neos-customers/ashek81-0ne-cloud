@@ -9,6 +9,15 @@ import {
   DollarSign,
   GraduationCap,
   Building2,
+  Calendar,
+  CalendarClock,
+  FileText,
+  FolderOpen,
+  History,
+  Layers,
+  Megaphone,
+  RefreshCw,
+  Upload,
   type LucideIcon,
 } from 'lucide-react'
 import type { AppId } from '@0ne/auth/permissions'
@@ -49,6 +58,22 @@ export const APPS: AppConfig[] = [
     href: '/skool-sync',
     color: 'bg-emerald-500',
   },
+  {
+    id: 'skoolScheduler',
+    name: 'Skool Scheduler',
+    description: 'Automate community post scheduling with content rotation',
+    icon: GraduationCap,
+    href: '/skool',
+    color: 'bg-purple-500',
+  },
+  {
+    id: 'ghlMedia',
+    name: 'GHL Media',
+    description: 'Manage GHL media library and integrate with Skool posts',
+    icon: FolderOpen,
+    href: '/media',
+    color: 'bg-teal-500',
+  },
 ]
 
 export function getAppById(id: AppId): AppConfig | undefined {
@@ -73,6 +98,21 @@ export function getAppNavigation(appId: AppId): AppNavItem[] {
         { name: 'Skool', href: '/kpi/skool', icon: GraduationCap },
         { name: 'GHL', href: '/kpi/ghl', icon: Building2 },
         { name: 'Notifications', href: '/kpi/notifications', icon: Bell },
+      ]
+    case 'skoolScheduler':
+      return [
+        { name: 'Overview', href: '/skool', icon: LayoutDashboard },
+        { name: 'Recurring', href: '/skool/scheduler', icon: RefreshCw },
+        { name: 'Variation Groups', href: '/skool/groups', icon: Layers },
+        { name: 'Campaigns', href: '/skool/campaigns', icon: Megaphone },
+        { name: 'Scheduled', href: '/skool/scheduled', icon: CalendarClock },
+        { name: 'Posts Library', href: '/skool/posts', icon: FileText },
+        { name: 'Execution Log', href: '/skool/log', icon: History },
+      ]
+    case 'ghlMedia':
+      return [
+        { name: 'Library', href: '/media', icon: LayoutDashboard },
+        { name: 'Upload', href: '/media/upload', icon: Upload },
       ]
     default:
       return []

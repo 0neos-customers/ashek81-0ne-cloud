@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Card,
   CardContent,
@@ -23,22 +23,13 @@ import { FilterBar } from '@/features/kpi/components/FilterBar'
 import { CohortTable, CohortTableLegend, type CohortData } from '@/features/kpi/components/CohortTable'
 import { MetricCard } from '@/features/kpi/components/MetricCard'
 import { usePersistedFilters } from '@/features/kpi/hooks/use-persisted-filters'
-import { DollarSign, Users, TrendingUp, Target, Loader2 } from 'lucide-react'
+import { useCohortsData } from '@/features/kpi/hooks/use-kpi-data'
+import { DollarSign, Users, TrendingUp, Target, Loader2, AlertCircle } from 'lucide-react'
+import { COHORT_DAYS } from '@/features/kpi/lib/config'
 
-// EPL & LTV data from sample-data.json
-const mockCohortChartData = [
-  { day: 1, epl: 0, ltv: 0 },
-  { day: 7, epl: 2.5, ltv: 15 },
-  { day: 14, epl: 8.2, ltv: 45 },
-  { day: 35, epl: 25.6, ltv: 180 },
-  { day: 65, epl: 48.3, ltv: 420 },
-  { day: 95, epl: 72.1, ltv: 750 },
-  { day: 185, epl: 125.4, ltv: 1250 },
-  { day: 370, epl: 185.2, ltv: 1850 },
-]
-
-// Cohort progression data from sample-data.json
-const mockCohortData: CohortData[] = [
+// Mock data for funnel progression table (requires separate API for week-based stage tracking)
+// TODO: Create /api/kpi/cohort-progression endpoint for real funnel stage data
+const mockCohortProgressionData: CohortData[] = [
   {
     cohort: '2026-W01',
     startDate: '2026-01-06',
@@ -77,14 +68,6 @@ const mockCohortData: CohortData[] = [
   },
 ]
 
-// Key metrics
-const metrics = {
-  day35EPL: { current: 25.6, change: 12.3, trend: 'up' as const },
-  day65EPL: { current: 48.3, change: 8.7, trend: 'up' as const },
-  day95EPL: { current: 72.1, change: 15.2, trend: 'up' as const },
-  avgLTV: { current: 1850, change: 22.4, trend: 'up' as const },
-}
-
 type CohortMetric = 'handRaisers' | 'qualified' | 'clients'
 
 const metricLabels: Record<CohortMetric, string> = {
@@ -108,6 +91,56 @@ export default function CohortsPage() {
   } = usePersistedFilters()
   const [cohortMetric, setCohortMetric] = useState<CohortMetric>('handRaisers')
   const [viewType, setViewType] = useState<'progression' | 'epl'>('progression')
+
+  // Fetch live cohorts data
+  const { data: cohortsData, isLoading: cohortsLoading, error: cohortsError } = useCohortsData({
+    sources,
+    weeks: 12, // 12 weeks of data
+  })
+
+  // Transform API cohort data to chart format (EPL/LTV progression by day)
+  const cohortChartData = useMemo(() => {
+    if (!cohortsData?.cohorts || cohortsData.cohorts.length === 0) {
+      return COHORT_DAYS.map(day => ({ day, epl: 0, ltv: 0 }))
+    }
+
+    // Calculate average EPL/LTV across all cohorts for each day milestone
+    const dayAverages: Record<number, { totalEpl: number; totalLtv: number; count: number }> = {}
+
+    for (const cohort of cohortsData.cohorts) {
+      for (const [dayStr, data] of Object.entries(cohort.progression)) {
+        const day = Number(dayStr)
+        if (!dayAverages[day]) {
+          dayAverages[day] = { totalEpl: 0, totalLtv: 0, count: 0 }
+        }
+        dayAverages[day].totalEpl += data.epl
+        dayAverages[day].totalLtv += data.ltv
+        dayAverages[day].count++
+      }
+    }
+
+    return COHORT_DAYS.map(day => ({
+      day,
+      epl: dayAverages[day]?.count > 0
+        ? Math.round((dayAverages[day].totalEpl / dayAverages[day].count) * 100) / 100
+        : 0,
+      ltv: dayAverages[day]?.count > 0
+        ? Math.round((dayAverages[day].totalLtv / dayAverages[day].count) * 100) / 100
+        : 0,
+    }))
+  }, [cohortsData])
+
+  // Extract EPL at specific milestones for metric cards
+  const getEplAtDay = (day: number): number => {
+    const point = cohortChartData.find(d => d.day === day)
+    return point?.epl || 0
+  }
+
+  // Calculate average LTV (from latest milestone data)
+  const avgLtv = useMemo(() => {
+    const latestWithData = [...cohortChartData].reverse().find(d => d.ltv > 0)
+    return latestWithData?.ltv || 0
+  }, [cohortChartData])
 
   if (!isLoaded) {
     return (
@@ -143,37 +176,39 @@ export default function CohortsPage() {
           onReset={resetFilters}
         />
 
+        {/* Error state */}
+        {cohortsError && (
+          <Card className="border-destructive">
+            <CardContent className="flex items-center gap-2 py-4">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              <p className="text-sm text-destructive">Failed to load cohort data: {cohortsError.message}</p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* EPL Milestone Cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             title="Day 35 EPL"
-            value={`$${metrics.day35EPL.current.toFixed(2)}`}
-            change={metrics.day35EPL.change}
-            trend={metrics.day35EPL.trend}
+            value={cohortsLoading ? '--' : `$${getEplAtDay(35).toFixed(2)}`}
             icon={DollarSign}
             description="Earnings per lead at 35 days"
           />
           <MetricCard
             title="Day 65 EPL"
-            value={`$${metrics.day65EPL.current.toFixed(2)}`}
-            change={metrics.day65EPL.change}
-            trend={metrics.day65EPL.trend}
+            value={cohortsLoading ? '--' : `$${getEplAtDay(65).toFixed(2)}`}
             icon={TrendingUp}
             description="Earnings per lead at 65 days"
           />
           <MetricCard
             title="Day 95 EPL"
-            value={`$${metrics.day95EPL.current.toFixed(2)}`}
-            change={metrics.day95EPL.change}
-            trend={metrics.day95EPL.trend}
+            value={cohortsLoading ? '--' : `$${getEplAtDay(95).toFixed(2)}`}
             icon={Target}
             description="Earnings per lead at 95 days"
           />
           <MetricCard
             title="Average LTV"
-            value={`$${metrics.avgLTV.current.toLocaleString()}`}
-            change={metrics.avgLTV.change}
-            trend={metrics.avgLTV.trend}
+            value={cohortsLoading ? '--' : `$${avgLtv.toLocaleString()}`}
             icon={Users}
             description="Lifetime value per client"
           />
@@ -214,12 +249,15 @@ export default function CohortsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <CohortTable
-                  data={mockCohortData}
+                  data={mockCohortProgressionData}
                   metric={cohortMetric}
                   showRates
                   weeksToShow={6}
                 />
                 <CohortTableLegend metric={metricLabels[cohortMetric]} />
+                <p className="text-xs text-muted-foreground italic">
+                  Note: Progression data shows sample values. Full implementation requires week-based funnel stage tracking.
+                </p>
               </CardContent>
             </Card>
 
@@ -228,36 +266,72 @@ export default function CohortsPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Best Performing Cohort</CardTitle>
-                  <CardDescription>Highest conversion rate</CardDescription>
+                  <CardDescription>Highest EPL at latest milestone</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold">2026-W02</span>
-                      <span className="text-sm text-green-600 font-medium">34.6% to HR</span>
+                  {cohortsLoading ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      52 leads, 18 hand raisers by week 3
-                    </p>
-                  </div>
+                  ) : cohortsData?.cohorts && cohortsData.cohorts.length > 0 ? (
+                    (() => {
+                      // Find cohort with highest EPL
+                      const sortedCohorts = [...cohortsData.cohorts].sort((a, b) => {
+                        const aMaxEpl = Math.max(...Object.values(a.progression).map(p => p.epl))
+                        const bMaxEpl = Math.max(...Object.values(b.progression).map(p => p.epl))
+                        return bMaxEpl - aMaxEpl
+                      })
+                      const best = sortedCohorts[0]
+                      const bestEpl = Math.max(...Object.values(best.progression).map(p => p.epl))
+                      return (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-2xl font-bold">{best.cohort}</span>
+                            <span className="text-sm text-green-600 font-medium">${bestEpl.toFixed(2)} EPL</span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {best.initialLeads} leads starting {best.startDate}
+                          </p>
+                        </div>
+                      )
+                    })()
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No cohort data available</p>
+                  )}
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
                   <CardTitle>Latest Cohort</CardTitle>
-                  <CardDescription>2026-W05 (current week)</CardDescription>
+                  <CardDescription>{cohortsData?.cohorts?.[0]?.cohort || 'Current week'}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold">72 leads</span>
-                      <span className="text-sm text-blue-600 font-medium">14 HR (19.4%)</span>
+                  {cohortsLoading ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      On track vs. historical averages
-                    </p>
-                  </div>
+                  ) : cohortsData?.cohorts && cohortsData.cohorts.length > 0 ? (
+                    (() => {
+                      const latest = cohortsData.cohorts[0]
+                      const latestEpl = Object.values(latest.progression).length > 0
+                        ? Object.values(latest.progression).slice(-1)[0]?.epl || 0
+                        : 0
+                      return (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-2xl font-bold">{latest.initialLeads} leads</span>
+                            <span className="text-sm text-blue-600 font-medium">${latestEpl.toFixed(2)} EPL</span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Started {latest.startDate}
+                          </p>
+                        </div>
+                      )
+                    })()
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No cohort data available</p>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -273,7 +347,13 @@ export default function CohortsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <CohortChart data={mockCohortChartData} />
+                {cohortsLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <CohortChart data={cohortChartData} />
+                )}
               </CardContent>
             </Card>
 
@@ -284,33 +364,42 @@ export default function CohortsPage() {
                 <CardDescription>Key earnings checkpoints for cohort analysis</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {mockCohortChartData.slice(1).map((point) => (
-                    <div key={point.day} className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <span className="text-sm font-medium w-16">Day {point.day}</span>
-                        <div className="h-2 w-48 rounded-full bg-muted">
-                          <div
-                            className="h-2 rounded-full bg-primary transition-all"
-                            style={{
-                              width: `${(point.epl / mockCohortChartData[mockCohortChartData.length - 1].epl) * 100}%`,
-                            }}
-                          />
+                {cohortsLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {cohortChartData.slice(1).map((point) => {
+                      const maxEpl = cohortChartData[cohortChartData.length - 1]?.epl || 1
+                      return (
+                        <div key={point.day} className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <span className="text-sm font-medium w-16">Day {point.day}</span>
+                            <div className="h-2 w-48 rounded-full bg-muted">
+                              <div
+                                className="h-2 rounded-full bg-primary transition-all"
+                                style={{
+                                  width: `${maxEpl > 0 ? (point.epl / maxEpl) * 100 : 0}%`,
+                                }}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-6">
+                            <div className="text-right">
+                              <div className="text-sm font-medium">${point.epl.toFixed(2)}</div>
+                              <div className="text-xs text-muted-foreground">EPL</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-medium">${point.ltv.toLocaleString()}</div>
+                              <div className="text-xs text-muted-foreground">LTV</div>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-6">
-                        <div className="text-right">
-                          <div className="text-sm font-medium">${point.epl.toFixed(2)}</div>
-                          <div className="text-xs text-muted-foreground">EPL</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm font-medium">${point.ltv.toLocaleString()}</div>
-                          <div className="text-xs text-muted-foreground">LTV</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                      )
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

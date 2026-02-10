@@ -13,9 +13,18 @@ export async function GET(request: Request) {
   try {
     const supabase = createServerClient()
 
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    const dateStr = yesterday.toISOString().split('T')[0]
+    // Support ?date=YYYY-MM-DD for backfilling, otherwise use yesterday
+    const url = new URL(request.url)
+    const dateParam = url.searchParams.get('date')
+
+    let dateStr: string
+    if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+      dateStr = dateParam
+    } else {
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      dateStr = yesterday.toISOString().split('T')[0]
+    }
     const startOfDay = `${dateStr}T00:00:00.000Z`
     const endOfDay = `${dateStr}T23:59:59.999Z`
 

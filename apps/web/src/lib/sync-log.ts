@@ -13,6 +13,7 @@ export type SyncType =
   | 'skool'
   | 'skool_analytics'
   | 'skool_member_history'
+  | 'skool_posts'
   | 'meta'
 
 export type SyncStatus = 'running' | 'completed' | 'failed'

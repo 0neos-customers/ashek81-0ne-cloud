@@ -5,9 +5,9 @@
 
 ## Quick Resume
 
-**Last Updated:** 2026-02-08
-**Last Session Focus:** Unit Economics Phase 5 complete - API endpoint, calculated LTV/EPL/ARPU, MRR trend chart
-**Next Session Focus:** Choose next feature or refine Unit Economics display
+**Last Updated:** 2026-02-10
+**Last Session Focus:** KPI Dashboard Completion - All 6 phases complete (Delete Expense, Daily Snapshots, Historical Trends, Funnel Contacts, Overview Trends, Cohorts EPL/LTV)
+**Next Session Focus:** Manual verification of all KPI Dashboard features using checklist below
 
 > **Revenue Architecture (3 KPIs):**
 > - **Total** = One Time + Recurring
@@ -21,6 +21,254 @@
 > - Payback = CAC / ARPU
 
 > **To resume:** Just say "Read BUILD-STATE.md and continue with the next phase."
+
+---
+
+## KPI Dashboard Completion ✅ COMPLETE (2026-02-10)
+
+> All 6 implementation phases complete. Phase 7 (Tests) deferred.
+
+### Verification Checklist
+
+Run `cd apps/web && bun dev` and verify each feature:
+
+**Cohorts Page (`/kpi/cohorts`):**
+- [ ] EPL values are non-zero (if GHL transactions exist)
+- [ ] EPL increases at later milestones (Day 35 < Day 65 < Day 95)
+- [ ] Values match actual revenue in `ghl_transactions` table
+
+**Funnel Page (`/kpi/funnel`):**
+- [ ] Clicking stage tabs loads real contacts (not mock data)
+- [ ] Contact names/emails match GHL data
+- [ ] Source attribution filters work correctly
+- [ ] Counts match funnel totals shown in bars
+
+**Overview Page (`/kpi`):**
+- [ ] Weekly trends chart shows real data from `daily_aggregates`
+- [ ] Recent activity shows actual contact stage movements
+- [ ] MetricCards show non-zero change percentages
+- [ ] Trend arrows point correct direction (up=green, down=red)
+
+**Expenses Page (`/kpi/expenses`):**
+- [ ] Delete button removes non-system expenses
+- [ ] System expenses (Facebook Ads) cannot be deleted (403 error)
+- [ ] Toast shows success/error feedback
+- [ ] Expense list refreshes after delete
+
+**Daily Snapshots (Backend):**
+- [ ] `daily_aggregates` table has entries (check Supabase)
+- [ ] Ad spend aggregates from `ad_metrics` table correctly
+- [ ] Cron jobs configured in `vercel.json`
+
+### Jimmy's Remaining Tasks
+
+1. **GHL Revenue Workflows** - Build in GHL UI:
+   - Premium ($99/mo) workflow
+   - VIP (yearly) workflow
+   - See `REVENUE-WORKFLOW.md` for details
+
+2. **Vercel Deployment** - Add `CRON_SECRET` to Vercel environment variables
+
+### Phases Completed
+
+| Phase | Feature | Status |
+|-------|---------|--------|
+| 4 | Delete Expense API | ✅ |
+| 5 | Daily Snapshots Verification | ✅ |
+| 6 | Historical Trend Data | ✅ |
+| 2 | Funnel Live Contacts | ✅ |
+| 3 | Overview Trends & Activity | ✅ |
+| 1 | Cohorts EPL/LTV Calculations | ✅ |
+| 7 | Test Suite | Deferred |
+
+---
+
+## Skool Scheduler Enhancements ✅ COMPLETE
+
+> All phases complete (2026-02-09). Variation Groups, Campaigns, One-Off Posts with email blast tracking.
+
+### Overview
+
+Three major capabilities added:
+1. **Variation Groups** - Flexible post matching by group instead of rigid category+day+time
+2. **One-Off Posts** - Date-specific scheduled posts for Offer Cycle campaigns
+3. **Email Blast Tracking** - 72-hour cooldown tracking per Skool group
+
+### Database Schema
+
+| Table | Purpose |
+|-------|---------|
+| `skool_variation_groups` | Groups of post variations for content rotation |
+| `skool_campaigns` | Campaign grouping for one-off posts |
+| `skool_oneoff_posts` | Date-specific scheduled posts |
+| `skool_group_settings` | Email blast cooldown tracking |
+
+**Migrations:**
+- `packages/db/schemas/skool-variation-groups.sql`
+- `packages/db/schemas/skool-oneoff.sql`
+- `packages/db/schemas/skool-variation-groups-data-migration.sql`
+
+### API Routes
+
+| Route | Purpose |
+|-------|---------|
+| `/api/skool/variation-groups` | CRUD for variation groups |
+| `/api/skool/campaigns` | CRUD for campaigns with stats |
+| `/api/skool/oneoff-posts` | CRUD for one-off posts |
+| `/api/skool/group-settings` | Email blast status & cooldown |
+
+### React Hooks
+
+| Hook | Purpose |
+|------|---------|
+| `use-variation-groups.ts` | Fetch/manage variation groups |
+| `use-campaigns.ts` | Fetch/manage campaigns |
+| `use-oneoff-posts.ts` | Fetch/manage one-off posts |
+| `use-group-settings.ts` | Email blast status |
+
+### UI Components
+
+| Component | Purpose |
+|-----------|---------|
+| `VariationGroupDialog.tsx` | Create/edit variation groups |
+| `CampaignDialog.tsx` | Create/edit campaigns |
+| `OneOffPostDialog.tsx` | Create/edit one-off posts |
+
+### Pages
+
+| Page | Purpose |
+|------|---------|
+| `/skool` | Overview dashboard with stats, quick actions |
+| `/skool/groups` | Variation groups management |
+| `/skool/campaigns` | Campaign management |
+| `/skool/scheduled` | One-off posts list with filters |
+
+### Cron Job Updates
+
+Updated `/api/cron/skool-post-scheduler`:
+- Supports variation group matching (new) OR legacy category+day+time matching (fallback)
+- Processes one-off posts scheduled for current time
+- Checks email blast 72-hour cooldown before sending
+- Records blast usage in `skool_group_settings`
+
+### Data Migration Results
+
+- 6 variation groups created
+- 7 schedulers linked
+- 87 posts linked (0 unlinked)
+
+Groups created:
+- Funding Club - Reminder (12 posts)
+- Funding Club - Live Now (12 posts)
+- Funding Hot Seat - Reminder (13 posts)
+- Funding Hot Seat - Live Now (12 posts)
+- The Money Room - Reminder (26 posts, 2 schedulers)
+- The Money Room - Live Now (12 posts)
+
+---
+
+## Skool Scheduler UI Enhancements ✅ COMPLETE
+
+> All 5 phases complete (2026-02-09). List views, inline editing, dual filters, minute-precision time.
+
+### Phase 1: Variation Groups List View ✅ COMPLETE
+
+**Goal:** Convert Variation Groups page from card grid to table/list view (like Posts Library)
+
+**File:** `apps/web/src/app/skool/groups/page.tsx`
+
+- [x] Replace card grid with `<Table>` component
+- [x] Columns: Name, Description, Post Count, Scheduler Count, Status, Actions
+- [x] Add row click handler to navigate to detail page
+- [x] Keep Add/Edit/Delete via dropdown menu (like scheduler page)
+- [x] Add empty state matching other pages
+
+**Acceptance:** Variation Groups page looks like Posts Library table, rows are clickable
+
+---
+
+### Phase 2: Variation Group Detail Page ✅ COMPLETE
+
+**Goal:** Create `/skool/groups/[id]` page showing all posts in a group with full CRUD
+
+**New Files:**
+- `apps/web/src/app/skool/groups/[id]/page.tsx`
+- `apps/web/src/app/api/skool/variation-groups/[id]/route.ts`
+
+**Updates:**
+- `apps/web/src/features/skool/hooks/use-post-library.ts` - Add `variationGroupId` filter option
+- `apps/web/src/features/skool/hooks/use-variation-groups.ts` - Add `useVariationGroup` hook for single group fetch
+- `apps/web/src/features/skool/hooks/index.ts` - Export new hook and type
+
+- [x] Create dynamic route `/skool/groups/[id]/page.tsx`
+- [x] Fetch group details + posts where `variation_group_id = id`
+- [x] Display group header (name, description, edit button)
+- [x] Table of posts (same columns as Posts Library)
+- [x] Add Post button (pre-selects this variation group)
+- [x] Edit/Delete posts inline (same pattern as Posts Library)
+- [x] Back link to `/skool/groups`
+- [x] 404 handling for invalid group IDs
+
+**Acceptance:** Can click into a group, see all its posts, add/edit/delete posts from that view
+
+---
+
+### Phase 3: Posts Library Dual Filters ✅ COMPLETE
+
+**Goal:** Add separate Group Name filter alongside Category filter (can use either or both)
+
+**File:** `apps/web/src/app/skool/posts/page.tsx`
+
+**Updates:**
+- `apps/web/src/app/api/skool/posts/route.ts` - Already supported `variation_group_id`
+- `apps/web/src/features/skool/hooks/use-post-library.ts` - Already has `variationGroupId` filter (from Phase 2)
+
+- [x] Add "Variation Group" filter dropdown (fetches from use-variation-groups)
+- [x] Update usePostLibrary to accept `variationGroupId` param
+- [x] Update API route to filter by `variation_group_id`
+- [x] Both filters work independently AND together
+- [x] Contextual empty state messages for filter combinations
+- [x] Show filter counts in dropdown labels
+
+**Acceptance:** Can filter posts by group only, category only, or both; filters work independently
+
+---
+
+### Phase 4: Minute-Precision Time Picker ✅ COMPLETE
+
+**Goal:** Allow editing schedule time down to the minute (previously limited to 30/15-min intervals)
+
+**Files:**
+- `apps/web/src/features/skool/components/SchedulerDialog.tsx`
+- `apps/web/src/features/skool/components/PostDialog.tsx`
+- `apps/web/src/features/skool/components/OneOffPostDialog.tsx`
+
+- [x] Replace time select dropdown with `<Input type="time">` for minute precision
+- [x] Update SchedulerDialog time field to use time input
+- [x] Update PostDialog time field to use time input
+- [x] Update OneOffPostDialog time field to use time input
+- [x] Ensure time format is `HH:MM` (24-hour for consistency with DB)
+- [x] Removed TIME_OPTIONS arrays from all three dialogs
+
+**Acceptance:** Can set schedule to any minute (e.g., 09:15, 18:47), saved correctly
+
+---
+
+### Phase 5: Inline Recurring Schedule Editing ✅ COMPLETE
+
+**Goal:** Edit day and time directly on the Recurring page table rows (no dialog needed)
+
+**File:** `apps/web/src/app/skool/scheduler/page.tsx`
+
+- [x] Replace Day column text with inline `<Select>` (Sun-Sat dropdown)
+- [x] Replace Time column text with inline `<input type="time">`
+- [x] Add debounced auto-save on change (400ms delay)
+- [x] Show loading spinner in row while saving
+- [x] Toast on success/failure
+- [x] Keep "..." dropdown for category change, note edit, delete (less common operations)
+- [x] Disable day/time selectors when row is in saving state
+
+**Acceptance:** Can change day/time for any scheduler slot directly in the table, saves automatically
 
 ---
 
@@ -1180,6 +1428,32 @@ curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/syn
 
 ---
 
+### Phase 5: Daily Snapshots Verification ✅ COMPLETE
+**Scope:** Verify and fix daily snapshot aggregation
+
+#### 5.1 Cron Configuration
+**File:** `apps/web/vercel.json`
+- [x] `/api/cron/sync-ghl` - Hourly (0 * * * *)
+- [x] `/api/cron/sync-skool` - Daily at 5am (0 5 * * *)
+- [x] `/api/cron/sync-meta` - Daily at 6am (0 6 * * *)
+- [x] `/api/cron/aggregate` - Daily at 7am (0 7 * * *)
+- [x] `/api/cron/send-daily-snapshot` - Hourly (0 * * * *)
+
+#### 5.2 Aggregate Cron Verification
+**File:** `apps/web/src/app/api/cron/aggregate/route.ts`
+- [x] Queries `ad_metrics` table for daily ad spend
+- [x] Populates `daily_aggregates` table
+- [x] Added `?date=YYYY-MM-DD` parameter for backfilling specific dates
+- [x] Tested: 2026-02-08 shows $108.93 ad spend correctly aggregated
+
+#### 5.3 Snapshot Generator Fix
+**File:** `apps/web/src/features/notifications/lib/generate-snapshot.ts`
+- [x] Fixed `fetchAdSpend()` to aggregate from `ad_metrics` table (was placeholder returning 0)
+- [x] Calculates MTD ad spend from ad_metrics
+- [x] Calculates cost per lead using leads count
+
+**🏁 PHASE 5 COMPLETE - Daily Snapshots Verified! (2026-02-09)**
+
 ---
 
 ### Implementation Notes
@@ -1573,3 +1847,9 @@ product/
 | 2026-02-07 | Revenue KPI Integration - Phase 3 COMPLETE | Created `/api/kpi/revenue` endpoint returning three revenue KPIs (Total, One-Time, Recurring). Added `useRevenueData` hook to use-kpi-data.ts with `RevenueData` type. Updated Overview Row 1 to: **Revenue** (total=$503.25) \| **One Time** ($0 placeholder) \| **MRR** ($503.25) \| **Expenses**. Added `mrr`, `mrrRetention`, `paidMembers` to `SkoolMetrics` type. One-Time shows "GHL Payments API integration pending" note. MRR shows "X paying @ Y% retention" description. Fixed Expenses card to sync with ExpenseCategoryFilter - now uses `totalExpenses` (filtered sum) and shows "X of Y selected" when filtering. Build passes. |
 | 2026-02-07 | GHL Payments API Integration COMPLETE | Built and deployed One-Time revenue tracking: (1) Added payment methods to GHLClient with offset-based pagination. (2) Created `ghl-transactions.sql` migration. (3) Created `/api/cron/sync-ghl-payments` endpoint. (4) Updated `/api/kpi/revenue` to query ghl_transactions. (5) Fixed bugs: amounts in dollars not cents, offset pagination not cursor-based. (6) Synced 189 transactions totaling $143,973 (PREIFM=setup fees, New Invoice=7% funding fees). Peak month: Jul 2025 @ $29,795. Build passes. |
 | 2026-02-07 | Funnel Tag Split - Offer Made | Split single `offer_made` stage into separate `offer_made_vip` and `offer_made_premium` stages to track each path independently. Updated config.ts: FUNNEL_STAGE_ORDER, TAG_MAPPINGS ('skool - vip offer made' + 'skool - premium offer made'), STAGE_LABELS, STAGE_COLORS (pink for Premium path, violet for VIP path), FUNNEL_GROUPS, FUNNEL_PATHS. Updated page.tsx: live data funnel mapping uses new stage IDs, sample fallback colors match config. Current counts: offer_made_premium=6, offer_made_vip=1. Build passes. |
+| 2026-02-09 | Skool Scheduler Enhancements COMPLETE | **Major feature: Variation Groups, Campaigns, One-Off Posts.** (1) Created `skool_variation_groups` table for flexible post grouping. (2) Created `skool_campaigns` and `skool_oneoff_posts` tables for date-specific scheduling. (3) Created `skool_group_settings` for email blast 72-hour cooldown tracking. (4) Added new API routes: `/api/skool/variation-groups`, `/api/skool/campaigns`, `/api/skool/oneoff-posts`, `/api/skool/group-settings`. (5) Created hooks: `use-variation-groups.ts`, `use-campaigns.ts`, `use-oneoff-posts.ts`, `use-group-settings.ts`. (6) Created UI components: `VariationGroupDialog`, `CampaignDialog`, `OneOffPostDialog`. (7) Updated `SchedulerDialog` and `PostDialog` with variation group support. (8) Created new pages: `/skool/groups`, `/skool/campaigns`, `/skool/scheduled`, enhanced `/skool` overview. (9) Updated cron job to support variation group matching + one-off post processing. (10) Ran migrations and data migration: 6 variation groups created, 7 schedulers linked, 87 posts linked. Build passes. |
+| 2026-02-09 | Delete Expense API | Added DELETE handler to `/api/kpi/expenses/route.ts` - requires auth, gets ID from query params, checks expense is not `is_system=true` before deleting, returns 403 for system expenses, 404 for not found. Added `deleteExpense()` function to `use-kpi-data.ts` hook. Wired frontend `handleDeleteExpense` in `/kpi/expenses/page.tsx` to call DELETE API with toast feedback on success/error and refetch after delete. System expenses (Facebook Ads) protected from deletion. Build passes. |
+| 2026-02-09 | Phase 6: Historical Trend Data | **Period-over-period change calculations for Skool member metrics.** (1) Updated `/api/kpi/overview/route.ts` to query `skool_members_daily` for previous period data. (2) Added `calculateChange()` calls for member metrics (totalMembersChange, newMembersChange). (3) Updated `SkoolMetrics` interface with `previousTotalMembers`, `totalMembersChange`, `previousNewMembers`, `newMembersChange` fields. (4) Updated `/kpi/page.tsx` to use API change values instead of hardcoded `change: 0`. (5) Fixed pre-existing TypeScript errors: `CampaignStats` property names (pending_posts vs pending), `variation_group_id` missing on create forms, nullable day_of_week/time handling, useSearchParams Suspense boundaries. (6) Fixed pre-existing interface issues: `OneOffPostWithCampaign` extends pattern. (7) Backfill endpoint exists at `/api/cron/aggregate?date=YYYY-MM-DD` for historical data. (8) Build passes. **Note:** For non-zero changes, ensure `skool_members_daily` has historical data - run sync-member-history cron or backfill. |
+| 2026-02-09 | Funnel Page Live Contacts | **Replaced mock contacts with live API data.** (1) Extended `/api/kpi/funnel/route.ts` to return `contactsByStage` when `?stage=` param provided. Returns top 50 contacts at that stage with name, email, source (from skool_members attribution_source), daysInStage, enteredAt. (2) Added `ContactAtStage` interface to use-kpi-data.ts. (3) Created `useContactsByStage` hook for fetching contacts at a specific stage with loading state. (4) Updated `/kpi/funnel/page.tsx` to use `useContactsByStage` hook instead of mock data. Shows loading spinner while fetching, updates when tab changes. (5) Removed mock `ContactAtStage` interface and `mockContactsInStage` data. Build passes. |
+| 2026-02-09 | Phase 3: Overview Trends & Activity | **Wired overview page to live data.** (1) Updated `/kpi/page.tsx` to use `kpiData?.trends?.weekly` for TrendChart instead of hardcoded `trendData`. (2) Created `/api/kpi/recent-activity/route.ts` endpoint - queries last 10 contact stage changes from events table (with fallback to contacts.updated_at), joins with contacts for name/source, returns action, stage, timeAgo. (3) Added `useRecentActivity` hook to use-kpi-data.ts with `RecentActivityItem` type. (4) Updated Recent Activity section to use live data with loading state and empty state. (5) Updated `typeColors` and `typeLabels` objects to include all funnel stages from config.ts. Build passes. **Note:** Requires events table with stage_changed entries OR falls back to contacts.updated_at. |
+| 2026-02-09 | Cohorts EPL/LTV Calculations | **Wired cohorts page to live EPL/LTV data from GHL transactions.** (1) Updated `/api/kpi/cohorts/route.ts` lines 176-188 to query `ghl_transactions` for cohort members' revenue at each day milestone. (2) EPL now calculated as `total_revenue / cohort_size` for each milestone. (3) LTV = EPL for now (MRR attribution requires subscription tracking). (4) Updated overall metrics to calculate actual averages from cohort data. (5) Wired `/kpi/cohorts/page.tsx` to use `useCohortsData` hook. (6) EPL Milestone Cards (Day 35/65/95 EPL, Average LTV) show live data. (7) EPL & LTV Curves chart and milestones table use live `cohortChartData`. (8) Cohort Insights cards (Best Performing, Latest Cohort) show live data from API. (9) Cohort Progression tab still uses mock data (requires separate week-based funnel stage tracking API). Build passes. |

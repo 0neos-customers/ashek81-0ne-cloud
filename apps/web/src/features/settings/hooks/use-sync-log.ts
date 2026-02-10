@@ -179,6 +179,7 @@ export function formatSyncType(syncType: SyncType): string {
     skool: 'Skool',
     skool_analytics: 'Skool Analytics',
     skool_member_history: 'Skool Member History',
+    skool_posts: 'Skool Posts',
     meta: 'Meta Ads',
   }
   return typeNames[syncType] || syncType
