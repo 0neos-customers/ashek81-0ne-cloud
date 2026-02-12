@@ -28,7 +28,7 @@ import {
   CardTitle,
   toast,
 } from '@0ne/ui'
-import { Plus, MoreHorizontal, Pencil, Trash2, Loader2 } from 'lucide-react'
+import { Plus, MoreHorizontal, Pencil, Trash2, Loader2, Send } from 'lucide-react'
 import { DAY_NAMES, formatScheduleTime, type SkoolScheduledPost, type DayOfWeek, type OneOffPostStatus } from '@0ne/db'
 import {
   useSchedulers,
@@ -136,6 +136,11 @@ function SchedulerPageContent() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deleteType, setDeleteType] = useState<'recurring' | 'oneoff'>('recurring')
   const [isDeleting, setIsDeleting] = useState(false)
+
+  // Post Now confirmation state
+  const [postNowDialogOpen, setPostNowDialogOpen] = useState(false)
+  const [postingNowPost, setPostingNowPost] = useState<OneOffPostWithCampaign | null>(null)
+  const [isPostingNow, setIsPostingNow] = useState(false)
 
   // Toggle loading state per row (for recurring status toggle)
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set())
@@ -565,6 +570,41 @@ function SchedulerPageContent() {
     }
   }
 
+  // ===== POST NOW HANDLER =====
+
+  const handlePostNowClick = (post: OneOffPostWithCampaign) => {
+    setPostingNowPost(post)
+    setPostNowDialogOpen(true)
+  }
+
+  const handlePostNow = async () => {
+    if (!postingNowPost) return
+    setIsPostingNow(true)
+    try {
+      const response = await fetch('/api/skool/oneoff-posts/post-now', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: postingNowPost.id }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        toast.error(result.error || 'Failed to post')
+        return
+      }
+
+      toast.success(`Posted successfully! ${result.postUrl ? 'View on Skool' : ''}`)
+      refreshOneOff()
+      setPostNowDialogOpen(false)
+    } catch (error) {
+      toast.error('Failed to post. Please try again.')
+    } finally {
+      setIsPostingNow(false)
+      setPostingNowPost(null)
+    }
+  }
+
   // ===== HELPERS =====
 
   const parseScheduledAt = (scheduledAt: string): { date: string; time: string } => {
@@ -898,6 +938,7 @@ function SchedulerPageContent() {
                                 <SelectItem value="draft">Draft</SelectItem>
                                 <SelectItem value="approved">Approved</SelectItem>
                                 <SelectItem value="pending">Scheduled</SelectItem>
+                                <SelectItem value="posted_manually">Posted Manually</SelectItem>
                               </SelectContent>
                             </Select>
                           ) : (
@@ -923,6 +964,14 @@ function SchedulerPageContent() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                              {editable && (
+                                <DropdownMenuItem
+                                  onClick={() => handlePostNowClick(post)}
+                                >
+                                  <Send className="h-4 w-4 mr-2" />
+                                  Post Now
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem
                                 onClick={() => handleEditOneOff(post)}
                                 disabled={!editable}
@@ -995,6 +1044,22 @@ function SchedulerPageContent() {
         }
         onConfirm={handleDelete}
         isLoading={isDeleting}
+      />
+
+      {/* Post Now Confirmation Dialog */}
+      <ConfirmDialog
+        open={postNowDialogOpen}
+        onOpenChange={setPostNowDialogOpen}
+        title="Post Now"
+        description={
+          postingNowPost
+            ? `Are you sure you want to post "${postingNowPost.title}" to Skool right now? This will bypass the scheduled time and post immediately.`
+            : 'Post this content to Skool immediately?'
+        }
+        onConfirm={handlePostNow}
+        isLoading={isPostingNow}
+        confirmText="Post Now"
+        variant="default"
       />
     </div>
   )
