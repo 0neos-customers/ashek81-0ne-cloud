@@ -3,5 +3,12 @@
   "buildCommand": "bun run build --filter=web",
   "installCommand": "bun install",
   "outputDirectory": "apps/web/.next",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "redirects": [
+    {
+      "source": "/podcast",
+      "destination": "https://open.spotify.com/playlist/5xFAYhRQQaOnMPbmyq49lf",
+      "permanent": true
+    }
+  ]
 }
