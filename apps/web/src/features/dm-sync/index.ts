@@ -79,10 +79,19 @@ export {
 // =============================================================================
 
 export {
+  // Legacy client (non-marketplace)
   GhlConversationClient,
   createGhlConversationClient,
   createGhlConversationClientFromEnv,
   type GhlConversationClientConfig,
+  // Marketplace client (Phase 4)
+  GhlConversationProviderClient,
+  createGhlConversationProviderClient,
+  createGhlConversationProviderClientFromEnv,
+  type GhlMarketplaceConfig,
+  // Webhook utilities
+  verifyGhlWebhookSignature,
+  type GhlOutboundMessagePayload,
 } from './lib/ghl-conversation'
 
 // =============================================================================
