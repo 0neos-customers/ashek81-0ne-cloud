@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@0ne/db/server'
+import { SyncLogger } from '@/lib/sync-log'
 
 export const runtime = 'edge'
 export const dynamic = 'force-dynamic'
@@ -108,6 +109,9 @@ export async function GET(request: Request) {
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  const syncLogger = new SyncLogger('aggregate')
+  await syncLogger.start({ source: 'cron' })
 
   try {
     const supabase = createServerClient()
@@ -345,6 +349,12 @@ export async function GET(request: Request) {
       }
     }
 
+    await syncLogger.complete(aggregatesToUpsert.length, {
+      sourcesProcessed: sources.length,
+      campaignsProcessed: campaignIds.length,
+      expenseCategoriesProcessed: expenseCategoryRows.length,
+    })
+
     return NextResponse.json({
       success: true,
       date: dateStr,
@@ -358,6 +368,7 @@ export async function GET(request: Request) {
     })
   } catch (error) {
     console.error('Aggregate error:', error)
+    await syncLogger.fail(String(error))
     return NextResponse.json(
       { error: 'Aggregation failed', details: String(error) },
       { status: 500 }

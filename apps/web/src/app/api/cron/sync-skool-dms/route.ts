@@ -14,6 +14,7 @@ import {
   getEnabledSyncConfigs,
   type InboundSyncResult,
 } from '@/features/dm-sync'
+import { SyncLogger } from '@/lib/sync-log'
 
 export const maxDuration = 300 // 5 minutes max for sync
 
@@ -39,6 +40,9 @@ export async function GET(request: NextRequest) {
 
   const startTime = Date.now()
   console.log('[sync-skool-dms] Starting inbound sync')
+
+  const syncLogger = new SyncLogger('skool_dms')
+  await syncLogger.start({ source: 'cron' })
 
   try {
     // Get enabled sync configs
@@ -118,6 +122,12 @@ export async function GET(request: NextRequest) {
       `[sync-skool-dms] Completed in ${duration}s: synced=${totals.synced}, skipped=${totals.skipped}, errors=${totals.errors}`
     )
 
+    if (totals.errors === 0) {
+      await syncLogger.complete(totals.synced, { skipped: totals.skipped })
+    } else {
+      await syncLogger.fail(`${totals.errors} user syncs failed`, totals.synced)
+    }
+
     return NextResponse.json({
       success: totals.errors === 0,
       duration: `${duration}s`,
@@ -131,6 +141,7 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('[sync-skool-dms] Fatal error:', error)
+    await syncLogger.fail(error instanceof Error ? error.message : 'Unknown error')
     return NextResponse.json(
       {
         success: false,

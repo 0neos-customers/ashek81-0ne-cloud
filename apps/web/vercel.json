@@ -1,34 +1,4 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/sync-ghl",
-      "schedule": "0 4 * * *"
-    },
-    {
-      "path": "/api/cron/sync-skool",
-      "schedule": "0 5 * * *"
-    },
-    {
-      "path": "/api/cron/sync-meta",
-      "schedule": "0 6 * * *"
-    },
-    {
-      "path": "/api/cron/aggregate",
-      "schedule": "0 7 * * *"
-    },
-    {
-      "path": "/api/cron/send-daily-snapshot",
-      "schedule": "0 8 * * *"
-    },
-    {
-      "path": "/api/cron/sync-skool-dms",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/cron/send-pending-dms",
-      "schedule": "*/5 * * * *"
-    }
-  ],
   "headers": [
     {
       "source": "/embed",

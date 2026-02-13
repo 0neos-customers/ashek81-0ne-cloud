@@ -180,6 +180,11 @@ export function formatSyncType(syncType: SyncType): string {
     skool_analytics: 'Skool Analytics',
     skool_member_history: 'Skool Member History',
     skool_posts: 'Skool Posts',
+    skool_dms: 'Skool DMs (Inbound)',
+    skool_dms_outbound: 'Skool DMs (Outbound)',
+    hand_raiser: 'Hand-Raiser Monitor',
+    aggregate: 'Daily Aggregation',
+    daily_snapshot: 'Daily Snapshot',
     meta: 'Meta Ads',
   }
   return typeNames[syncType] || syncType

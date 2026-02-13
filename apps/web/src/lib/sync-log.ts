@@ -14,6 +14,11 @@ export type SyncType =
   | 'skool_analytics'
   | 'skool_member_history'
   | 'skool_posts'
+  | 'skool_dms'
+  | 'skool_dms_outbound'
+  | 'hand_raiser'
+  | 'aggregate'
+  | 'daily_snapshot'
   | 'meta'
 
 export type SyncStatus = 'running' | 'completed' | 'failed'

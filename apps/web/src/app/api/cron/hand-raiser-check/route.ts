@@ -14,6 +14,7 @@ import {
   getUsersWithActiveHandRaisers,
   type HandRaiserResult,
 } from '@/features/dm-sync'
+import { SyncLogger } from '@/lib/sync-log'
 
 export const maxDuration = 300 // 5 minutes max
 
@@ -39,6 +40,9 @@ export async function GET(request: NextRequest) {
 
   const startTime = Date.now()
   console.log('[hand-raiser-check] Starting hand-raiser processing')
+
+  const syncLogger = new SyncLogger('hand_raiser')
+  await syncLogger.start({ source: 'cron' })
 
   try {
     // Get users with active hand-raiser campaigns
@@ -120,6 +124,15 @@ export async function GET(request: NextRequest) {
       `[hand-raiser-check] Completed in ${duration}s: campaigns=${totals.campaignsProcessed}, comments=${totals.commentsChecked}, dms=${totals.dmsSent}, errors=${totals.errors}`
     )
 
+    if (totals.errors === 0) {
+      await syncLogger.complete(totals.dmsSent, {
+        campaignsProcessed: totals.campaignsProcessed,
+        commentsChecked: totals.commentsChecked,
+      })
+    } else {
+      await syncLogger.fail(`${totals.errors} errors during processing`, totals.dmsSent)
+    }
+
     return NextResponse.json({
       success: totals.errors === 0,
       duration: `${duration}s`,
@@ -134,6 +147,7 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('[hand-raiser-check] Fatal error:', error)
+    await syncLogger.fail(error instanceof Error ? error.message : 'Unknown error')
     return NextResponse.json(
       {
         success: false,
