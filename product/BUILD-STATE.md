@@ -7,8 +7,8 @@
 
 ## Quick Resume
 
-**Last Updated:** 2026-02-12
-**Current Focus:** Skool-GHL DM Sync (Phase 1 pending)
+**Last Updated:** 2026-02-13
+**Current Focus:** Skool-GHL DM Sync (All 7 phases deployed, awaiting OAuth)
 
 ---
 
@@ -16,7 +16,7 @@
 
 | Feature | Status | BUILD-STATE Location |
 |---------|--------|---------------------|
-| Skool-GHL DM Sync | 🔄 Phase 1 Pending | `sections/skool-sync/BUILD-STATE.md` |
+| Skool-GHL DM Sync | 🔄 Awaiting OAuth setup | `sections/skool-sync/BUILD-STATE.md` |
 | Skool Scheduler | ✅ Complete | `sections/skool-scheduler/BUILD-STATE.md` |
 | GHL Media Manager | ✅ Complete | `sections/media/BUILD-STATE.md` |
 
@@ -49,6 +49,25 @@ Vercel Cron → Skool API (SKOOL_COOKIES) → Supabase → GHL Conversation Prov
 ## Blockers / Decisions Needed
 
 1. **Jimmy Action:** Add `EXTERNAL_API_KEY` to Vercel environment (for Skool Post Drafts API)
+
+---
+
+## TODO: Review Cron Schedules
+
+Now on Vercel Pro, review all cron jobs and set optimal intervals:
+
+| Cron | Current | Location | Notes |
+|------|---------|----------|-------|
+| sync-skool-dms | */5 * * * * | apps/web/vercel.json | Inbound DM sync |
+| send-pending-dms | */5 * * * * | apps/web/vercel.json | Outbound DM send |
+| hand-raiser-check | */15 * * * * | vercel.json | Auto-DM campaigns |
+| sync-ghl | 0 4 * * * | apps/web/vercel.json | Daily GHL sync |
+| sync-skool | 0 5 * * * | apps/web/vercel.json | Daily Skool sync |
+| sync-meta | 0 6 * * * | apps/web/vercel.json | Daily Meta ads sync |
+| aggregate | 0 7 * * * | apps/web/vercel.json | Daily aggregation |
+| send-daily-snapshot | 0 8 * * * | apps/web/vercel.json | Daily notification |
+
+**Consider:** Consolidating vercel.json files (root vs apps/web)
 
 ---
 
