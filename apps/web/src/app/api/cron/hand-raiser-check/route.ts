@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
 
     if (users.length === 0) {
       console.log('[hand-raiser-check] No users with active campaigns')
+      await syncLogger.complete(0, { message: 'No active hand-raiser campaigns' })
       return NextResponse.json({
         success: true,
         message: 'No active hand-raiser campaigns',
@@ -63,6 +64,7 @@ export async function GET(request: NextRequest) {
       : users
 
     if (targetUsers.length === 0) {
+      await syncLogger.complete(0, { message: 'No matching users' })
       return NextResponse.json({
         success: true,
         message: 'No matching users',

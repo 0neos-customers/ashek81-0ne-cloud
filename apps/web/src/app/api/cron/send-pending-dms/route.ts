@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
 
     if (configs.length === 0) {
       console.log('[send-pending-dms] No enabled sync configs found')
+      await syncLogger.complete(0, { message: 'No enabled sync configs' })
       return NextResponse.json({
         success: true,
         message: 'No enabled sync configs',
@@ -63,6 +64,7 @@ export async function GET(request: NextRequest) {
       : configs
 
     if (targetConfigs.length === 0) {
+      await syncLogger.complete(0, { message: 'No matching sync configs' })
       return NextResponse.json({
         success: true,
         message: 'No matching sync configs',
