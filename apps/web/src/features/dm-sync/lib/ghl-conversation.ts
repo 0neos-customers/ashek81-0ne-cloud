@@ -371,12 +371,10 @@ export class GhlConversationProviderClient {
   /**
    * Push outbound message from Jimmy (Skool) to GHL inbox
    *
-   * This creates a message in the GHL unified inbox that represents
-   * Jimmy's outbound message to the contact.
+   * This creates a message in the GHL unified inbox that appears to come
+   * FROM the business (Jimmy), shown on the RIGHT side of the chat.
    *
-   * Note: GHL Conversation Provider doesn't support direct outbound via API.
-   * We use the inbound endpoint with a visual indicator (→) to show direction.
-   * The message will appear on the LEFT but with a clear "Jimmy replied:" prefix.
+   * Uses the inbound endpoint with direction: 'outbound' to control positioning.
    *
    * @param locationId - GHL location ID
    * @param contactId - GHL contact ID
@@ -392,28 +390,24 @@ export class GhlConversationProviderClient {
     messageText: string,
     skoolMessageId: string
   ): Promise<string> {
-    console.log('[GHL Provider] Pushing outbound (synced from Skool) message:', {
+    console.log('[GHL Provider] Pushing outbound message:', {
       contactId,
       skoolUserId,
       messageLength: messageText?.length || 0,
       altId: skoolMessageId,
     })
 
-    // GHL Conversation Provider doesn't support direct outbound messages via API
-    // (that flow is meant to go: GHL UI → webhook → your app → deliver to channel)
-    //
-    // For syncing historical Skool messages, we use the inbound endpoint with
-    // a clear visual prefix so it's obvious this is Jimmy's reply synced from Skool
-    const formattedMessage = `→ Jimmy (via Skool):\n${messageText}`
-
+    // Try using inbound endpoint with direction field to control positioning
+    // Some custom providers use this to distinguish message direction
     const body = {
       type: 'Custom',
       contactId,
       locationId,
-      message: formattedMessage,
+      message: messageText,
       conversationProviderId: this.conversationProviderId,
       altId: skoolMessageId,
-      externalId: `outbound-${skoolUserId}`, // Different externalId to distinguish
+      externalId: skoolUserId,
+      direction: 'outbound', // Try to indicate this is an outbound message
     }
 
     const response = await this.request<{
@@ -432,12 +426,16 @@ export class GhlConversationProviderClient {
       throw new Error('GHL push outbound message response missing messageId')
     }
 
-    console.log('[GHL Provider] Outbound (synced) message pushed successfully:', messageId)
+    console.log('[GHL Provider] Outbound message pushed successfully:', messageId)
     return messageId
   }
 
   /**
    * Get or create a conversation for a contact on the Skool channel
+   *
+   * For Conversation Providers, conversations are created when the first
+   * message is pushed. We use a system message via the inbound endpoint
+   * to establish the conversation if one doesn't exist.
    *
    * @param locationId - GHL location ID
    * @param contactId - GHL contact ID
@@ -447,67 +445,38 @@ export class GhlConversationProviderClient {
   async getOrCreateConversation(
     locationId: string,
     contactId: string,
-    channelType: string = 'Skool'
+    _channelType: string = 'Skool'
   ): Promise<string> {
-    // First, try to find existing conversation
-    const existing = await this.findConversationByContact(locationId, contactId, channelType)
-    if (existing) {
-      return existing
+    // For Conversation Providers, push a system message to create/get the conversation
+    // The inbound endpoint returns the conversationId
+    const body = {
+      type: 'Custom',
+      contactId,
+      locationId,
+      message: '⚡ Skool channel connected',
+      conversationProviderId: this.conversationProviderId,
+      altId: `init-${contactId}-${Date.now()}`,
+      externalId: contactId,
     }
 
-    // Create new conversation
-    const body = {
-      locationId,
-      contactId,
-      type: channelType,
-      conversationProviderId: this.conversationProviderId,
-    }
+    console.log('[GHL Provider] Creating/getting conversation via inbound message')
 
     const response = await this.request<{
-      conversation?: { id: string }
-      id?: string
-    }>('/conversations', {
+      conversationId?: string
+      messageId?: string
+    }>('/conversations/messages/inbound', {
       method: 'POST',
       body: JSON.stringify(body),
     })
 
-    const conversationId = response.conversation?.id || response.id
+    const conversationId = response.conversationId
     if (!conversationId) {
-      throw new Error('GHL create conversation response missing id')
+      console.error('[GHL Provider] No conversationId in response:', response)
+      throw new Error('GHL create conversation response missing conversationId')
     }
 
+    console.log('[GHL Provider] Got conversationId:', conversationId)
     return conversationId
-  }
-
-  /**
-   * Find existing conversation for a contact on the Skool channel
-   */
-  private async findConversationByContact(
-    locationId: string,
-    contactId: string,
-    _channelType: string
-  ): Promise<string | null> {
-    try {
-      const searchParams = new URLSearchParams({
-        locationId,
-        contactId,
-      })
-
-      const response = await this.request<{
-        conversations?: Array<{ id: string; type?: string }>
-      }>(`/conversations/search?${searchParams.toString()}`)
-
-      // Find conversation matching our provider type
-      const conversation = response.conversations?.find(
-        (c) => c.type === 'Custom' || c.type === 'Skool'
-      )
-
-      return conversation?.id || null
-    } catch (error) {
-      // Search endpoint may not exist or return 404 - that's OK
-      console.log('[GHL Provider] Conversation search failed, will create new:', error)
-      return null
-    }
   }
 
   /**
