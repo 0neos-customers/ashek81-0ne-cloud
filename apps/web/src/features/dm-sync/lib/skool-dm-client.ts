@@ -186,7 +186,16 @@ export class SkoolDmClient {
       // Handle error responses
       if (!response.ok) {
         const errorCode = this.mapStatusToErrorCode(response.status)
-        const errorMessage = await this.getErrorMessage(response)
+        const responseText = await response.text()
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`
+
+        try {
+          const errorData = JSON.parse(responseText)
+          errorMessage = errorData.message || errorData.error || errorMessage
+        } catch {
+          // If not JSON, include raw response
+          errorMessage = `HTTP ${response.status}: ${responseText.substring(0, 200)}`
+        }
 
         console.error(
           `[SkoolDmClient] API error: ${response.status} - ${errorMessage}`
