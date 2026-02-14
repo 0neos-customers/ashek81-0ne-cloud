@@ -251,6 +251,15 @@ async function processConversation(
           conversation.participant.displayName
         )
         ghlContactId = contactResult.ghlContactId
+
+        // Skip all messages if we can't create a contact (no email)
+        if (!ghlContactId) {
+          console.log(
+            `[Sync Engine] Skipping conversation ${conversation.id} - no GHL contact (user has no email)`
+          )
+          result.skipped++
+          return // Exit the entire conversation processing
+        }
       }
 
       // Skip messages with no content

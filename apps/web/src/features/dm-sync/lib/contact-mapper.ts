@@ -26,13 +26,13 @@ import type { ContactMappingRow, MapContactResult } from '../types'
 /**
  * Match method for contact mapping
  */
-export type MatchMethod = 'cache' | 'skool_members' | 'email' | 'skool_id' | 'created'
+export type MatchMethod = 'cache' | 'skool_members' | 'email' | 'skool_id' | 'created' | 'no_email'
 
 /**
  * Result of findOrCreateGhlContact
  */
 export interface ContactLookupResult {
-  ghlContactId: string
+  ghlContactId: string | null
   matchMethod: MatchMethod
   wasCreated: boolean
 }
@@ -182,10 +182,15 @@ export async function findOrCreateGhlContact(
   // 5. RARE: Create NEW contact with REAL data (~1% of cases)
   // Only if we have real email (NOT synthetic)
   if (!email) {
-    throw new Error(
-      `Cannot create GHL contact for Skool user ${skoolUserId} - no email found. ` +
+    console.log(
+      `[Contact Mapper] Cannot create GHL contact for Skool user ${skoolUserId} - no email found. ` +
         'This user may not have completed the Skool survey.'
     )
+    return {
+      ghlContactId: null,
+      matchMethod: 'no_email',
+      wasCreated: false,
+    }
   }
 
   // Extract phone if available
