@@ -73,11 +73,32 @@ Cookies are saved in two places:
 
 ## Cookie Expiry
 
-Skool session cookies typically expire after:
-- **Short-lived:** 1 hour (access tokens)
-- **Long-lived:** 7-30 days (refresh tokens)
+Skool uses multiple cookie types with different lifespans:
 
-The script shows expiry time. Re-run when cookies expire.
+| Cookie | Lifespan | Purpose |
+|--------|----------|---------|
+| `auth_token` | ~1 year (JWT) | Actual authentication token |
+| `aws-waf-token` | ~5 minutes | AWS WAF bot detection |
+| `AWSALB` / `AWSALBTG` | ~1 hour | AWS load balancer session |
+
+**Key insight:** The `auth_token` is long-lived, but AWS WAF cookies expire quickly and are IP-bound.
+
+### Production (Vercel) Considerations
+
+AWS WAF tokens are tied to:
+1. **IP address** - Cookies generated from GitHub Actions may not work from Vercel
+2. **Browser fingerprint** - Headless browser fingerprints differ from server requests
+3. **Time** - Tokens expire within minutes
+
+**Current mitigation:**
+- GitHub Action runs every 4 hours (not weekly)
+- Triggers Vercel redeploy to pick up new env vars
+- May still have gaps if IP mismatch causes WAF rejection
+
+**If 403 errors persist:**
+1. Manual cookie extraction from browser (same IP not required for auth_token)
+2. Extract only the `auth_token` and test if WAF cookies are actually required
+3. Consider using a proxy service that maintains browser sessions
 
 ---
 
@@ -147,9 +168,36 @@ const response = await fetch("https://api2.skool.com/self/chat-channels?offset=0
 
 ---
 
+## GitHub Action (Automated Refresh)
+
+**File:** `.github/workflows/skool-refresh-cookies.yml`
+
+**Schedule:** Every 4 hours (`0 */4 * * *`)
+
+**What it does:**
+1. Runs Playwright to login to Skool
+2. Captures all cookies
+3. Updates `SKOOL_COOKIES` env var in Vercel
+4. Triggers production redeploy
+
+**Required secrets:**
+| Secret | Purpose |
+|--------|---------|
+| `SKOOL_EMAIL` | Skool login email |
+| `SKOOL_PASSWORD` | Skool password |
+| `VERCEL_TOKEN` | Vercel API token |
+| `VERCEL_PROJECT_ID` | Project ID from Vercel |
+| `VERCEL_TEAM_ID` | Team ID (optional) |
+
+**Manual trigger:** GitHub Actions UI → "Run workflow"
+
+---
+
 ## Related Files
 
 - `scripts/skool-auth.ts` - The authentication script
+- `scripts/skool-refresh-cookies.ts` - Auto-refresh with validation
 - `scripts/.skool-cookies.json` - Full cookie data (gitignored)
 - `apps/web/.env.local` - Environment variables (gitignored)
+- `.github/workflows/skool-refresh-cookies.yml` - GitHub Action
 - `SKOOL-API.md` - API endpoint documentation

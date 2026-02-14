@@ -81,13 +81,20 @@ interface SkoolApiChatChannel {
 
 /**
  * Raw message from Skool API
+ *
+ * Note: The actual API response has a different structure than the original interface.
+ * Content is in metadata.content, sender is in metadata.src, etc.
  */
 interface SkoolApiMessage {
   id: string
-  channelId: string
-  senderId: string
-  content: string
-  createdAt: string
+  channel_id: string
+  metadata: {
+    content: string
+    src: string  // sender ID
+    dst: string  // recipient ID
+  }
+  created_at: string
+  updated_at: string
 }
 
 /**
@@ -298,6 +305,9 @@ export class SkoolDmClient {
 
   /**
    * Transform API message to SkoolMessage
+   *
+   * Maps the Skool API response structure (metadata.content, metadata.src)
+   * to our internal SkoolMessage format.
    */
   private transformMessage(
     message: SkoolApiMessage,
@@ -305,11 +315,11 @@ export class SkoolDmClient {
   ): SkoolMessage {
     return {
       id: message.id,
-      conversationId: message.channelId,
-      senderId: message.senderId,
-      content: message.content,
-      sentAt: new Date(message.createdAt),
-      isOutbound: message.senderId === currentUserId,
+      conversationId: message.channel_id,
+      senderId: message.metadata.src,
+      content: message.metadata.content,
+      sentAt: new Date(message.created_at),
+      isOutbound: message.metadata.src === currentUserId,
     }
   }
 

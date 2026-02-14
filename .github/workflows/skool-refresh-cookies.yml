@@ -1,9 +1,10 @@
 name: Refresh Skool Cookies
 
 on:
-  # Run every Sunday at 6am UTC (1am EST)
+  # Run every 4 hours to keep AWS WAF cookies fresh
+  # AWS cookies (aws-waf-token, AWSALB) expire within hours
   schedule:
-    - cron: '0 6 * * 0'
+    - cron: '0 */4 * * *'
 
   # Manual trigger from GitHub Actions UI
   workflow_dispatch:
@@ -84,19 +85,36 @@ jobs:
 
           echo "✅ Vercel environment variable updated!"
 
-      - name: Trigger Vercel Redeploy (optional)
+      - name: Trigger Vercel Redeploy
         if: success()
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
         run: |
-          # Get the latest deployment to find the target
+          # Build team query param if set
           TEAM_PARAM=""
           if [ -n "$VERCEL_TEAM_ID" ]; then
-            TEAM_PARAM="&teamId=$VERCEL_TEAM_ID"
+            TEAM_PARAM="?teamId=$VERCEL_TEAM_ID"
           fi
 
-          # Trigger redeploy of production
-          echo "Note: New env vars will take effect on next deployment."
-          echo "You can manually redeploy from Vercel dashboard if needed."
+          # Get the latest production deployment
+          LATEST=$(curl -s -X GET \
+            "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&target=production&limit=1$TEAM_PARAM" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            | jq -r '.deployments[0].uid')
+
+          if [ -n "$LATEST" ] && [ "$LATEST" != "null" ]; then
+            echo "Triggering redeploy of deployment: $LATEST"
+
+            # Create a new deployment from the latest
+            curl -X POST \
+              "https://api.vercel.com/v13/deployments$TEAM_PARAM" \
+              -H "Authorization: Bearer $VERCEL_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"name\":\"0ne-app\",\"deploymentId\":\"$LATEST\",\"target\":\"production\"}"
+
+            echo "✅ Redeploy triggered! New env vars will be available shortly."
+          else
+            echo "⚠️ Could not find latest deployment. New env vars will take effect on next manual deploy."
+          fi

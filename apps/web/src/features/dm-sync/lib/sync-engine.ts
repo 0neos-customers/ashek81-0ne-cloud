@@ -51,6 +51,16 @@ export interface InboundSyncResult {
   skipped: number
   errors: number
   errorDetails: SyncError[]
+  debugInfo?: {
+    currentUserId: string
+    conversations: Array<{
+      participantId: string
+      participantUsername: string
+      messageCount: number
+      inboundCount: number
+      outboundCount: number
+    }>
+  }
 }
 
 /**
@@ -116,6 +126,10 @@ export async function syncInboundMessages(
     skipped: 0,
     errors: 0,
     errorDetails: [],
+    debugInfo: {
+      currentUserId: '',
+      conversations: [],
+    },
   }
 
   console.log(`[Sync Engine] Starting inbound sync for user: ${userId}`)
@@ -228,15 +242,38 @@ async function processConversation(
   // Find/create GHL contact for this conversation's participant
   let ghlContactId: string | null = null
 
+  // Collect debug info
+  const inboundMessages = messages.filter(m => !m.isOutbound && m.senderId !== currentUserId)
+  const outboundMessages = messages.filter(m => m.isOutbound || m.senderId === currentUserId)
+
+  // Track skip reasons for debugging
+  const skipReasons: string[] = []
+
+  result.debugInfo?.conversations.push({
+    participantId: conversation.participant.id,
+    participantUsername: conversation.participant.username || 'unknown',
+    messageCount: messages.length,
+    inboundCount: inboundMessages.length,
+    outboundCount: outboundMessages.length,
+  })
+
+  if (!result.debugInfo?.currentUserId) {
+    result.debugInfo!.currentUserId = currentUserId
+  }
+
   for (const message of messages) {
     // Skip already synced messages (deduplication)
     if (syncedMessageIds.has(message.id)) {
+      console.log(`[Sync Engine] Skipping already synced: ${message.id}`)
+      skipReasons.push(`msg:${message.id}:already_synced`)
       result.skipped++
       continue
     }
 
     // Skip outbound messages (we sent them)
     if (message.isOutbound || message.senderId === currentUserId) {
+      console.log(`[Sync Engine] Skipping outbound: ${message.id} (senderId=${message.senderId}, isOutbound=${message.isOutbound})`)
+      skipReasons.push(`msg:${message.id}:outbound`)
       result.skipped++
       continue
     }
@@ -252,12 +289,30 @@ async function processConversation(
         )
         ghlContactId = contactResult.ghlContactId
 
+        // Track contact creation result in debug
+        if (result.debugInfo) {
+          const convDebug = result.debugInfo.conversations.find(
+            c => c.participantId === conversation.participant.id
+          )
+          if (convDebug) {
+            (convDebug as any).ghlContactId = ghlContactId || 'NOT_FOUND'
+            ;(convDebug as any).contactMatchMethod = contactResult.matchMethod || 'none'
+          }
+        }
+
         // Skip all messages if we can't create a contact (no email)
         if (!ghlContactId) {
-          console.log(
-            `[Sync Engine] Skipping conversation ${conversation.id} - no GHL contact (user has no email)`
-          )
+          skipReasons.push(`msg:${message.id}:no_ghl_contact`)
           result.skipped++
+          // Update debug with skip reasons before returning
+          if (result.debugInfo) {
+            const convDebug = result.debugInfo.conversations.find(
+              c => c.participantId === conversation.participant.id
+            )
+            if (convDebug) {
+              (convDebug as any).skipReasons = skipReasons
+            }
+          }
           return // Exit the entire conversation processing
         }
       }
@@ -266,6 +321,7 @@ async function processConversation(
       const messageContent = message.content || ''
       if (!messageContent.trim()) {
         console.log(`[Sync Engine] Skipping empty message ${message.id}`)
+        skipReasons.push(`msg:${message.id}:empty_content`)
         result.skipped++
         continue
       }
@@ -302,16 +358,39 @@ async function processConversation(
       }
 
       result.synced++
+      skipReasons.push(`msg:${message.id}:SYNCED`)
       console.log(`[Sync Engine] Synced message ${message.id} -> ${ghlMessageId}`)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
       console.error(`[Sync Engine] Error syncing message ${message.id}:`, errorMessage)
+      skipReasons.push(`msg:${message.id}:error:${errorMessage.substring(0, 50)}`)
       result.errors++
       result.errorDetails.push({
         messageId: message.id,
         conversationId: conversation.channelId,
         error: errorMessage,
       })
+    }
+  }
+
+  // Update debug with skip reasons and message previews
+  if (result.debugInfo) {
+    const convDebug = result.debugInfo.conversations.find(
+      c => c.participantId === conversation.participant.id
+    )
+    if (convDebug) {
+      // Store in local const to avoid TS confusion
+      const reasons = skipReasons
+      const convDebugAny = convDebug as any
+      convDebugAny.skipReasons = reasons
+      // Add message content preview for first few messages
+      convDebugAny.messagePreview = messages.slice(0, 3).map(m => ({
+        id: m.id,
+        contentLength: (m.content || '').length,
+        contentPreview: (m.content || '').substring(0, 50),
+        senderId: m.senderId,
+        isOutbound: m.isOutbound,
+      }))
     }
   }
 }
