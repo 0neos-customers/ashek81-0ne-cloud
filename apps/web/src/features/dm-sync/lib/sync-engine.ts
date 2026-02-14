@@ -23,8 +23,9 @@ import { ContactMapper, findOrCreateGhlContact } from './contact-mapper'
 import {
   GhlConversationClient,
   GhlConversationProviderClient,
-  createGhlConversationProviderClientFromEnv,
+  createGhlConversationProviderClientWithPersistence,
 } from './ghl-conversation'
+import { getStoredTokens } from './ghl-token-store'
 
 // =============================================================================
 // CONFIGURATION
@@ -150,9 +151,20 @@ export async function syncInboundMessages(
 
     // Initialize clients
     const skoolClient = createSkoolDmClient(syncConfig.skool_community_slug)
-    const ghlClient = createGhlConversationProviderClientFromEnv(
+
+    // Get stored tokens from database (falls back to env vars)
+    const storedTokens = await getStoredTokens(userId)
+
+    // Create GHL client with token persistence
+    const ghlClient = await createGhlConversationProviderClientWithPersistence(
+      userId,
       syncConfig.ghl_location_id,
-      process.env.GHL_CONVERSATION_PROVIDER_ID
+      process.env.GHL_CONVERSATION_PROVIDER_ID,
+      storedTokens ? {
+        refreshToken: storedTokens.refreshToken,
+        accessToken: storedTokens.accessToken,
+        expiresAt: storedTokens.expiresAt,
+      } : undefined
     )
 
     // Get Skool inbox (conversations)

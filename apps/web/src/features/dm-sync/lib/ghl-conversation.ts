@@ -43,6 +43,14 @@ export interface GhlMarketplaceConfig {
   conversationProviderId?: string
   /** Initial refresh token from OAuth authorization flow */
   refreshToken?: string
+  /** User ID for database token persistence */
+  userId?: string
+  /** Callback to save new tokens after refresh (for DB persistence) */
+  onTokenRefresh?: (tokens: {
+    accessToken: string
+    refreshToken: string
+    expiresIn: number
+  }) => Promise<void>
 }
 
 /**
@@ -115,6 +123,12 @@ export class GhlConversationProviderClient {
   private locationId: string
   private conversationProviderId: string
   private initialRefreshToken?: string
+  private userId?: string
+  private onTokenRefresh?: (tokens: {
+    accessToken: string
+    refreshToken: string
+    expiresIn: number
+  }) => Promise<void>
 
   constructor(config: GhlMarketplaceConfig) {
     this.clientId = config.clientId
@@ -122,6 +136,8 @@ export class GhlConversationProviderClient {
     this.locationId = config.locationId
     this.conversationProviderId = config.conversationProviderId || ''
     this.initialRefreshToken = config.refreshToken
+    this.userId = config.userId
+    this.onTokenRefresh = config.onTokenRefresh
   }
 
   /**
@@ -188,6 +204,9 @@ export class GhlConversationProviderClient {
 
   /**
    * Refresh an existing token
+   *
+   * IMPORTANT: GHL refresh tokens are single-use. After each refresh,
+   * the new refresh token MUST be persisted or it will be lost.
    */
   private async refreshToken(refreshToken: string): Promise<TokenCacheEntry> {
     const response = await fetch(GHL_OAUTH_URL, {
@@ -210,10 +229,28 @@ export class GhlConversationProviderClient {
 
     const data = (await response.json()) as OAuthTokenResponse
 
+    const newRefreshToken = data.refresh_token || refreshToken
+
+    // Persist the new tokens to database if callback provided
+    // This is CRITICAL because GHL refresh tokens are single-use
+    if (this.onTokenRefresh && data.refresh_token) {
+      try {
+        await this.onTokenRefresh({
+          accessToken: data.access_token,
+          refreshToken: data.refresh_token,
+          expiresIn: data.expires_in,
+        })
+        console.log('[GHL Provider] New tokens persisted to database')
+      } catch (error) {
+        console.error('[GHL Provider] Failed to persist tokens:', error)
+        // Don't throw - we can still use the token for this request
+      }
+    }
+
     return {
       accessToken: data.access_token,
       expiresAt: Date.now() + data.expires_in * 1000,
-      refreshToken: data.refresh_token || refreshToken,
+      refreshToken: newRefreshToken,
     }
   }
 
@@ -797,6 +834,61 @@ export function createGhlConversationProviderClientFromEnv(
     locationId,
     conversationProviderId,
     refreshToken,
+  })
+}
+
+/**
+ * Create a GHL Conversation Provider client with database-backed token persistence
+ *
+ * This version stores tokens in the database and automatically saves new tokens
+ * after each refresh. This is the preferred method for production use since
+ * GHL refresh tokens are single-use.
+ *
+ * @param userId - User ID for token storage
+ * @param locationId - GHL location ID
+ * @param conversationProviderId - Optional conversation provider ID
+ * @param storedTokens - Pre-fetched tokens from database (optional, will use env vars if not provided)
+ * @returns Configured GHL client with token persistence
+ */
+export async function createGhlConversationProviderClientWithPersistence(
+  userId: string,
+  locationId: string,
+  conversationProviderId?: string,
+  storedTokens?: { refreshToken: string; accessToken?: string; expiresAt?: Date }
+): Promise<GhlConversationProviderClient> {
+  // Dynamically import to avoid circular dependencies
+  const { saveTokens } = await import('./ghl-token-store')
+
+  const clientId = process.env.GHL_MARKETPLACE_CLIENT_ID
+  const clientSecret = process.env.GHL_MARKETPLACE_CLIENT_SECRET
+
+  if (!clientId || !clientSecret) {
+    throw new Error(
+      'GHL_MARKETPLACE_CLIENT_ID and GHL_MARKETPLACE_CLIENT_SECRET environment variables are required'
+    )
+  }
+
+  // Use stored tokens or fall back to environment
+  const refreshToken =
+    storedTokens?.refreshToken || process.env.GHL_MARKETPLACE_REFRESH_TOKEN
+
+  if (!refreshToken) {
+    throw new Error(
+      'GHL refresh token not found in database or environment. ' +
+      'Visit /api/auth/ghl/callback to authorize the app.'
+    )
+  }
+
+  return new GhlConversationProviderClient({
+    clientId,
+    clientSecret,
+    locationId,
+    conversationProviderId,
+    refreshToken,
+    userId,
+    onTokenRefresh: async (tokens) => {
+      await saveTokens(userId, tokens)
+    },
   })
 }
 

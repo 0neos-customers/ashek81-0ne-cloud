@@ -90,11 +90,26 @@ export {
   GhlConversationProviderClient,
   createGhlConversationProviderClient,
   createGhlConversationProviderClientFromEnv,
+  // Marketplace client with DB persistence (recommended)
+  createGhlConversationProviderClientWithPersistence,
   type GhlMarketplaceConfig,
   // Webhook utilities
   verifyGhlWebhookSignature,
   type GhlOutboundMessagePayload,
 } from './lib/ghl-conversation'
+
+// =============================================================================
+// GHL TOKEN STORE
+// =============================================================================
+
+export {
+  getStoredTokens,
+  saveTokens,
+  clearTokens,
+  tokensNeedRefresh,
+  type StoredTokens,
+  type TokenUpdate,
+} from './lib/ghl-token-store'
 
 // =============================================================================
 // SYNC ENGINE
