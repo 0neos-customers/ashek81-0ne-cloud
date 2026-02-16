@@ -167,8 +167,8 @@ export async function GET(request: NextRequest) {
       .or(`user_id.eq.${staffSkoolId},staff_skool_id.eq.${staffSkoolId}`)
       .eq('direction', 'outbound')
       .eq('status', 'pending')
-      // Pick up messages from: GHL (have ghl_message_id), hand-raiser campaigns, OR inbox (manual)
-      .or('ghl_message_id.not.is.null,source.eq.hand-raiser,source.eq.manual')
+      // Pick up messages from: GHL (have ghl_message_id OR source='ghl'), hand-raiser campaigns, OR inbox (manual)
+      .or('ghl_message_id.not.is.null,source.eq.ghl,source.eq.hand-raiser,source.eq.manual')
       .order('created_at', { ascending: true })
       .limit(limit)
 
