@@ -189,19 +189,16 @@ export async function POST(request: NextRequest) {
           raw_data: metric.rawData || null,
         }
 
-        // Use upsert to handle duplicates - update if exists
+        // Insert first, handle duplicate via update fallback
+        // (Can't use upsert because the unique index uses COALESCE(post_id, '') expression)
         const { error } = await supabase
           .from('skool_analytics')
-          .upsert(analyticsRow, {
-            onConflict: 'user_id,group_id,coalesce_post_id,metric_type,metric_date',
-            ignoreDuplicates: false,
-          })
+          .insert(analyticsRow)
 
         if (error) {
-          // If upsert fails, try insert with conflict handling
           if (error.code === '23505') {
-            // Duplicate - try update instead
-            const { error: updateError } = await supabase
+            // Duplicate - update existing record
+            const updateQuery = supabase
               .from('skool_analytics')
               .update({
                 metric_value: metric.metricValue,
@@ -212,7 +209,15 @@ export async function POST(request: NextRequest) {
               .eq('group_id', metric.groupId)
               .eq('metric_type', metric.metricType)
               .eq('metric_date', metricDate)
-              .is('post_id', metric.postId || null)
+
+            // Handle post_id NULL vs value
+            if (metric.postId) {
+              updateQuery.eq('post_id', metric.postId)
+            } else {
+              updateQuery.is('post_id', null)
+            }
+
+            const { error: updateError } = await updateQuery
 
             if (updateError) {
               console.error(`[Extension API] Error updating metric:`, updateError)
