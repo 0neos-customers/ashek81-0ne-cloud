@@ -147,9 +147,12 @@ export async function GET(request: NextRequest) {
 
     // Build conversation list with participant info
     let conversations: Conversation[] = Array.from(conversationMap.values()).map((conv) => {
-      const userInfo = userMap.get(conv.skool_user_id)
+      // Resolve the OTHER participant's skool_user_id (from inbound messages, not Jimmy's outbound)
+      const inboundMsg = conv.messages.find((m) => m.direction === 'inbound')
+      const participantUserId = inboundMsg?.skool_user_id || conv.skool_user_id
+
+      const userInfo = userMap.get(participantUserId)
       // Try sender_name from an INBOUND message that has a valid name (not "Unknown")
-      // Look through all inbound messages to find one with a real name
       const inboundMessageWithName = conv.messages.find(
         (m) => m.direction === 'inbound' && m.sender_name && m.sender_name !== 'Unknown'
       )
@@ -162,7 +165,7 @@ export async function GET(request: NextRequest) {
       return {
         conversation_id: conv.conversation_id,
         participant: {
-          skool_user_id: conv.skool_user_id,
+          skool_user_id: participantUserId,
           display_name: userInfo?.display_name || senderName || null,
           username: userInfo?.username || null,
         },
