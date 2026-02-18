@@ -82,6 +82,7 @@ export async function GET(request: NextRequest) {
 
     // Get contact mappings for participant names
     const skoolUserIds = [...new Set(messages.map((m) => m.skool_user_id))]
+
     const { data: mappings } = await supabase
       .from('dm_contact_mappings')
       .select('skool_user_id, skool_username, skool_display_name')
@@ -152,6 +153,7 @@ export async function GET(request: NextRequest) {
       const participantUserId = inboundMsg?.skool_user_id || conv.skool_user_id
 
       const userInfo = userMap.get(participantUserId)
+
       // Try sender_name from an INBOUND message that has a valid name (not "Unknown")
       const inboundMessageWithName = conv.messages.find(
         (m) => m.direction === 'inbound' && m.sender_name && m.sender_name !== 'Unknown'

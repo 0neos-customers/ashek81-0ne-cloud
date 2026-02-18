@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     const supabase = createServerClient()
     let updated = 0
 
-    // Batch update sender_name on messages where it's currently null/empty
+    // Batch update sender_name on ALL messages (both directions) where it's missing or "Unknown"
     for (const p of body.participants) {
       if (!p.conversationId || !p.name) continue
 
@@ -54,15 +54,14 @@ export async function POST(request: NextRequest) {
         .from('dm_messages')
         .update({ sender_name: p.name })
         .eq('skool_conversation_id', p.conversationId)
-        .eq('direction', 'inbound')
-        .or('sender_name.is.null,sender_name.eq.')
+        .or('sender_name.is.null,sender_name.eq.,sender_name.eq.Unknown')
         .select('id')
 
       updated += data?.length || 0
     }
 
     if (updated > 0) {
-      console.log(`[Extension API] Updated sender_name on ${updated} messages`)
+      console.log(`[Extension API] Backfilled sender_name on ${updated} messages`)
     }
 
     return NextResponse.json(
