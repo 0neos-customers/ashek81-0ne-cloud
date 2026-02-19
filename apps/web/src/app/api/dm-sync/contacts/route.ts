@@ -193,20 +193,24 @@ export async function GET(request: NextRequest) {
       .select('skool_user_id, staff_skool_id, skool_channel_id')
       .in('skool_user_id', pageSkoolUserIds)
 
-    // Fetch survey_answers from skool_members for this page's contacts
-    const { data: memberSurveys } = await supabase
+    // Fetch survey_answers, email, phone from skool_members for this page's contacts
+    const { data: memberData } = await supabase
       .from('skool_members')
-      .select('skool_user_id, survey_answers')
+      .select('skool_user_id, survey_answers, email, phone')
       .in('skool_user_id', pageSkoolUserIds)
 
     const surveyMap = new Map<string, Array<{ question: string; answer: string }> | null>()
-    memberSurveys?.forEach((m) => {
+    const memberEmailMap = new Map<string, string | null>()
+    const memberPhoneMap = new Map<string, string | null>()
+    memberData?.forEach((m) => {
       // Normalize: survey data can be array directly or nested {survey: [...]}
       let answers = m.survey_answers as unknown
       if (answers && typeof answers === 'object' && !Array.isArray(answers) && 'survey' in (answers as Record<string, unknown>)) {
         answers = (answers as { survey: unknown }).survey
       }
       surveyMap.set(m.skool_user_id, Array.isArray(answers) ? answers : null)
+      memberEmailMap.set(m.skool_user_id, m.email || null)
+      memberPhoneMap.set(m.skool_user_id, m.phone || null)
     })
 
     // Build channels map per user (with staff display name lookup)
@@ -297,8 +301,8 @@ export async function GET(request: NextRequest) {
         skool_display_name: mapping.skool_display_name,
         ghl_contact_id: mapping.ghl_contact_id,
         match_method: mapping.match_method as ContactActivity['match_method'],
-        email: mapping.email || null,
-        phone: mapping.phone || null,
+        email: mapping.email || memberEmailMap.get(mapping.skool_user_id) || null,
+        phone: mapping.phone || memberPhoneMap.get(mapping.skool_user_id) || null,
         contact_type: mapping.contact_type || null,
         created_at: mapping.created_at,
         skool_conversation_id: conversationMap.get(mapping.skool_user_id) || null,

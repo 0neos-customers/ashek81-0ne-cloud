@@ -45,6 +45,50 @@ export function useManualMatch() {
 /**
  * Hook for creating a synthetic GHL contact for an unmatched Skool user
  */
+/**
+ * Hook for updating any contact field (email, phone, name, username, ghl_contact_id)
+ */
+export function useContactUpdate() {
+  const { mutate } = useSWRConfig()
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const updateContact = async (
+    skoolUserId: string,
+    fields: Record<string, string>
+  ) => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch(`/api/dm-sync/contacts/${skoolUserId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fields),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to update contact')
+      }
+
+      await mutate((key: string) => typeof key === 'string' && key.startsWith('/api/dm-sync/contacts'))
+      return true
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error'
+      setError(message)
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return { updateContact, isLoading, error }
+}
+
+/**
+ * Hook for creating a synthetic GHL contact for an unmatched Skool user
+ */
 export function useSyntheticCreate() {
   const { mutate } = useSWRConfig()
   const [isLoading, setIsLoading] = useState(false)
