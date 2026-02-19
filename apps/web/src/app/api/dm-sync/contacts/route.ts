@@ -4,6 +4,12 @@ import { sanitizeForPostgrestFilter } from '@/lib/postgrest-utils'
 
 export const dynamic = 'force-dynamic'
 
+interface ContactChannelInfo {
+  staff_skool_id: string
+  skool_channel_id: string
+  staff_display_name: string | null
+}
+
 interface ContactActivity {
   id: string
   skool_user_id: string
@@ -16,6 +22,7 @@ interface ContactActivity {
   contact_type: 'community_member' | 'dm_contact' | 'unknown' | null
   created_at: string
   skool_conversation_id: string | null
+  channels: ContactChannelInfo[]
   stats: {
     inbound_count: number
     outbound_count: number
@@ -179,6 +186,37 @@ export async function GET(request: NextRequest) {
       .select('skool_user_id, direction, status, created_at, skool_conversation_id')
       .in('skool_user_id', pageSkoolUserIds)
 
+    // Fetch contact_channels for this page's contacts
+    const { data: contactChannels } = await supabase
+      .from('contact_channels')
+      .select('skool_user_id, staff_skool_id, skool_channel_id')
+      .in('skool_user_id', pageSkoolUserIds)
+
+    // Build channels map per user (with staff display name lookup)
+    const channelsMap = new Map<string, ContactChannelInfo[]>()
+
+    // Get staff display names
+    const staffIds = [...new Set(contactChannels?.map((c) => c.staff_skool_id) || [])]
+    const staffNameMap = new Map<string, string | null>()
+    if (staffIds.length > 0) {
+      const { data: staffUsers } = await supabase
+        .from('staff_users')
+        .select('skool_user_id, display_name')
+        .in('skool_user_id', staffIds)
+
+      staffUsers?.forEach((s) => staffNameMap.set(s.skool_user_id, s.display_name))
+    }
+
+    contactChannels?.forEach((ch) => {
+      const existing = channelsMap.get(ch.skool_user_id) || []
+      existing.push({
+        staff_skool_id: ch.staff_skool_id,
+        skool_channel_id: ch.skool_channel_id,
+        staff_display_name: staffNameMap.get(ch.staff_skool_id) || null,
+      })
+      channelsMap.set(ch.skool_user_id, existing)
+    })
+
     // Aggregate message stats per user
     const statsMap = new Map<string, {
       inbound_count: number
@@ -247,6 +285,7 @@ export async function GET(request: NextRequest) {
         contact_type: mapping.contact_type || null,
         created_at: mapping.created_at,
         skool_conversation_id: conversationMap.get(mapping.skool_user_id) || null,
+        channels: channelsMap.get(mapping.skool_user_id) || [],
         stats,
         ghl_location_id: config?.ghl_location_id || '',
         skool_community_slug: config?.skool_community_slug || '',
