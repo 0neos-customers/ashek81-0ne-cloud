@@ -12,8 +12,8 @@ import {
   Badge,
   Input,
 } from '@0ne/ui'
-import { Loader2, ExternalLink, Copy, Check } from 'lucide-react'
-import { useManualMatch, useSyntheticCreate } from '../hooks/use-contact-mutations'
+import { Loader2, ExternalLink, Copy, Check, Pencil } from 'lucide-react'
+import { useContactUpdate, useSyntheticCreate } from '../hooks/use-contact-mutations'
 import type { ContactActivity } from '../hooks/use-contact-activity'
 
 interface ContactEditDialogProps {
@@ -33,47 +33,133 @@ function ContactTypeBadge({ type }: { type: string | null }) {
   return <Badge className="bg-gray-100 text-gray-600">Unknown</Badge>
 }
 
+/**
+ * Editable field: value + pencil icon → click to edit.
+ * Empty → always shows open input.
+ */
+function EditableField({
+  label,
+  value,
+  placeholder,
+  onChange,
+  type = 'text',
+  suffix,
+}: {
+  label: string
+  value: string
+  placeholder: string
+  onChange: (val: string) => void
+  type?: string
+  suffix?: React.ReactNode
+}) {
+  const [editing, setEditing] = useState(false)
+  const hasValue = !!value.trim()
+
+  if (!hasValue || editing) {
+    return (
+      <div className="grid gap-1">
+        <label className="text-sm font-medium text-muted-foreground">{label}</label>
+        <div className="flex items-center gap-2">
+          <Input
+            type={type}
+            placeholder={placeholder}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onBlur={() => { if (hasValue) setEditing(false) }}
+            autoFocus={editing}
+            className="flex-1"
+          />
+          {suffix}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid gap-1">
+      <label className="text-sm font-medium text-muted-foreground">{label}</label>
+      <div className="flex items-center gap-2">
+        <span className="text-sm">{value}</span>
+        <button
+          onClick={() => setEditing(true)}
+          className="text-muted-foreground hover:text-foreground"
+          title={`Edit ${label.toLowerCase()}`}
+        >
+          <Pencil className="h-3.5 w-3.5" />
+        </button>
+        {suffix}
+      </div>
+    </div>
+  )
+}
+
 export function ContactEditDialog({
   open,
   onOpenChange,
   contact,
   onSuccess,
 }: ContactEditDialogProps) {
+  const [displayName, setDisplayName] = useState('')
+  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [ghlContactId, setGhlContactId] = useState('')
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { manualMatch, isLoading: isMatching } = useManualMatch()
+  const { updateContact, isLoading: isUpdating } = useContactUpdate()
   const { createSynthetic, isLoading: isCreating } = useSyntheticCreate()
 
   const isMatched = !!contact?.ghl_contact_id
-  const isSaving = isMatching || isCreating
+  const isSaving = isUpdating || isCreating
 
-  // Reset form when dialog opens — pre-fill with current GHL ID if matched
+  // Reset form when dialog opens
   useEffect(() => {
     if (open && contact) {
+      setDisplayName(contact.skool_display_name || '')
+      setUsername(contact.skool_username || '')
+      setEmail(contact.email || '')
+      setPhone(contact.phone || '')
       setGhlContactId(contact.ghl_contact_id || '')
       setCopied(false)
       setError(null)
     }
   }, [open, contact])
 
-  const handleManualMatch = async () => {
-    if (!contact || !ghlContactId.trim()) return
+  if (!contact) return null
+
+  const getChangedFields = (): Record<string, string> => {
+    const changes: Record<string, string> = {}
+    if (displayName.trim() !== (contact.skool_display_name || ''))
+      changes.display_name = displayName.trim()
+    if (username.trim() !== (contact.skool_username || ''))
+      changes.username = username.trim()
+    if (email.trim() !== (contact.email || ''))
+      changes.email = email.trim()
+    if (phone.trim() !== (contact.phone || ''))
+      changes.phone = phone.trim()
+    if (ghlContactId.trim() !== (contact.ghl_contact_id || ''))
+      changes.ghl_contact_id = ghlContactId.trim()
+    return changes
+  }
+
+  const hasChanges = Object.keys(getChangedFields()).length > 0
+
+  const handleSave = async () => {
+    const changes = getChangedFields()
+    if (Object.keys(changes).length === 0) return
     setError(null)
 
-    const success = await manualMatch(contact.skool_user_id, ghlContactId.trim())
+    const success = await updateContact(contact.skool_user_id, changes)
     if (success) {
       onSuccess?.()
       onOpenChange(false)
     } else {
-      setError('Failed to match contact')
+      setError('Failed to save changes')
     }
   }
 
   const handleSyntheticCreate = async () => {
-    if (!contact) return
     setError(null)
-
     const result = await createSynthetic(contact.skool_user_id)
     if (result) {
       onSuccess?.()
@@ -89,38 +175,39 @@ export function ContactEditDialog({
     setTimeout(() => setCopied(false), 2000)
   }
 
-  if (!contact) return null
-
-  const displayName = contact.skool_display_name || contact.skool_username || 'Unknown'
-  const hasChangedGhlId = ghlContactId.trim() !== (contact.ghl_contact_id || '')
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>Edit Contact</DialogTitle>
           <DialogDescription>
-            View and edit contact details. Change the GHL Contact ID to re-match.
+            View and edit contact details. Click the pencil icon to edit a field.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
           {/* Name */}
-          <div className="grid gap-1">
-            <label className="text-sm font-medium text-muted-foreground">Name</label>
-            <div className="flex items-center gap-2">
-              <span className="text-sm">{displayName}</span>
+          <div>
+            <EditableField
+              label="Name"
+              value={displayName}
+              placeholder="Display name..."
+              onChange={(val) => { setDisplayName(val); setError(null) }}
+            />
+            <div className="mt-1">
               <ContactTypeBadge type={contact.contact_type} />
             </div>
           </div>
 
           {/* Username */}
-          <div className="grid gap-1">
-            <label className="text-sm font-medium text-muted-foreground">Username</label>
-            <span className="text-sm">{contact.skool_username ? `@${contact.skool_username}` : '-'}</span>
-          </div>
+          <EditableField
+            label="Username"
+            value={username}
+            placeholder="Skool username..."
+            onChange={(val) => { setUsername(val); setError(null) }}
+          />
 
-          {/* Skool User ID */}
+          {/* Skool User ID (read-only) */}
           <div className="grid gap-1">
             <label className="text-sm font-medium text-muted-foreground">Skool User ID</label>
             <div className="flex items-center gap-2">
@@ -136,20 +223,22 @@ export function ContactEditDialog({
           </div>
 
           {/* Email */}
-          {contact.email && (
-            <div className="grid gap-1">
-              <label className="text-sm font-medium text-muted-foreground">Email</label>
-              <span className="text-sm">{contact.email}</span>
-            </div>
-          )}
+          <EditableField
+            label="Email"
+            value={email}
+            placeholder="Email address..."
+            onChange={(val) => { setEmail(val); setError(null) }}
+            type="email"
+          />
 
           {/* Phone */}
-          {contact.phone && (
-            <div className="grid gap-1">
-              <label className="text-sm font-medium text-muted-foreground">Phone</label>
-              <span className="text-sm">{contact.phone}</span>
-            </div>
-          )}
+          <EditableField
+            label="Phone"
+            value={phone}
+            placeholder="Phone number..."
+            onChange={(val) => { setPhone(val); setError(null) }}
+            type="tel"
+          />
 
           {/* Survey Answers */}
           {contact.survey_answers && contact.survey_answers.length > 0 && (
@@ -159,30 +248,21 @@ export function ContactEditDialog({
                 {contact.survey_answers.map((qa, i) => (
                   <div key={i}>
                     <p className="text-xs font-medium text-muted-foreground">{qa.question}</p>
-                    <p className="text-sm">{qa.answer || '—'}</p>
+                    <p className="text-sm">{qa.answer || '\u2014'}</p>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* GHL Contact ID — always editable */}
-          <div className="grid gap-2">
-            <label htmlFor="ghl-id" className="text-sm font-medium">
-              GHL Contact ID
-            </label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="ghl-id"
-                placeholder="Paste GHL contact ID here..."
-                value={ghlContactId}
-                onChange={(e) => {
-                  setGhlContactId(e.target.value)
-                  setError(null)
-                }}
-                className="flex-1"
-              />
-              {isMatched && contact.ghl_location_id && contact.ghl_contact_id && (
+          {/* GHL Contact ID */}
+          <EditableField
+            label="GHL Contact ID"
+            value={ghlContactId}
+            placeholder="Paste GHL contact ID here..."
+            onChange={(val) => { setGhlContactId(val); setError(null) }}
+            suffix={
+              isMatched && contact.ghl_location_id && contact.ghl_contact_id ? (
                 <a
                   href={`https://app.gohighlevel.com/v2/location/${contact.ghl_location_id}/contacts/detail/${contact.ghl_contact_id}`}
                   target="_blank"
@@ -192,14 +272,9 @@ export function ContactEditDialog({
                 >
                   <ExternalLink className="h-4 w-4" />
                 </a>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {isMatched
-                ? 'Change this ID to re-match to a different GHL contact.'
-                : 'Find the contact in GHL and paste their ID to manually link them.'}
-            </p>
-          </div>
+              ) : undefined
+            }
+          />
 
           {/* Error */}
           {error && (
@@ -228,11 +303,11 @@ export function ContactEditDialog({
           )}
 
           <Button
-            onClick={handleManualMatch}
-            disabled={isSaving || !ghlContactId.trim() || !hasChangedGhlId}
+            onClick={handleSave}
+            disabled={isSaving || !hasChanges}
           >
-            {isMatching && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isMatched ? 'Update Match' : 'Match to GHL'}
+            {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Changes
           </Button>
         </DialogFooter>
       </DialogContent>
