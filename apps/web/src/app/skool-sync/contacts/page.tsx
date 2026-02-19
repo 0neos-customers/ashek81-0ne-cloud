@@ -370,9 +370,9 @@ function MatchedTable({
 
             return (
               <TableRow key={contact.id}>
-                <TableCell>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-medium text-sm">
+                <TableCell className="max-w-[200px]">
+                  <div className="flex items-center gap-1.5 overflow-hidden">
+                    <span className="font-medium text-sm truncate">
                       {displayName || (
                         <span className="flex items-center gap-1 text-muted-foreground">
                           <HelpCircle className="h-3 w-3" />
@@ -462,9 +462,9 @@ function UnmatchedTable({
 
             return (
               <TableRow key={contact.id}>
-                <TableCell>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-medium text-sm">
+                <TableCell className="max-w-[200px]">
+                  <div className="flex items-center gap-1.5 overflow-hidden">
+                    <span className="font-medium text-sm truncate">
                       {displayName || (
                         <span className="flex items-center gap-1 text-muted-foreground">
                           <HelpCircle className="h-3 w-3" />

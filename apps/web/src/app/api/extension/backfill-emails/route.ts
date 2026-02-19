@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
       phones_extracted: 0,
       mappings_updated: 0,
       ghl_matched: 0,
+      names_cleaned: 0,
     }
 
     // =========================================================================
@@ -185,6 +186,55 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`[Backfill] Updated ${stats.mappings_updated} dm_contact_mappings`)
+
+    // =========================================================================
+    // Step 2b: Clean up garbage display names in dm_contact_mappings
+    // Garbage = contains URLs, commas, is >50 chars, or looks like bio text
+    // Replace with username-derived name or skool_members display_name
+    // =========================================================================
+
+    const allMappingsForCleanup = await fetchAllRows<{
+      skool_user_id: string
+      skool_display_name: string | null
+      skool_username: string | null
+    }>(supabase, 'dm_contact_mappings', 'skool_user_id, skool_display_name, skool_username')
+
+    for (const mapping of allMappingsForCleanup) {
+      const name = mapping.skool_display_name
+      if (!name) continue
+
+      // Detect garbage: URLs, very long, commas, or contains "http"
+      const isGarbage = name.length > 50 ||
+        name.includes('http') ||
+        name.includes(',') ||
+        name.includes('assets.skool.com')
+
+      if (isGarbage) {
+        // Try to get a clean name from skool_members
+        const { data: member } = await supabase
+          .from('skool_members')
+          .select('display_name, skool_username')
+          .eq('skool_user_id', mapping.skool_user_id)
+          .single()
+
+        // Use member display_name if it's clean, otherwise fall back to username
+        let cleanName = mapping.skool_username || null
+        if (member?.display_name && member.display_name.length <= 50 && !member.display_name.includes('http')) {
+          cleanName = member.display_name
+        }
+
+        await supabase
+          .from('dm_contact_mappings')
+          .update({
+            skool_display_name: cleanName,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('skool_user_id', mapping.skool_user_id)
+        stats.names_cleaned++
+      }
+    }
+
+    console.log(`[Backfill] Cleaned ${stats.names_cleaned} garbage display names`)
 
     // =========================================================================
     // Step 3: Auto-match unmatched members with email against GHL
