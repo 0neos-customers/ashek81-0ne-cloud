@@ -123,23 +123,26 @@ export async function POST(request: NextRequest) {
 
       try {
         // Map to existing dm_messages schema
-        // Extension-captured messages need GHL sync, so status='pending' and ghl_message_id=null
+        // Extension-captured inbound messages need GHL sync → status='pending'
+        // Extension-captured outbound messages are already sent in Skool → status='synced'
+        const isOutbound = msg.isOwnMessage
         const messageRow = {
           clerk_user_id: clerkUserId,
           skool_conversation_id: conversationId,
           skool_message_id: msg.id,
           skool_user_id: msg.senderId,
           sender_name: msg.senderName || null, // Store sender name for contact matching
-          direction: msg.isOwnMessage ? 'outbound' : 'inbound',
+          direction: isOutbound ? 'outbound' : 'inbound',
           message_text: msg.content,
-          status: 'pending', // Extension messages need GHL sync
-          synced_at: null, // Will be set when pushed to GHL
+          status: isOutbound ? 'synced' : 'pending', // Outbound already sent; inbound needs GHL sync
+          synced_at: isOutbound ? new Date().toISOString() : null,
+          source: 'extension', // Extension-scraped, NOT from GHL/manual/hand-raiser
           // Use original message timestamp, not insertion time
           created_at: msg.timestamp || new Date().toISOString(),
           // ghl_message_id will be null until synced to GHL
           // Phase 5: Multi-staff attribution
-          staff_skool_id: msg.isOwnMessage ? staffSkoolId : null,
-          staff_display_name: msg.isOwnMessage ? (staffDisplayName || null) : null,
+          staff_skool_id: isOutbound ? staffSkoolId : null,
+          staff_display_name: isOutbound ? (staffDisplayName || null) : null,
         }
 
         const { error } = await supabase.from('dm_messages').insert(messageRow)
