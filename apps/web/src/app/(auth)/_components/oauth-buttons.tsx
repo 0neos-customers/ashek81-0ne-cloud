@@ -67,27 +67,12 @@ export function OAuthButtons({ mode }: OAuthButtonsProps) {
 
   if (!isLoaded) return null
 
-  // Read enabled OAuth providers from Clerk's environment config
-  const thirdPartyProviders =
-    (mode === 'sign-in'
-      ? signIn?.supportedFirstFactors
-      : signUp?.supportedThirdPartyProviders) || []
-
-  // Extract OAuth strategy names
+  // Both modes use signIn.supportedFirstFactors to discover OAuth providers
   const oauthStrategies: string[] = []
-
-  if (mode === 'sign-in') {
-    for (const factor of thirdPartyProviders as { strategy: string }[]) {
-      if (factor.strategy?.startsWith('oauth_')) {
-        oauthStrategies.push(factor.strategy as string)
-      }
-    }
-  } else {
-    // signUp.supportedThirdPartyProviders is already an array of strategy strings
-    for (const provider of thirdPartyProviders as unknown as string[]) {
-      if (typeof provider === 'string' && provider.startsWith('oauth_')) {
-        oauthStrategies.push(provider as string)
-      }
+  const factors = signIn?.supportedFirstFactors || []
+  for (const factor of factors) {
+    if (factor.strategy?.startsWith('oauth_')) {
+      oauthStrategies.push(factor.strategy)
     }
   }
 
