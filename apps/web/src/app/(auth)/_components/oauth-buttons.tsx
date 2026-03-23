@@ -60,10 +60,7 @@ export function OAuthButtons({ mode }: OAuthButtonsProps) {
 
   // Filter to only show providers that are enabled in Clerk
   const enabledProviders = socialConfig
-    ? providers.filter((p) => {
-        const key = p.strategy.replace('oauth_', '')
-        return socialConfig[key]?.enabled
-      })
+    ? providers.filter((p) => socialConfig[p.strategy]?.enabled)
     : providers // If we can't read config, show all and let Clerk handle errors
 
   if (enabledProviders.length === 0) return null
