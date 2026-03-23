@@ -1,7 +1,6 @@
 'use client'
 
 import { useSignIn, useSignUp } from '@clerk/nextjs'
-import type { OAuthStrategy } from '@clerk/types'
 import { Button } from '@0ne/ui'
 import { Loader2 } from 'lucide-react'
 import { useState } from 'react'
@@ -75,37 +74,37 @@ export function OAuthButtons({ mode }: OAuthButtonsProps) {
       : signUp?.supportedThirdPartyProviders) || []
 
   // Extract OAuth strategy names
-  const oauthStrategies: OAuthStrategy[] = []
+  const oauthStrategies: string[] = []
 
   if (mode === 'sign-in') {
     for (const factor of thirdPartyProviders as { strategy: string }[]) {
       if (factor.strategy?.startsWith('oauth_')) {
-        oauthStrategies.push(factor.strategy as OAuthStrategy)
+        oauthStrategies.push(factor.strategy as string)
       }
     }
   } else {
     // signUp.supportedThirdPartyProviders is already an array of strategy strings
     for (const provider of thirdPartyProviders as unknown as string[]) {
       if (typeof provider === 'string' && provider.startsWith('oauth_')) {
-        oauthStrategies.push(provider as OAuthStrategy)
+        oauthStrategies.push(provider as string)
       }
     }
   }
 
   if (oauthStrategies.length === 0) return null
 
-  const handleOAuth = async (strategy: OAuthStrategy) => {
+  const handleOAuth = async (strategy: string) => {
     setLoadingProvider(strategy)
     try {
       if (mode === 'sign-in' && signIn) {
         await signIn.authenticateWithRedirect({
-          strategy,
+          strategy: strategy as Parameters<typeof signIn.authenticateWithRedirect>[0]['strategy'],
           redirectUrl: '/sign-in/sso-callback',
           redirectUrlComplete: '/',
         })
       } else if (mode === 'sign-up' && signUp) {
         await signUp.authenticateWithRedirect({
-          strategy,
+          strategy: strategy as Parameters<typeof signUp.authenticateWithRedirect>[0]['strategy'],
           redirectUrl: '/sign-up/sso-callback',
           redirectUrlComplete: '/onboarding',
         })
