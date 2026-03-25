@@ -17,7 +17,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </p>
         </div>
         <p className="text-sm text-white/30">
-          project0ne.ai
+          0neos.com
         </p>
       </div>
 

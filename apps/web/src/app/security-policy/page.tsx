@@ -68,7 +68,7 @@ export default function InformationSecurityPolicy() {
             <ul className="list-disc pl-6 space-y-2">
               <li>
                 The 0ne Cloud web application hosted on Vercel
-                (app.project0ne.ai).
+                (app.0neos.com).
               </li>
               <li>The Supabase PostgreSQL database and all stored data.</li>
               <li>

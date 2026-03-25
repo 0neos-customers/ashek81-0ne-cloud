@@ -17,7 +17,7 @@
  *   2. Paste the same value here as API_KEY
  *   3. Both values MUST match or the widget returns 401
  */
-const API_URL = "https://app.project0ne.ai/api/widget/metrics";
+const API_URL = "https://app.0neos.com/api/widget/metrics";
 const API_KEY = "YOUR_WIDGET_API_KEY_HERE"; // Set in Vercel env as WIDGET_API_KEY
 
 /**

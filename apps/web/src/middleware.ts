@@ -2,14 +2,28 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { canAccessApp, type AppId } from '@0ne/auth/permissions'
 
-// Redirect root domain to app subdomain (temporary until marketing site exists)
+// Redirect all domains to app.0neos.com (canonical)
 function handleDomainRedirect(request: NextRequest): NextResponse | null {
   const hostname = request.headers.get('host') || ''
 
-  // Redirect project0ne.ai (not app.project0ne.ai) to app subdomain
-  if (hostname === 'project0ne.ai' || hostname === 'www.project0ne.ai') {
+  // These are the canonical app subdomain — no redirect needed
+  if (hostname === 'app.0neos.com') {
+    return null
+  }
+
+  // All other 0ne domains redirect to the canonical app subdomain
+  const redirectDomains = [
+    '0neos.com', 'www.0neos.com',
+    'project0ne.ai', 'www.project0ne.ai', 'app.project0ne.ai',
+    'project0ne.com', 'www.project0ne.com',
+    '0necloud.com', 'www.0necloud.com',
+    '0nesync.com', 'www.0nesync.com',
+    'install0ne.com', 'www.install0ne.com',
+  ]
+
+  if (redirectDomains.includes(hostname)) {
     const url = request.nextUrl.clone()
-    url.host = 'app.project0ne.ai'
+    url.host = 'app.0neos.com'
     return NextResponse.redirect(url, 307)
   }
 

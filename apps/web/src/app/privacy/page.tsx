@@ -28,7 +28,7 @@ export default function PrivacyPolicy() {
               PROJECT1.ai and 0ne Cloud (&quot;we,&quot; &quot;our,&quot; or
               &quot;us&quot;) are operated by Designed With Pixels LLC. This Privacy Policy
               explains how we collect, use, and protect your information when you
-              use our websites (project1.ai and project0ne.ai) and related
+              use our websites (project1.ai and 0neos.com) and related
               services.
             </p>
           </section>
