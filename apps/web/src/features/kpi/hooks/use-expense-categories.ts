@@ -12,11 +12,11 @@ export interface ExpenseCategoryData {
   slug: string
   color: string | null
   description: string | null
-  is_system: boolean
-  display_order: number
-  created_at: string
-  updated_at: string
-  expense_count: number
+  isSystem: boolean
+  displayOrder: number
+  createdAt: string
+  updatedAt: string
+  expenseCount: number
 }
 
 export interface ExpenseCategoriesResponse {

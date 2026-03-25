@@ -14,24 +14,22 @@ import type { FunnelStage } from './config'
 export interface DailyAggregate {
   id: string
   date: string
-  campaign_id: string | null
+  campaignId: string | null
   source: string | null
-  new_members: number
-  new_hand_raisers: number
-  new_qualified_premium: number
-  new_qualified_vip: number
-  new_offer_made: number
-  new_offer_seen: number
-  new_vip: number
-  new_premium: number
-  total_revenue: number
-  vip_revenue: number
-  premium_revenue: number
-  success_fee_revenue: number
-  ad_spend: number
+  newLeads: number
+  newHandRaisers: number
+  newQualified: number
+  newVip: number
+  newPremium: number
+  newFunded: number
+  totalRevenue: number
+  vipRevenue: number
+  premiumRevenue: number
+  successFeeRevenue: number
+  adSpend: number
   expenses: number
-  total_funded_amount: number
-  funded_count: number
+  totalFundedAmount: number
+  fundedCount: number
 }
 
 export interface AggregatedTotals {
@@ -60,34 +58,34 @@ export interface AggregatedTotals {
 
 export interface DimensionSource {
   source: string
-  display_name: string
-  contact_count: number
-  last_seen_date: string | null
-  is_active: boolean
+  displayName: string
+  contactCount: number
+  lastSeenDate: string | null
+  isActive: boolean
 }
 
 export interface DimensionStage {
   stage: string
-  display_name: string
+  displayName: string
   color: string
-  sort_order: number
-  contact_count: number
+  sortOrder: number
+  contactCount: number
 }
 
 export interface DimensionCampaign {
-  campaign_id: string
-  campaign_name: string
-  contact_count: number
-  is_active: boolean
+  campaignId: string
+  campaignName: string
+  contactCount: number
+  isActive: boolean
 }
 
 export interface DimensionExpenseCategory {
   category: string
-  display_name: string | null
+  displayName: string | null
   color: string | null
-  expense_count: number
-  total_amount: number
-  is_system: boolean
+  expenseCount: number
+  totalAmount: number
+  isSystem: boolean
 }
 
 // =============================================================================
@@ -95,26 +93,26 @@ export interface DimensionExpenseCategory {
 // =============================================================================
 
 export interface WeeklyTrend {
-  week_start: string
-  week_number: string
+  weekStart: string
+  weekNumber: string
   source: string | null
-  campaign_id: string | null
-  new_leads: number
-  new_hand_raisers: number
-  new_qualified: number
-  new_clients: number
-  total_revenue: number
-  ad_spend: number
-  cost_per_lead: number | null
-  cost_per_client: number | null
+  campaignId: string | null
+  newLeads: number
+  newHandRaisers: number
+  newQualified: number
+  newClients: number
+  totalRevenue: number
+  adSpend: number
+  costPerLead: number | null
+  costPerClient: number | null
 }
 
 export interface DailyExpenseByCategory {
   date: string
   category: string
   amount: number
-  is_system: boolean
-  expense_count: number
+  isSystem: boolean
+  expenseCount: number
 }
 
 // =============================================================================

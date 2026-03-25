@@ -895,7 +895,7 @@ export default function ExpensesPage() {
                               style={{ backgroundColor: row.color || '#6b7280' }}
                             />
                             <span className="font-medium">{value as string}</span>
-                            {row.is_system && (
+                            {row.isSystem && (
                               <span title="System category">
                                 <Lock className="h-3 w-3 text-blue-600" />
                               </span>
@@ -931,7 +931,7 @@ export default function ExpensesPage() {
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            {!row.is_system && (
+                            {!row.isSystem && (
                               <Button
                                 variant="ghost"
                                 size="sm"

@@ -133,23 +133,23 @@ function filterByDateRange(
 function sumAggregates(aggregates: DailyAggregate[]): AggregatedTotals {
   return aggregates.reduce(
     (acc, agg) => ({
-      newMembers: acc.newMembers + (agg.new_members || 0),
-      newHandRaisers: acc.newHandRaisers + (agg.new_hand_raisers || 0),
-      newQualifiedPremium: acc.newQualifiedPremium + (agg.new_qualified_premium || 0),
-      newQualifiedVip: acc.newQualifiedVip + (agg.new_qualified_vip || 0),
-      newOfferMade: acc.newOfferMade + (agg.new_offer_made || 0),
-      newOfferSeen: acc.newOfferSeen + (agg.new_offer_seen || 0),
-      newVip: acc.newVip + (agg.new_vip || 0),
-      newPremium: acc.newPremium + (agg.new_premium || 0),
-      newClients: acc.newClients + (agg.new_vip || 0) + (agg.new_premium || 0),
-      totalRevenue: acc.totalRevenue + (agg.total_revenue || 0),
-      vipRevenue: acc.vipRevenue + (agg.vip_revenue || 0),
-      premiumRevenue: acc.premiumRevenue + (agg.premium_revenue || 0),
-      successFeeRevenue: acc.successFeeRevenue + (agg.success_fee_revenue || 0),
-      adSpend: acc.adSpend + (agg.ad_spend || 0),
+      newMembers: acc.newMembers + (agg.newLeads || 0),
+      newHandRaisers: acc.newHandRaisers + (agg.newHandRaisers || 0),
+      newQualifiedPremium: acc.newQualifiedPremium + (agg.newQualified || 0),
+      newQualifiedVip: acc.newQualifiedVip,
+      newOfferMade: acc.newOfferMade,
+      newOfferSeen: acc.newOfferSeen,
+      newVip: acc.newVip + (agg.newVip || 0),
+      newPremium: acc.newPremium + (agg.newPremium || 0),
+      newClients: acc.newClients + (agg.newVip || 0) + (agg.newPremium || 0),
+      totalRevenue: acc.totalRevenue + (agg.totalRevenue || 0),
+      vipRevenue: acc.vipRevenue + (agg.vipRevenue || 0),
+      premiumRevenue: acc.premiumRevenue + (agg.premiumRevenue || 0),
+      successFeeRevenue: acc.successFeeRevenue + (agg.successFeeRevenue || 0),
+      adSpend: acc.adSpend + (agg.adSpend || 0),
       expenses: acc.expenses + (agg.expenses || 0),
-      totalFundedAmount: acc.totalFundedAmount + (agg.total_funded_amount || 0),
-      fundedCount: acc.fundedCount + (agg.funded_count || 0),
+      totalFundedAmount: acc.totalFundedAmount + (agg.totalFundedAmount || 0),
+      fundedCount: acc.fundedCount + (agg.fundedCount || 0),
     }),
     {
       newMembers: 0,
@@ -206,7 +206,7 @@ function getFilteredAggregates(
     // Both filters - use the all array and filter
     aggregates = dataset.aggregates.all.filter((agg) => {
       if (agg.source && sources.length > 0 && !sources.includes(agg.source)) return false
-      if (agg.campaign_id && campaigns.length > 0 && !campaigns.includes(agg.campaign_id)) return false
+      if (agg.campaignId && campaigns.length > 0 && !campaigns.includes(agg.campaignId)) return false
       return true
     })
   }
@@ -319,16 +319,16 @@ export function useDerivedMetrics(): DerivedMetrics | null {
         },
       },
       sparklines: {
-        revenue: sparklineData.map((d) => d.total_revenue || 0),
-        leads: sparklineData.map((d) => d.new_members || 0),
-        clients: sparklineData.map((d) => (d.new_vip || 0) + (d.new_premium || 0)),
-        fundedAmount: sparklineData.map((d) => d.total_funded_amount || 0),
+        revenue: sparklineData.map((d) => d.totalRevenue || 0),
+        leads: sparklineData.map((d) => d.newLeads || 0),
+        clients: sparklineData.map((d) => (d.newVip || 0) + (d.newPremium || 0)),
+        fundedAmount: sparklineData.map((d) => d.totalFundedAmount || 0),
         costPerLead: sparklineData.map((d) =>
-          d.new_members > 0 ? Number(((d.ad_spend || 0) / d.new_members).toFixed(2)) : 0
+          d.newLeads > 0 ? Number(((d.adSpend || 0) / d.newLeads).toFixed(2)) : 0
         ),
         costPerClient: sparklineData.map((d) => {
-          const clients = (d.new_vip || 0) + (d.new_premium || 0)
-          return clients > 0 ? Number(((d.ad_spend || 0) / clients).toFixed(2)) : 0
+          const clients = (d.newVip || 0) + (d.newPremium || 0)
+          return clients > 0 ? Number(((d.adSpend || 0) / clients).toFixed(2)) : 0
         }),
       },
     }
@@ -367,7 +367,7 @@ export function useWeeklyTrends(): WeeklyTrend[] | null {
 
     // Filter by date range
     return trends.filter(
-      (trend) => trend.week_start >= dateRange.startDate && trend.week_start <= dateRange.endDate
+      (trend) => trend.weekStart >= dateRange.startDate && trend.weekStart <= dateRange.endDate
     )
   })
 }

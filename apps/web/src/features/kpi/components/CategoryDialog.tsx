@@ -101,9 +101,9 @@ export function CategoryDialog({
               placeholder="e.g., Content Creation"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              disabled={category?.is_system}
+              disabled={category?.isSystem}
             />
-            {category?.is_system && (
+            {category?.isSystem && (
               <p className="text-xs text-muted-foreground">
                 System category names cannot be changed.
               </p>
