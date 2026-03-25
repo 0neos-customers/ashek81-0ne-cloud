@@ -1,14 +1,14 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { neon } from '@neondatabase/serverless'
+import { drizzle } from 'drizzle-orm/neon-http'
+import * as schema from './schema'
 
-export function createServerClient() {
-  return createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    }
-  )
-}
+const sql = neon(process.env.POSTGRES_URL ?? process.env.DATABASE_URL!)
+export const db = drizzle(sql, { schema })
+export type Db = typeof db
+
+// Re-export Drizzle utilities for convenience
+export { eq, ne, gt, gte, lt, lte, and, or, not, inArray, isNull, isNotNull, desc, asc, count, sql as rawSql, ilike, like, between } from 'drizzle-orm'
+export * from './schema'
+
+// Legacy Supabase client — remove after all routes are migrated
+export { createServerClient } from './server-legacy'
