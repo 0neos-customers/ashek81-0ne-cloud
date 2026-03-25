@@ -32,9 +32,9 @@ export type {
 // Export SkoolCategory from types with alias to avoid conflict
 export type { SkoolCategory as SkoolApiCategory } from './types'
 
-// Lib
+// Lib (client-safe only — server functions imported directly from lib/)
 export * from './lib/config'
-export * from './lib/metrics-sync'
+export type { SkoolMetricsSnapshot } from './lib/types'
 
 // Hooks (Post Scheduler)
 export * from './hooks'

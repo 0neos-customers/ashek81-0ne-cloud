@@ -33,6 +33,7 @@ export const numericNumber = customType<{
     return Number(value)
   },
   toDriver(value: number): string {
+    if (!Number.isFinite(value)) throw new Error(`Invalid numeric value: ${value}`)
     return String(value)
   },
 })
