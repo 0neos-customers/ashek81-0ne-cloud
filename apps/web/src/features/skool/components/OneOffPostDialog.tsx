@@ -26,18 +26,18 @@ import type { OneOffPostStatus } from '@0ne/db'
 
 export interface OneOffPostFormData {
   id?: string
-  group_slug: string
+  groupSlug: string
   category: string
-  category_id: string | null
-  scheduled_date: string
-  scheduled_time: string
+  categoryId: string | null
+  scheduledDate: string
+  scheduledTime: string
   timezone: string
   title: string
   body: string
-  image_url: string
-  video_url: string
-  campaign_id: string | null
-  send_email_blast: boolean
+  imageUrl: string
+  videoUrl: string
+  campaignId: string | null
+  sendEmailBlast: boolean
   status: OneOffPostStatus
 }
 
@@ -50,18 +50,18 @@ interface OneOffPostDialogProps {
 }
 
 const defaultFormData: OneOffPostFormData = {
-  group_slug: 'fruitful',
+  groupSlug: 'fruitful',
   category: '',
-  category_id: null,
-  scheduled_date: '',
-  scheduled_time: '09:00',
+  categoryId: null,
+  scheduledDate: '',
+  scheduledTime: '09:00',
   timezone: 'America/New_York',
   title: '',
   body: '',
-  image_url: '',
-  video_url: '',
-  campaign_id: null,
-  send_email_blast: false,
+  imageUrl: '',
+  videoUrl: '',
+  campaignId: null,
+  sendEmailBlast: false,
   status: 'pending',
 }
 
@@ -78,7 +78,7 @@ export function OneOffPostDialog({
   const [videoPickerOpen, setVideoPickerOpen] = useState(false)
   const { categories, isLoading: categoriesLoading, isRefreshing, refresh: refreshCategories, source } = useCategories()
   const { campaigns } = useCampaigns({ activeOnly: true })
-  const { emailBlastStatus } = useGroupSettings(formData.group_slug)
+  const { emailBlastStatus } = useGroupSettings(formData.groupSlug)
   const isEditMode = !!post?.id
 
   // Reset form when dialog opens/closes or post changes
@@ -90,24 +90,24 @@ export function OneOffPostDialog({
       if (post.id) {
         // Edit mode - parse from ISO string if needed
         // The form data should already have date/time separated
-        scheduledDate = post.scheduled_date
-        scheduledTime = post.scheduled_time
+        scheduledDate = post.scheduledDate
+        scheduledTime = post.scheduledTime
       }
 
       setFormData({
         id: post.id,
-        group_slug: post.group_slug || 'fruitful',
+        groupSlug: post.groupSlug || 'fruitful',
         category: post.category || '',
-        category_id: post.category_id || null,
-        scheduled_date: scheduledDate,
-        scheduled_time: scheduledTime,
+        categoryId: post.categoryId || null,
+        scheduledDate: scheduledDate,
+        scheduledTime: scheduledTime,
         timezone: post.timezone || 'America/New_York',
         title: post.title || '',
         body: post.body || '',
-        image_url: post.image_url || '',
-        video_url: post.video_url || '',
-        campaign_id: post.campaign_id || null,
-        send_email_blast: post.send_email_blast ?? false,
+        imageUrl: post.imageUrl || '',
+        videoUrl: post.videoUrl || '',
+        campaignId: post.campaignId || null,
+        sendEmailBlast: post.sendEmailBlast ?? false,
         status: post.status || 'pending',
       })
     } else if (open && !post) {
@@ -115,7 +115,7 @@ export function OneOffPostDialog({
       const tomorrow = new Date()
       tomorrow.setDate(tomorrow.getDate() + 1)
       const dateStr = tomorrow.toISOString().split('T')[0]
-      setFormData({ ...defaultFormData, scheduled_date: dateStr })
+      setFormData({ ...defaultFormData, scheduledDate: dateStr })
     }
   }, [open, post])
 
@@ -128,12 +128,12 @@ export function OneOffPostDialog({
     setFormData({
       ...formData,
       category: categoryName,
-      category_id: selectedCategory?.id || null,
+      categoryId: selectedCategory?.id || null,
     })
   }
 
   const isValid =
-    formData.category && formData.scheduled_date && formData.scheduled_time && formData.title && formData.body
+    formData.category && formData.scheduledDate && formData.scheduledTime && formData.title && formData.body
 
   const blastCooldownActive = emailBlastStatus && !emailBlastStatus.available
 
@@ -191,9 +191,9 @@ export function OneOffPostDialog({
                 Campaign (optional)
               </label>
               <Select
-                value={formData.campaign_id || 'none'}
+                value={formData.campaignId || 'none'}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, campaign_id: value === 'none' ? null : value })
+                  setFormData({ ...formData, campaignId: value === 'none' ? null : value })
                 }
               >
                 <SelectTrigger id="oneoff-campaign">
@@ -220,8 +220,8 @@ export function OneOffPostDialog({
               <Input
                 id="oneoff-date"
                 type="date"
-                value={formData.scheduled_date}
-                onChange={(e) => setFormData({ ...formData, scheduled_date: e.target.value })}
+                value={formData.scheduledDate}
+                onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })}
               />
             </div>
             <div className="grid gap-2">
@@ -231,8 +231,8 @@ export function OneOffPostDialog({
               <Input
                 id="oneoff-time"
                 type="time"
-                value={formData.scheduled_time}
-                onChange={(e) => setFormData({ ...formData, scheduled_time: e.target.value })}
+                value={formData.scheduledTime}
+                onChange={(e) => setFormData({ ...formData, scheduledTime: e.target.value })}
               />
             </div>
           </div>
@@ -276,8 +276,8 @@ export function OneOffPostDialog({
                 <Input
                   id="oneoff-image"
                   placeholder="https://... or use picker"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                  value={formData.imageUrl}
+                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
                   className="flex-1"
                 />
                 <Button
@@ -300,8 +300,8 @@ export function OneOffPostDialog({
                 <Input
                   id="oneoff-video"
                   placeholder="https://... or use picker"
-                  value={formData.video_url}
-                  onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
+                  value={formData.videoUrl}
+                  onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
                   className="flex-1"
                 />
                 <Button
@@ -318,12 +318,12 @@ export function OneOffPostDialog({
           </div>
 
           {/* Image Preview */}
-          {formData.image_url && (
+          {formData.imageUrl && (
             <div className="rounded-md border p-2">
               <p className="text-xs text-muted-foreground mb-2">Image Preview:</p>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={formData.image_url}
+                src={formData.imageUrl}
                 alt="Preview"
                 className="max-h-32 rounded-md object-contain"
                 onError={(e) => {
@@ -347,14 +347,14 @@ export function OneOffPostDialog({
               </div>
               <Switch
                 id="oneoff-email"
-                checked={formData.send_email_blast}
-                onCheckedChange={(checked) => setFormData({ ...formData, send_email_blast: checked })}
+                checked={formData.sendEmailBlast}
+                onCheckedChange={(checked) => setFormData({ ...formData, sendEmailBlast: checked })}
               />
             </div>
-            {formData.send_email_blast && blastCooldownActive && (
+            {formData.sendEmailBlast && blastCooldownActive && (
               <div className="mt-2 flex items-center gap-2 text-amber-600 text-xs">
                 <AlertCircle className="h-3 w-3" />
-                Blast cooldown active. Available in {emailBlastStatus?.hours_until_available} hours.
+                Blast cooldown active. Available in {emailBlastStatus?.hoursUntilAvailable} hours.
               </div>
             )}
           </div>
@@ -401,7 +401,7 @@ export function OneOffPostDialog({
         onOpenChange={setImagePickerOpen}
         onSelect={(files) => {
           if (files.length > 0) {
-            setFormData({ ...formData, image_url: files[0].url })
+            setFormData({ ...formData, imageUrl: files[0].url })
           }
         }}
         mode="single"
@@ -412,7 +412,7 @@ export function OneOffPostDialog({
         onOpenChange={setVideoPickerOpen}
         onSelect={(files) => {
           if (files.length > 0) {
-            setFormData({ ...formData, video_url: files[0].url })
+            setFormData({ ...formData, videoUrl: files[0].url })
           }
         }}
         mode="single"

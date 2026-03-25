@@ -123,7 +123,7 @@ export default function ExecutionLogPage() {
                 {logs.map((log) => (
                   <TableRow key={log.id}>
                     <TableCell className="whitespace-nowrap">
-                      {new Date(log.executed_at).toLocaleString()}
+                      {new Date(log.executedAt).toLocaleString()}
                     </TableCell>
                     <TableCell className="font-medium">
                       {log.scheduler?.category || '-'}
@@ -131,7 +131,7 @@ export default function ExecutionLogPage() {
                     <TableCell className="text-muted-foreground">
                       {log.scheduler ? (
                         <>
-                          {DAY_NAMES[log.scheduler.day_of_week]}{' '}
+                          {DAY_NAMES[log.scheduler.dayOfWeek]}{' '}
                           {formatScheduleTime(log.scheduler.time)}
                         </>
                       ) : (
@@ -143,9 +143,9 @@ export default function ExecutionLogPage() {
                     </TableCell>
                     <TableCell>{getStatusBadge(log.status)}</TableCell>
                     <TableCell>
-                      {log.skool_post_url ? (
+                      {log.skoolPostUrl ? (
                         <a
-                          href={log.skool_post_url}
+                          href={log.skoolPostUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-primary hover:underline"
@@ -153,10 +153,10 @@ export default function ExecutionLogPage() {
                           View
                           <ExternalLink className="h-3 w-3" />
                         </a>
-                      ) : log.error_message ? (
+                      ) : log.errorMessage ? (
                         <span
                           className="text-destructive text-sm cursor-help"
-                          title={log.error_message}
+                          title={log.errorMessage}
                         >
                           Error
                         </span>

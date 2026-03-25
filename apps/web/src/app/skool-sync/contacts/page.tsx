@@ -110,7 +110,7 @@ function ContactTypeBadge({ type }: { type: string | null }) {
 }
 
 // Match method badge component
-function MatchMethodBadge({ method }: { method: ContactActivity['match_method'] }) {
+function MatchMethodBadge({ method }: { method: ContactActivity['matchMethod'] }) {
   const variants: Record<string, { className: string; label: string }> = {
     skool_id: { className: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Skool ID' },
     email: { className: 'bg-green-100 text-green-800 border-green-200', label: 'Email' },
@@ -129,31 +129,31 @@ function MatchMethodBadge({ method }: { method: ContactActivity['match_method'] 
 
 // Status indicator component
 function StatusIndicator({ contact }: { contact: ContactActivity }) {
-  const { synced_count, pending_count, failed_count } = contact.stats
+  const { syncedCount, pendingCount, failedCount } = contact.stats
 
-  if (failed_count > 0) {
+  if (failedCount > 0) {
     return (
       <div className="flex items-center gap-1 text-red-600">
         <XCircle className="h-4 w-4" />
-        <span className="text-sm font-medium">{failed_count} failed</span>
+        <span className="text-sm font-medium">{failedCount} failed</span>
       </div>
     )
   }
 
-  if (pending_count > 0) {
+  if (pendingCount > 0) {
     return (
       <div className="flex items-center gap-1 text-yellow-600">
         <Clock className="h-4 w-4" />
-        <span className="text-sm font-medium">{pending_count} pending</span>
+        <span className="text-sm font-medium">{pendingCount} pending</span>
       </div>
     )
   }
 
-  if (synced_count > 0) {
+  if (syncedCount > 0) {
     return (
       <div className="flex items-center gap-1 text-green-600">
         <CheckCircle2 className="h-4 w-4" />
-        <span className="text-sm font-medium">{synced_count} synced</span>
+        <span className="text-sm font-medium">{syncedCount} synced</span>
       </div>
     )
   }
@@ -163,9 +163,9 @@ function StatusIndicator({ contact }: { contact: ContactActivity }) {
 
 // Message count display
 function MessageCounts({ contact }: { contact: ContactActivity }) {
-  const { inbound_count, outbound_count } = contact.stats
+  const { inboundCount, outboundCount } = contact.stats
 
-  if (inbound_count === 0 && outbound_count === 0) {
+  if (inboundCount === 0 && outboundCount === 0) {
     return <span className="text-sm text-muted-foreground">-</span>
   }
 
@@ -173,11 +173,11 @@ function MessageCounts({ contact }: { contact: ContactActivity }) {
     <div className="flex items-center gap-2 text-sm">
       <span className="flex items-center gap-0.5" title="Inbound messages">
         <ArrowDownLeft className="h-3 w-3 text-muted-foreground" />
-        {inbound_count}
+        {inboundCount}
       </span>
       <span className="flex items-center gap-0.5" title="Outbound messages">
         <ArrowUpRight className="h-3 w-3 text-muted-foreground" />
-        {outbound_count}
+        {outboundCount}
       </span>
     </div>
   )
@@ -224,14 +224,14 @@ function ContactActions({
   onSynthetic?: () => void
   showSynthetic: boolean
 }) {
-  const isMatched = !!contact.ghl_contact_id
+  const isMatched = !!contact.ghlContactId
 
-  const channelId = contact.channels?.[0]?.skool_channel_id
+  const channelId = contact.channels?.[0]?.skoolChannelId
   const channelCount = contact.channels?.length || 0
   const channelTooltip = channelCount > 1
     ? `${channelCount} staff channels`
     : channelCount === 1
-      ? `DM via ${contact.channels[0].staff_display_name || 'staff'}`
+      ? `DM via ${contact.channels[0].staffDisplayName || 'staff'}`
       : 'No DM channel'
 
   return (
@@ -239,7 +239,7 @@ function ContactActions({
       {/* Skool DM deep link */}
       {channelId ? (
         <a
-          href={`https://www.skool.com/${contact.skool_community_slug || 'fruitful'}/-/dm?channel=${channelId}`}
+          href={`https://www.skool.com/${contact.skoolCommunitySlug || 'fruitful'}/-/dm?channel=${channelId}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center h-7 w-7 rounded text-blue-600 hover:text-blue-700 hover:bg-blue-50 relative"
@@ -259,9 +259,9 @@ function ContactActions({
       )}
 
       {/* Inbox deep link */}
-      {contact.skool_conversation_id ? (
+      {contact.skoolConversationId ? (
         <a
-          href={`/skool-sync/inbox?conversation=${contact.skool_conversation_id}`}
+          href={`/skool-sync/inbox?conversation=${contact.skoolConversationId}`}
           className="inline-flex items-center justify-center h-7 w-7 rounded text-muted-foreground hover:text-foreground hover:bg-muted"
           title="Open in Inbox"
         >
@@ -274,17 +274,17 @@ function ContactActions({
       )}
 
       {/* Skool Link — member search for group members, direct profile for non-members */}
-      {contact.skool_username ? (
+      {contact.skoolUsername ? (
         <a
           href={
-            contact.contact_type === 'community_member' && contact.skool_community_slug
-              ? buildSkoolSearchUrl(contact.skool_community_slug, contact.skool_username)
-              : buildSkoolProfileUrl(contact.skool_username)
+            contact.contactType === 'community_member' && contact.skoolCommunitySlug
+              ? buildSkoolSearchUrl(contact.skoolCommunitySlug, contact.skoolUsername)
+              : buildSkoolProfileUrl(contact.skoolUsername)
           }
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center h-7 w-7 rounded text-muted-foreground hover:text-foreground hover:bg-muted"
-          title={contact.contact_type === 'community_member' ? 'Search in Skool' : 'Skool profile'}
+          title={contact.contactType === 'community_member' ? 'Search in Skool' : 'Skool profile'}
         >
           <span className="text-xs font-semibold">S</span>
         </a>
@@ -295,9 +295,9 @@ function ContactActions({
       )}
 
       {/* GHL Link */}
-      {isMatched && contact.ghl_location_id && contact.ghl_contact_id ? (
+      {isMatched && contact.ghlLocationId && contact.ghlContactId ? (
         <a
-          href={buildGhlContactUrl(contact.ghl_location_id, contact.ghl_contact_id)}
+          href={buildGhlContactUrl(contact.ghlLocationId, contact.ghlContactId)}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center h-7 w-7 rounded text-primary hover:text-primary/80 hover:bg-muted"
@@ -378,7 +378,7 @@ function MatchedTable({
         <TableBody>
           {contacts.map((contact) => {
             const displayName =
-              contact.skool_display_name || usernameToDisplayName(contact.skool_username)
+              contact.skoolDisplayName || usernameToDisplayName(contact.skoolUsername)
 
             return (
               <TableRow key={contact.id}>
@@ -388,22 +388,22 @@ function MatchedTable({
                       {displayName || (
                         <span className="flex items-center gap-1 text-muted-foreground">
                           <HelpCircle className="h-3 w-3" />
-                          {contact.skool_user_id.slice(0, 8)}...
+                          {contact.skoolUserId.slice(0, 8)}...
                         </span>
                       )}
                     </span>
-                    <ContactTypeBadge type={contact.contact_type} />
+                    <ContactTypeBadge type={contact.contactType} />
                   </div>
                 </TableCell>
                 <TableCell className="text-sm max-w-[140px] truncate overflow-hidden">
-                  {contact.skool_username ? (
+                  {contact.skoolUsername ? (
                     <a
-                      href={buildSkoolProfileUrl(contact.skool_username)}
+                      href={buildSkoolProfileUrl(contact.skoolUsername)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-muted-foreground hover:text-foreground hover:underline"
                     >
-                      @{contact.skool_username}
+                      @{contact.skoolUsername}
                     </a>
                   ) : '-'}
                 </TableCell>
@@ -411,7 +411,7 @@ function MatchedTable({
                   {contact.email || '-'}
                 </TableCell>
                 <TableCell>
-                  <MatchMethodBadge method={contact.match_method} />
+                  <MatchMethodBadge method={contact.matchMethod} />
                 </TableCell>
                 <TableCell>
                   <MessageCounts contact={contact} />
@@ -479,7 +479,7 @@ function UnmatchedTable({
         <TableBody>
           {contacts.map((contact) => {
             const displayName =
-              contact.skool_display_name || usernameToDisplayName(contact.skool_username)
+              contact.skoolDisplayName || usernameToDisplayName(contact.skoolUsername)
 
             return (
               <TableRow key={contact.id}>
@@ -489,21 +489,21 @@ function UnmatchedTable({
                       {displayName || (
                         <span className="flex items-center gap-1 text-muted-foreground">
                           <HelpCircle className="h-3 w-3" />
-                          {contact.skool_user_id.slice(0, 8)}...
+                          {contact.skoolUserId.slice(0, 8)}...
                         </span>
                       )}
                     </span>
                   </div>
                 </TableCell>
                 <TableCell className="text-sm max-w-[140px] truncate overflow-hidden">
-                  {contact.skool_username ? (
+                  {contact.skoolUsername ? (
                     <a
-                      href={buildSkoolProfileUrl(contact.skool_username)}
+                      href={buildSkoolProfileUrl(contact.skoolUsername)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-muted-foreground hover:text-foreground hover:underline"
                     >
-                      @{contact.skool_username}
+                      @{contact.skoolUsername}
                     </a>
                   ) : '-'}
                 </TableCell>
@@ -511,7 +511,7 @@ function UnmatchedTable({
                   {contact.email || '-'}
                 </TableCell>
                 <TableCell>
-                  <ContactTypeBadge type={contact.contact_type} />
+                  <ContactTypeBadge type={contact.contactType} />
                 </TableCell>
                 <TableCell className="text-right">
                   <ContactActions
@@ -574,7 +574,7 @@ export default function ContactActivityPage() {
   }
 
   const handleSyntheticCreate = async (contact: ContactActivity) => {
-    await createSynthetic(contact.skool_user_id)
+    await createSynthetic(contact.skoolUserId)
     refresh()
   }
 
@@ -599,25 +599,25 @@ export default function ContactActivityPage() {
         <StatsCard
           icon={Users}
           label="Matched"
-          value={summary.matched_contacts}
+          value={summary.matchedContacts}
           className="bg-green-100 text-green-600"
         />
         <StatsCard
           icon={AlertCircle}
           label="Unmatched"
-          value={summary.unmatched_contacts}
+          value={summary.unmatchedContacts}
           className="bg-yellow-100 text-yellow-600"
         />
         <StatsCard
           icon={MessageSquare}
           label="Messages"
-          value={summary.total_messages}
+          value={summary.totalMessages}
           className="bg-blue-100 text-blue-600"
         />
         <StatsCard
           icon={Clock}
           label="Pending"
-          value={summary.contacts_with_pending}
+          value={summary.contactsWithPending}
           className="bg-orange-100 text-orange-600"
         />
       </div>
@@ -646,10 +646,10 @@ export default function ContactActivityPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <TabsList>
                 <TabsTrigger value="matched">
-                  Matched ({summary.matched_contacts})
+                  Matched ({summary.matchedContacts})
                 </TabsTrigger>
                 <TabsTrigger value="unmatched">
-                  Unmatched ({summary.unmatched_contacts})
+                  Unmatched ({summary.unmatchedContacts})
                 </TabsTrigger>
               </TabsList>
 

@@ -27,7 +27,7 @@ export async function GET() {
 
     const schedulers = data.map((row) => ({
       ...row.scheduler,
-      variation_group: row.variationGroup?.id ? row.variationGroup : null,
+      variationGroup: row.variationGroup?.id ? row.variationGroup : null,
     }))
 
     return NextResponse.json({ schedulers })
@@ -49,17 +49,17 @@ export async function POST(request: NextRequest) {
     const body: SkoolScheduledPostInput = await request.json()
 
     // Validate required fields
-    if (!body.category || body.day_of_week === undefined || !body.time) {
+    if (!body.category || body.dayOfWeek === undefined || !body.time) {
       return NextResponse.json(
-        { error: 'Missing required fields: category, day_of_week, time' },
+        { error: 'Missing required fields: category, dayOfWeek, time' },
         { status: 400 }
       )
     }
 
-    // Validate day_of_week range (0-6)
-    if (body.day_of_week < 0 || body.day_of_week > 6) {
+    // Validate dayOfWeek range (0-6)
+    if (body.dayOfWeek < 0 || body.dayOfWeek > 6) {
       return NextResponse.json(
-        { error: 'day_of_week must be between 0 (Sunday) and 6 (Saturday)' },
+        { error: 'dayOfWeek must be between 0 (Sunday) and 6 (Saturday)' },
         { status: 400 }
       )
     }
@@ -75,13 +75,13 @@ export async function POST(request: NextRequest) {
     const [inserted] = await db
       .insert(skoolScheduledPosts)
       .values({
-        groupSlug: body.group_slug || 'fruitful',
+        groupSlug: body.groupSlug || 'fruitful',
         category: body.category,
-        categoryId: body.category_id || null,
-        dayOfWeek: body.day_of_week,
+        categoryId: body.categoryId || null,
+        dayOfWeek: body.dayOfWeek,
         time: body.time,
-        variationGroupId: body.variation_group_id || null,
-        isActive: body.is_active ?? true,
+        variationGroupId: body.variationGroupId || null,
+        isActive: body.isActive ?? true,
         note: body.note || null,
       })
       .returning()
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       variationGroup = vg || null
     }
 
-    return NextResponse.json({ scheduler: { ...inserted, variation_group: variationGroup } }, { status: 201 })
+    return NextResponse.json({ scheduler: { ...inserted, variationGroup: variationGroup } }, { status: 201 })
   } catch (error) {
     console.error('[Schedulers API] POST exception:', error)
     return NextResponse.json(
@@ -119,11 +119,11 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Missing id' }, { status: 400 })
     }
 
-    // Validate day_of_week if provided
-    if (updates.day_of_week !== undefined) {
-      if (updates.day_of_week < 0 || updates.day_of_week > 6) {
+    // Validate dayOfWeek if provided
+    if (updates.dayOfWeek !== undefined) {
+      if (updates.dayOfWeek < 0 || updates.dayOfWeek > 6) {
         return NextResponse.json(
-          { error: 'day_of_week must be between 0 (Sunday) and 6 (Saturday)' },
+          { error: 'dayOfWeek must be between 0 (Sunday) and 6 (Saturday)' },
           { status: 400 }
         )
       }
@@ -137,15 +137,15 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Map snake_case input to camelCase schema columns
+    // Map input to schema columns
     const setData: Record<string, unknown> = { updatedAt: new Date() }
-    if (updates.group_slug !== undefined) setData.groupSlug = updates.group_slug
+    if (updates.groupSlug !== undefined) setData.groupSlug = updates.groupSlug
     if (updates.category !== undefined) setData.category = updates.category
-    if (updates.category_id !== undefined) setData.categoryId = updates.category_id
-    if (updates.day_of_week !== undefined) setData.dayOfWeek = updates.day_of_week
+    if (updates.categoryId !== undefined) setData.categoryId = updates.categoryId
+    if (updates.dayOfWeek !== undefined) setData.dayOfWeek = updates.dayOfWeek
     if (updates.time !== undefined) setData.time = updates.time
-    if (updates.variation_group_id !== undefined) setData.variationGroupId = updates.variation_group_id
-    if (updates.is_active !== undefined) setData.isActive = updates.is_active
+    if (updates.variationGroupId !== undefined) setData.variationGroupId = updates.variationGroupId
+    if (updates.isActive !== undefined) setData.isActive = updates.isActive
     if (updates.note !== undefined) setData.note = updates.note
 
     const [updated] = await db
@@ -168,7 +168,7 @@ export async function PUT(request: NextRequest) {
       variationGroup = vg || null
     }
 
-    return NextResponse.json({ scheduler: { ...updated, variation_group: variationGroup } })
+    return NextResponse.json({ scheduler: { ...updated, variationGroup: variationGroup } })
   } catch (error) {
     console.error('[Schedulers API] PUT exception:', error)
     return NextResponse.json(

@@ -6,8 +6,8 @@ import type { SkoolVariationGroup, SkoolVariationGroupInput } from '@0ne/db'
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export interface VariationGroupWithStats extends SkoolVariationGroup {
-  post_count?: number
-  scheduler_count?: number
+  postCount?: number
+  schedulerCount?: number
 }
 
 export interface UseVariationGroupsReturn {
@@ -21,7 +21,7 @@ export interface UseVariationGroupsReturn {
  * Hook for fetching variation groups
  */
 export function useVariationGroups(includeStats = false): UseVariationGroupsReturn {
-  const url = `/api/skool/variation-groups${includeStats ? '?include_stats=true' : ''}`
+  const url = `/api/skool/variation-groups${includeStats ? '?includeStats=true' : ''}`
 
   const { data, error, mutate } = useSWR<{ groups: VariationGroupWithStats[] }>(url, fetcher)
 

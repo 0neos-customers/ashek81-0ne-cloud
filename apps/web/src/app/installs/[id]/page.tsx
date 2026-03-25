@@ -231,9 +231,9 @@ function ResolutionSection({
   fixActions: FixAction[]
   fixSummary: FixSummary | null
 }) {
-  const attempted = fixSummary?.fixes_attempted ?? fixActions.length
-  const succeeded = fixSummary?.fixes_succeeded ?? fixActions.filter((a) => a.success).length
-  const failed = fixSummary?.fixes_failed ?? fixActions.filter((a) => !a.success).length
+  const attempted = fixSummary?.fixesAttempted ?? fixActions.length
+  const succeeded = fixSummary?.fixesSucceeded ?? fixActions.filter((a) => a.success).length
+  const failed = fixSummary?.fixesFailed ?? fixActions.filter((a) => !a.success).length
   const total = succeeded + failed
 
   return (
@@ -310,13 +310,13 @@ function ResolutionSection({
                 {/* Before */}
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <Badge className={FIX_STATUS_COLORS[action.before_status] || 'bg-slate-100 text-slate-500'}>
-                      {action.before_status}
+                    <Badge className={FIX_STATUS_COLORS[action.beforeStatus] || 'bg-slate-100 text-slate-500'}>
+                      {action.beforeStatus}
                     </Badge>
                     <span className="text-xs text-muted-foreground">{action.category}</span>
                   </div>
-                  <div className="text-sm font-medium">{action.check_name}</div>
-                  <div className="text-xs text-muted-foreground">{action.before_detail}</div>
+                  <div className="text-sm font-medium">{action.checkName}</div>
+                  <div className="text-xs text-muted-foreground">{action.beforeDetail}</div>
                 </div>
 
                 {/* Arrow */}
@@ -326,17 +326,17 @@ function ResolutionSection({
 
                 {/* After */}
                 <div className="space-y-1.5">
-                  <Badge className={FIX_STATUS_COLORS[action.after_status] || 'bg-slate-100 text-slate-500'}>
-                    {action.after_status}
+                  <Badge className={FIX_STATUS_COLORS[action.afterStatus] || 'bg-slate-100 text-slate-500'}>
+                    {action.afterStatus}
                   </Badge>
-                  <div className="text-xs text-muted-foreground mt-1.5">{action.after_detail}</div>
+                  <div className="text-xs text-muted-foreground mt-1.5">{action.afterDetail}</div>
                 </div>
               </div>
 
               {/* Action taken */}
               <div className="mt-3 rounded-md bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 px-3 py-2">
                 <code className="text-xs text-foreground font-mono whitespace-pre-wrap break-words">
-                  {action.action_taken}
+                  {action.actionTaken}
                 </code>
               </div>
 
@@ -776,15 +776,15 @@ function InstallResultsTable({ results }: { results: Record<string, unknown>[] }
 // =============================================================================
 
 function SystemInfoPanel({ event }: { event: TelemetryEvent }) {
-  const systemInfo = event.system_info as Record<string, unknown> | null
+  const systemInfo = event.systemInfo as Record<string, unknown> | null
 
   // Collect all key-value pairs
   const entries: [string, string][] = []
 
   // Standard fields first
-  if (event.bun_version) entries.push(['Bun Version', event.bun_version])
-  if (event.os_version) entries.push(['OS Version', event.os_version])
-  if (event.one_version) entries.push(['0ne Version', event.one_version])
+  if (event.bunVersion) entries.push(['Bun Version', event.bunVersion])
+  if (event.osVersion) entries.push(['OS Version', event.osVersion])
+  if (event.oneVersion) entries.push(['0ne Version', event.oneVersion])
 
   // Then system_info entries
   if (systemInfo) {
@@ -832,11 +832,11 @@ function StatusTimeline({ history, event }: { history: StatusHistoryEntry[]; eve
     ...history,
     {
       id: 'created',
-      event_id: event.id,
-      old_status: null,
-      new_status: 'new',
+      eventId: event.id,
+      oldStatus: null,
+      newStatus: 'new',
       note: 'Event created',
-      created_at: event.created_at,
+      createdAt: event.createdAt,
     } as StatusHistoryEntry,
   ]
 
@@ -855,8 +855,8 @@ function StatusTimeline({ history, event }: { history: StatusHistoryEntry[]; eve
 
         <div className="space-y-4">
           {timelineEntries.map((entry) => {
-            const isStatusChange = entry.old_status !== entry.new_status
-            const dotColor = STATUS_TIMELINE_COLORS[entry.new_status] || 'bg-slate-400'
+            const isStatusChange = entry.oldStatus !== entry.newStatus
+            const dotColor = STATUS_TIMELINE_COLORS[entry.newStatus] || 'bg-slate-400'
 
             return (
               <div key={entry.id} className="flex gap-3 relative">
@@ -868,9 +868,9 @@ function StatusTimeline({ history, event }: { history: StatusHistoryEntry[]; eve
                   <div className="flex items-center gap-2 flex-wrap">
                     {isStatusChange ? (
                       <span className="text-sm font-medium">
-                        {entry.old_status || 'new'}
+                        {entry.oldStatus || 'new'}
                         <span className="text-muted-foreground mx-1">→</span>
-                        {entry.new_status}
+                        {entry.newStatus}
                       </span>
                     ) : (
                       <span className="text-sm font-medium flex items-center gap-1">
@@ -879,7 +879,7 @@ function StatusTimeline({ history, event }: { history: StatusHistoryEntry[]; eve
                       </span>
                     )}
                     <span className="text-xs text-muted-foreground">
-                      {formatDateShort(entry.created_at)}
+                      {formatDateShort(entry.createdAt)}
                     </span>
                   </div>
                   {entry.note && entry.id !== 'created' && (
@@ -963,8 +963,8 @@ export default function InstallDetailPage() {
     )
   }
 
-  const { event, status_history } = data
-  const TypeIcon = TYPE_ICONS[event.event_type] || Circle
+  const { event, statusHistory } = data
+  const TypeIcon = TYPE_ICONS[event.eventType] || Circle
   const results = (event.results || []) as Record<string, unknown>[]
 
   return (
@@ -991,45 +991,45 @@ export default function InstallDetailPage() {
               <TypeIcon className="h-6 w-6 text-muted-foreground" />
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Badge className={TYPE_COLORS[event.event_type] || 'bg-gray-100 text-gray-700'}>
-                    {event.event_type}
+                  <Badge className={TYPE_COLORS[event.eventType] || 'bg-gray-100 text-gray-700'}>
+                    {event.eventType}
                   </Badge>
                   <Badge className={STATUS_COLORS[event.status] || 'bg-gray-100 text-gray-700'}>
                     {event.status}
                   </Badge>
                 </div>
                 <div className="mt-1 text-sm text-muted-foreground">
-                  {formatDateFull(event.created_at)}
+                  {formatDateFull(event.createdAt)}
                 </div>
               </div>
             </div>
 
             <div className="flex flex-col sm:items-end gap-1">
               <div className="text-sm font-medium">
-                {event.principal_name || 'Unknown'}
+                {event.principalName || 'Unknown'}
               </div>
               <PlatformLabel
                 platform={event.platform}
                 arch={event.arch}
-                osVersion={event.os_version}
+                osVersion={event.osVersion}
               />
             </div>
           </div>
 
           {/* Fix info if present */}
-          {(event.fix_commit || event.fix_notes) && (
+          {(event.fixCommit || event.fixNotes) && (
             <div className="mt-4 pt-4 border-t border-border">
-              {event.fix_commit && (
+              {event.fixCommit && (
                 <div className="flex items-center gap-2 text-sm">
                   <span className="text-muted-foreground">Fix commit:</span>
                   <code className="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                    {event.fix_commit}
+                    {event.fixCommit}
                   </code>
                 </div>
               )}
-              {event.fix_notes && (
+              {event.fixNotes && (
                 <div className="text-sm text-muted-foreground mt-1">
-                  {event.fix_notes}
+                  {event.fixNotes}
                 </div>
               )}
             </div>
@@ -1040,10 +1040,10 @@ export default function InstallDetailPage() {
         <SummaryBar summary={event.summary} />
 
         {/* Resolution section — only when fix_actions exist */}
-        {event.fix_actions && event.fix_actions.length > 0 && (
+        {event.fixActions && event.fixActions.length > 0 && (
           <ResolutionSection
-            fixActions={event.fix_actions}
-            fixSummary={event.fix_summary}
+            fixActions={event.fixActions}
+            fixSummary={event.fixSummary}
           />
         )}
 
@@ -1057,7 +1057,7 @@ export default function InstallDetailPage() {
 
         {/* Results table */}
         {results.length > 0 && (
-          event.event_type === 'doctor' ? (
+          event.eventType === 'doctor' ? (
             <DoctorResultsTable results={results} />
           ) : (
             <InstallResultsTable results={results} />
@@ -1068,7 +1068,7 @@ export default function InstallDetailPage() {
         <SystemInfoPanel event={event} />
 
         {/* Status timeline */}
-        <StatusTimeline history={status_history} event={event} />
+        <StatusTimeline history={statusHistory} event={event} />
       </div>
     </AppShell>
   )

@@ -11,20 +11,20 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json())
 export interface ConversationMessage {
   id: string
   direction: 'inbound' | 'outbound'
-  message_text: string | null
-  sender_name: string | null
+  messageText: string | null
+  senderName: string | null
   status: 'synced' | 'pending' | 'failed'
-  created_at: string
+  createdAt: string
 }
 
 /**
  * Participant details including GHL contact link
  */
 export interface ConversationDetailParticipant {
-  skool_user_id: string
-  display_name: string | null
+  skoolUserId: string
+  displayName: string | null
   username: string | null
-  ghl_contact_id: string | null
+  ghlContactId: string | null
 }
 
 /**
@@ -33,7 +33,7 @@ export interface ConversationDetailParticipant {
 export interface ConversationDetail {
   id: string
   participant: ConversationDetailParticipant
-  message_count: number
+  messageCount: number
 }
 
 /**

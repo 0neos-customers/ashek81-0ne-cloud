@@ -67,7 +67,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       >
         {/* Message Text */}
         <p className="text-sm whitespace-pre-wrap break-words">
-          {message.message_text || 'Image Attachment(s)'}
+          {message.messageText || 'Image Attachment(s)'}
         </p>
 
         {/* Timestamp + Status */}
@@ -77,7 +77,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
             ${isOutbound ? 'text-white/70 justify-end' : 'text-gray-500'}
           `}
         >
-          <span>{formatTime(message.created_at)}</span>
+          <span>{formatTime(message.createdAt)}</span>
           {isOutbound && <StatusIndicator status={message.status} />}
         </div>
       </div>

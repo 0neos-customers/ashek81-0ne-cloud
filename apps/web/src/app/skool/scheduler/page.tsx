@@ -73,14 +73,14 @@ const STATUS_LABELS: Record<OneOffPostStatus, string> = {
 
 // Types for inline editing
 type RecurringInlineChanges = {
-  day_of_week?: DayOfWeek
+  dayOfWeek?: DayOfWeek
   time?: string
-  variation_group_id?: string | null
+  variationGroupId?: string | null
 }
 
 type OneOffInlineChanges = {
-  scheduled_date?: string
-  scheduled_time?: string
+  scheduledDate?: string
+  scheduledTime?: string
   status?: OneOffPostStatus
 }
 
@@ -204,12 +204,12 @@ function SchedulerPageContent() {
       if (data.id) {
         const result = await updateScheduler(data.id, {
           category: data.category,
-          category_id: data.category_id,
-          day_of_week: data.day_of_week,
+          categoryId: data.categoryId,
+          dayOfWeek: data.dayOfWeek,
           time: data.time,
-          is_active: data.is_active,
+          isActive: data.isActive,
           note: data.note || null,
-          variation_group_id: data.variation_group_id || null,
+          variationGroupId: data.variationGroupId || null,
         })
         if (result.error) {
           toast.error(result.error)
@@ -218,14 +218,14 @@ function SchedulerPageContent() {
         toast.success('Schedule slot updated')
       } else {
         const result = await createScheduler({
-          group_slug: data.group_slug,
+          groupSlug: data.groupSlug,
           category: data.category,
-          category_id: data.category_id,
-          day_of_week: data.day_of_week,
+          categoryId: data.categoryId,
+          dayOfWeek: data.dayOfWeek,
           time: data.time,
-          is_active: data.is_active,
+          isActive: data.isActive,
           note: data.note || null,
-          variation_group_id: data.variation_group_id || null,
+          variationGroupId: data.variationGroupId || null,
         })
         if (result.error) {
           toast.error(result.error)
@@ -244,7 +244,7 @@ function SchedulerPageContent() {
     setTogglingIds((prev) => new Set(prev).add(scheduler.id))
     try {
       const result = await updateScheduler(scheduler.id, {
-        is_active: !scheduler.is_active,
+        isActive: !scheduler.isActive,
       })
       if (result.error) {
         toast.error(result.error)
@@ -267,9 +267,9 @@ function SchedulerPageContent() {
     setRecurringSavingRows((prev) => new Set(prev).add(schedulerId))
     try {
       const result = await updateScheduler(schedulerId, {
-        day_of_week: changesArg.day_of_week ?? scheduler.day_of_week,
+        dayOfWeek: changesArg.dayOfWeek ?? scheduler.dayOfWeek,
         time: changesArg.time ?? scheduler.time,
-        variation_group_id: changesArg.variation_group_id !== undefined ? changesArg.variation_group_id : scheduler.variation_group_id,
+        variationGroupId: changesArg.variationGroupId !== undefined ? changesArg.variationGroupId : scheduler.variationGroupId,
       })
       if (result.error) {
         toast.error(result.error)
@@ -297,7 +297,7 @@ function SchedulerPageContent() {
 
     const newChanges = {
       ...recurringPendingChanges[scheduler.id],
-      day_of_week: dayOfWeek,
+      dayOfWeek: dayOfWeek,
     }
     setRecurringPendingChanges((prev) => ({
       ...prev,
@@ -339,7 +339,7 @@ function SchedulerPageContent() {
 
     const newChanges = {
       ...recurringPendingChanges[scheduler.id],
-      variation_group_id: groupId,
+      variationGroupId: groupId,
     }
     setRecurringPendingChanges((prev) => ({
       ...prev,
@@ -357,7 +357,7 @@ function SchedulerPageContent() {
 
   // Get display values for recurring
   const getRecurringDisplayDay = (scheduler: SkoolScheduledPost) => {
-    return recurringPendingChanges[scheduler.id]?.day_of_week ?? scheduler.day_of_week
+    return recurringPendingChanges[scheduler.id]?.dayOfWeek ?? scheduler.dayOfWeek
   }
 
   const getRecurringDisplayTime = (scheduler: SkoolScheduledPost) => {
@@ -365,9 +365,9 @@ function SchedulerPageContent() {
   }
 
   const getRecurringDisplayGroup = (scheduler: SkoolScheduledPost) => {
-    const pendingGroup = recurringPendingChanges[scheduler.id]?.variation_group_id
+    const pendingGroup = recurringPendingChanges[scheduler.id]?.variationGroupId
     if (pendingGroup !== undefined) return pendingGroup
-    return scheduler.variation_group_id
+    return scheduler.variationGroupId
   }
 
   // ===== ONE-OFF POSTS HANDLERS =====
@@ -378,21 +378,21 @@ function SchedulerPageContent() {
   }
 
   const handleEditOneOff = (post: OneOffPostWithCampaign) => {
-    const { date, time } = parseScheduledAt(post.scheduled_at)
+    const { date, time } = parseScheduledAt(post.scheduledAt)
     setEditingOneOff({
       id: post.id,
-      group_slug: post.group_slug,
+      groupSlug: post.groupSlug,
       category: post.category,
-      category_id: post.category_id,
-      scheduled_date: date,
-      scheduled_time: time,
+      categoryId: post.categoryId,
+      scheduledDate: date,
+      scheduledTime: time,
       timezone: post.timezone,
       title: post.title,
       body: post.body,
-      image_url: post.image_url || '',
-      video_url: post.video_url || '',
-      campaign_id: post.campaign_id,
-      send_email_blast: post.send_email_blast,
+      imageUrl: post.imageUrl || '',
+      videoUrl: post.videoUrl || '',
+      campaignId: post.campaignId,
+      sendEmailBlast: post.sendEmailBlast,
       status: post.status,
     })
     setOneOffDialogOpen(true)
@@ -407,21 +407,21 @@ function SchedulerPageContent() {
   const handleSaveOneOff = async (data: OneOffPostFormData) => {
     setIsOneOffSaving(true)
     try {
-      const scheduledAt = `${data.scheduled_date}T${data.scheduled_time}:00`
+      const scheduledAt = `${data.scheduledDate}T${data.scheduledTime}:00`
 
       if (data.id) {
         const result = await updateOneOffPost(data.id, {
-          group_slug: data.group_slug,
+          groupSlug: data.groupSlug,
           category: data.category,
-          category_id: data.category_id,
-          scheduled_at: scheduledAt,
+          categoryId: data.categoryId,
+          scheduledAt: scheduledAt,
           timezone: data.timezone,
           title: data.title,
           body: data.body,
-          image_url: data.image_url || null,
-          video_url: data.video_url || null,
-          campaign_id: data.campaign_id,
-          send_email_blast: data.send_email_blast,
+          imageUrl: data.imageUrl || null,
+          videoUrl: data.videoUrl || null,
+          campaignId: data.campaignId,
+          sendEmailBlast: data.sendEmailBlast,
           status: data.status,
         })
         if (result.error) {
@@ -431,17 +431,17 @@ function SchedulerPageContent() {
         toast.success('Scheduled post updated')
       } else {
         const result = await createOneOffPost({
-          group_slug: data.group_slug,
+          groupSlug: data.groupSlug,
           category: data.category,
-          category_id: data.category_id,
-          scheduled_at: scheduledAt,
+          categoryId: data.categoryId,
+          scheduledAt: scheduledAt,
           timezone: data.timezone,
           title: data.title,
           body: data.body,
-          image_url: data.image_url || null,
-          video_url: data.video_url || null,
-          campaign_id: data.campaign_id,
-          send_email_blast: data.send_email_blast,
+          imageUrl: data.imageUrl || null,
+          videoUrl: data.videoUrl || null,
+          campaignId: data.campaignId,
+          sendEmailBlast: data.sendEmailBlast,
           status: data.status,
         })
         if (result.error) {
@@ -464,12 +464,12 @@ function SchedulerPageContent() {
     setOneOffSavingRows((prev) => new Set(prev).add(postId))
     try {
       // Build scheduled_at from changes or existing values
-      const date = changesArg.scheduled_date ?? parseScheduledAt(post.scheduled_at).date
-      const time = changesArg.scheduled_time ?? parseScheduledAt(post.scheduled_at).time
+      const date = changesArg.scheduledDate ?? parseScheduledAt(post.scheduledAt).date
+      const time = changesArg.scheduledTime ?? parseScheduledAt(post.scheduledAt).time
       const scheduledAt = `${date}T${time}:00`
 
       const result = await updateOneOffPost(postId, {
-        scheduled_at: scheduledAt,
+        scheduledAt: scheduledAt,
         status: changesArg.status ?? post.status,
       })
       if (result.error) {
@@ -496,7 +496,7 @@ function SchedulerPageContent() {
   const handleOneOffDateChange = useCallback((post: OneOffPostWithCampaign, newDate: string) => {
     const newChanges = {
       ...oneOffPendingChanges[post.id],
-      scheduled_date: newDate,
+      scheduledDate: newDate,
     }
     setOneOffPendingChanges((prev) => ({
       ...prev,
@@ -516,7 +516,7 @@ function SchedulerPageContent() {
   const handleOneOffTimeChange = useCallback((post: OneOffPostWithCampaign, newTime: string) => {
     const newChanges = {
       ...oneOffPendingChanges[post.id],
-      scheduled_time: newTime,
+      scheduledTime: newTime,
     }
     setOneOffPendingChanges((prev) => ({
       ...prev,
@@ -554,11 +554,11 @@ function SchedulerPageContent() {
 
   // Get display values for one-off
   const getOneOffDisplayDate = (post: OneOffPostWithCampaign) => {
-    return oneOffPendingChanges[post.id]?.scheduled_date ?? parseScheduledAt(post.scheduled_at).date
+    return oneOffPendingChanges[post.id]?.scheduledDate ?? parseScheduledAt(post.scheduledAt).date
   }
 
   const getOneOffDisplayTime = (post: OneOffPostWithCampaign) => {
-    return oneOffPendingChanges[post.id]?.scheduled_time ?? parseScheduledAt(post.scheduled_at).time
+    return oneOffPendingChanges[post.id]?.scheduledTime ?? parseScheduledAt(post.scheduledAt).time
   }
 
   const getOneOffDisplayStatus = (post: OneOffPostWithCampaign) => {
@@ -653,8 +653,8 @@ function SchedulerPageContent() {
   // Group recurring by day of week for display
   const schedulersByDay = schedulers.reduce(
     (acc, s) => {
-      if (!acc[s.day_of_week]) acc[s.day_of_week] = []
-      acc[s.day_of_week].push(s)
+      if (!acc[s.dayOfWeek]) acc[s.dayOfWeek] = []
+      acc[s.dayOfWeek].push(s)
       return acc
     },
     {} as Record<number, SkoolScheduledPost[]>
@@ -798,19 +798,19 @@ function SchedulerPageContent() {
                                 <Loader2 className="h-4 w-4 animate-spin" />
                               ) : (
                                 <Switch
-                                  checked={scheduler.is_active}
+                                  checked={scheduler.isActive}
                                   onCheckedChange={() => handleToggleActive(scheduler)}
                                 />
                               )}
-                              <Badge variant={scheduler.is_active ? 'default' : 'secondary'}>
-                                {scheduler.is_active ? 'Active' : 'Paused'}
+                              <Badge variant={scheduler.isActive ? 'default' : 'secondary'}>
+                                {scheduler.isActive ? 'Active' : 'Paused'}
                               </Badge>
                             </div>
                           </TableCell>
                           {/* Last Run Column */}
                           <TableCell className="text-muted-foreground">
-                            {scheduler.last_run_at
-                              ? new Date(scheduler.last_run_at).toLocaleString()
+                            {scheduler.lastRunAt
+                              ? new Date(scheduler.lastRunAt).toLocaleString()
                               : 'Never'}
                           </TableCell>
                           {/* Note Column */}
@@ -914,7 +914,7 @@ function SchedulerPageContent() {
                             />
                           ) : (
                             <span className="text-muted-foreground">
-                              {new Date(post.scheduled_at).toLocaleDateString()}
+                              {new Date(post.scheduledAt).toLocaleDateString()}
                             </span>
                           )}
                         </TableCell>
@@ -937,7 +937,7 @@ function SchedulerPageContent() {
                             />
                           ) : (
                             <span className="text-muted-foreground">
-                              {new Date(post.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              {new Date(post.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           )}
                         </TableCell>
@@ -1033,14 +1033,14 @@ function SchedulerPageContent() {
           editingScheduler
             ? {
                 id: editingScheduler.id,
-                group_slug: editingScheduler.group_slug,
+                groupSlug: editingScheduler.groupSlug,
                 category: editingScheduler.category,
-                category_id: editingScheduler.category_id,
-                day_of_week: editingScheduler.day_of_week,
+                categoryId: editingScheduler.categoryId,
+                dayOfWeek: editingScheduler.dayOfWeek,
                 time: editingScheduler.time,
-                is_active: editingScheduler.is_active,
+                isActive: editingScheduler.isActive,
                 note: editingScheduler.note || '',
-                variation_group_id: editingScheduler.variation_group_id ?? null,
+                variationGroupId: editingScheduler.variationGroupId ?? null,
               }
             : null
         }

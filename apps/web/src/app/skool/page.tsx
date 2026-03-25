@@ -30,9 +30,9 @@ export default function SkoolOverviewPage() {
   const { posts: upcomingPosts } = useOneOffPosts({ upcoming: true, limit: 5 })
   const { emailBlastStatus } = useGroupSettings()
 
-  const activeSchedulers = schedulers.filter((s) => s.is_active)
-  const activePosts = posts.filter((p) => p.is_active)
-  const activeGroups = groups.filter((g) => g.is_active)
+  const activeSchedulers = schedulers.filter((s) => s.isActive)
+  const activePosts = posts.filter((p) => p.isActive)
+  const activeGroups = groups.filter((g) => g.isActive)
 
   return (
     <div className="space-y-6">
@@ -82,7 +82,7 @@ export default function SkoolOverviewPage() {
             <CardContent>
               <div className="text-2xl font-bold">{campaigns.length}</div>
               <p className="text-xs text-muted-foreground">
-                {campaigns.reduce((acc, c) => acc + (c.stats?.pending_posts || 0), 0)} pending posts
+                {campaigns.reduce((acc, c) => acc + (c.stats?.pendingPosts || 0), 0)} pending posts
               </p>
             </CardContent>
           </Card>
@@ -106,7 +106,7 @@ export default function SkoolOverviewPage() {
               <>
                 <div className="text-2xl font-bold text-amber-600 flex items-center gap-2">
                   <Clock className="h-5 w-5" />
-                  {emailBlastStatus?.hours_until_available}h
+                  {emailBlastStatus?.hoursUntilAvailable}h
                 </div>
                 <p className="text-xs text-muted-foreground">Until available</p>
               </>
@@ -131,7 +131,7 @@ export default function SkoolOverviewPage() {
             ) : (
               <div className="space-y-3">
                 {upcomingPosts.map((post) => {
-                  const scheduledDate = new Date(post.scheduled_at)
+                  const scheduledDate = new Date(post.scheduledAt)
                   return (
                     <div
                       key={post.id}
@@ -197,13 +197,13 @@ export default function SkoolOverviewPage() {
                     <div className="space-y-1">
                       <p className="text-sm font-medium leading-none">{scheduler.category}</p>
                       <p className="text-xs text-muted-foreground">
-                        {scheduler.variation_group
-                          ? `Group: ${scheduler.variation_group.name}`
+                        {scheduler.variationGroup
+                          ? `Group: ${scheduler.variationGroup.name}`
                           : 'Legacy matching'}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-medium">{getDayName(scheduler.day_of_week)}</p>
+                      <p className="text-sm font-medium">{getDayName(scheduler.dayOfWeek)}</p>
                       <p className="text-xs text-muted-foreground">
                         {formatScheduleTime(scheduler.time)}
                       </p>

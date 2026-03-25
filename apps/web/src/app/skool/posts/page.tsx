@@ -60,13 +60,13 @@ export default function PostsLibraryPage() {
   // Approve state
   const [approvingId, setApprovingId] = useState<string | null>(null)
 
-  // Sort posts by created_at descending (newest first)
+  // Sort posts by createdAt descending (newest first)
   const sortedPosts = useMemo(() => {
     return [...posts].sort((a, b) => {
-      // Drafts always at top, then by created_at descending
+      // Drafts always at top, then by createdAt descending
       if (a.status === 'draft' && b.status !== 'draft') return -1
       if (b.status === 'draft' && a.status !== 'draft') return 1
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     })
   }, [posts])
 
@@ -102,10 +102,10 @@ export default function PostsLibraryPage() {
         const result = await updatePost(data.id, {
           title: data.title,
           body: data.body,
-          image_url: data.image_url || null,
-          video_url: data.video_url || null,
-          is_active: data.is_active,
-          variation_group_id: data.variation_group_id,
+          imageUrl: data.imageUrl || null,
+          videoUrl: data.videoUrl || null,
+          isActive: data.isActive,
+          variationGroupId: data.variationGroupId,
           status: data.status,
         })
         if (result.error) {
@@ -117,14 +117,14 @@ export default function PostsLibraryPage() {
         // Create new (manual creation defaults to active)
         const result = await createPost({
           category: '', // kept for backward compatibility
-          day_of_week: null,
+          dayOfWeek: null,
           time: null,
           title: data.title,
           body: data.body,
-          image_url: data.image_url || null,
-          video_url: data.video_url || null,
-          is_active: data.is_active,
-          variation_group_id: data.variation_group_id,
+          imageUrl: data.imageUrl || null,
+          videoUrl: data.videoUrl || null,
+          isActive: data.isActive,
+          variationGroupId: data.variationGroupId,
           status: 'active',
           source: 'manual',
         })
@@ -215,8 +215,8 @@ export default function PostsLibraryPage() {
               {groups.map((group) => (
                 <SelectItem key={group.id} value={group.id}>
                   {group.name}
-                  {group.post_count !== undefined && (
-                    <span className="text-muted-foreground ml-1">({group.post_count})</span>
+                  {group.postCount !== undefined && (
+                    <span className="text-muted-foreground ml-1">({group.postCount})</span>
                   )}
                 </SelectItem>
               ))}
@@ -273,8 +273,8 @@ export default function PostsLibraryPage() {
                     </PostPreviewPopover>
                   </TableCell>
                   <TableCell>
-                    {post.variation_group_id ? (
-                      <span className="text-sm">{groupNameMap[post.variation_group_id] || 'Unknown'}</span>
+                    {post.variationGroupId ? (
+                      <span className="text-sm">{groupNameMap[post.variationGroupId] || 'Unknown'}</span>
                     ) : (
                       <span className="text-sm text-muted-foreground">-</span>
                     )}
@@ -371,14 +371,14 @@ export default function PostsLibraryPage() {
             ? {
                 id: editingPost.id,
                 category: editingPost.category,
-                day_of_week: editingPost.day_of_week,
+                dayOfWeek: editingPost.dayOfWeek,
                 time: editingPost.time,
                 title: editingPost.title,
                 body: editingPost.body,
-                image_url: editingPost.image_url || '',
-                video_url: editingPost.video_url || '',
-                is_active: editingPost.is_active,
-                variation_group_id: editingPost.variation_group_id ?? null,
+                imageUrl: editingPost.imageUrl || '',
+                videoUrl: editingPost.videoUrl || '',
+                isActive: editingPost.isActive,
+                variationGroupId: editingPost.variationGroupId ?? null,
                 status: editingPost.status,
                 source: editingPost.source,
               }

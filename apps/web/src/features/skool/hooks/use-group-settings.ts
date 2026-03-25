@@ -17,16 +17,16 @@ export interface UseGroupSettingsReturn {
  * Hook for fetching group settings including email blast status
  */
 export function useGroupSettings(groupSlug = 'fruitful'): UseGroupSettingsReturn {
-  const url = `/api/skool/group-settings?group_slug=${encodeURIComponent(groupSlug)}`
+  const url = `/api/skool/group-settings?groupSlug=${encodeURIComponent(groupSlug)}`
 
   const { data, error, mutate } = useSWR<{
     settings: SkoolGroupSettings
-    email_blast_status: EmailBlastStatus
+    emailBlastStatus: EmailBlastStatus
   }>(url, fetcher)
 
   return {
     settings: data?.settings || null,
-    emailBlastStatus: data?.email_blast_status || null,
+    emailBlastStatus: data?.emailBlastStatus || null,
     isLoading: !error && !data,
     error,
     refresh: mutate,
@@ -43,7 +43,7 @@ export async function recordEmailBlast(
     const response = await fetch('/api/skool/group-settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ group_slug: groupSlug }),
+      body: JSON.stringify({ groupSlug }),
     })
     const data = await response.json()
     if (!response.ok) {

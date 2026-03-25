@@ -19,7 +19,7 @@ export function useManualMatch() {
       const response = await fetch(`/api/dm-sync/contacts/${skoolUserId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ghl_contact_id: ghlContactId }),
+        body: JSON.stringify({ ghlContactId }),
       })
 
       if (!response.ok) {
@@ -46,7 +46,7 @@ export function useManualMatch() {
  * Hook for creating a synthetic GHL contact for an unmatched Skool user
  */
 /**
- * Hook for updating any contact field (email, phone, name, username, ghl_contact_id)
+ * Hook for updating any contact field (email, phone, name, username, ghlContactId)
  */
 export function useContactUpdate() {
   const { mutate } = useSWRConfig()

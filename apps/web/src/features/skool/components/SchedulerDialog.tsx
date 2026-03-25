@@ -24,13 +24,13 @@ import { useVariationGroups } from '../hooks/use-variation-groups'
 
 export interface SchedulerFormData {
   id?: string
-  group_slug: string
+  groupSlug: string
   category: string
-  category_id: string | null
-  day_of_week: DayOfWeek
+  categoryId: string | null
+  dayOfWeek: DayOfWeek
   time: string
-  variation_group_id: string | null
-  is_active: boolean
+  variationGroupId: string | null
+  isActive: boolean
   note: string
 }
 
@@ -43,13 +43,13 @@ interface SchedulerDialogProps {
 }
 
 const defaultFormData: SchedulerFormData = {
-  group_slug: 'fruitful',
+  groupSlug: 'fruitful',
   category: '',
-  category_id: null,
-  day_of_week: 1, // Monday
+  categoryId: null,
+  dayOfWeek: 1, // Monday
   time: '09:00',
-  variation_group_id: null,
-  is_active: true,
+  variationGroupId: null,
+  isActive: true,
   note: '',
 }
 
@@ -71,13 +71,13 @@ export function SchedulerDialog({
     if (open && scheduler) {
       setFormData({
         id: scheduler.id,
-        group_slug: scheduler.group_slug || 'fruitful',
+        groupSlug: scheduler.groupSlug || 'fruitful',
         category: scheduler.category || '',
-        category_id: scheduler.category_id || null,
-        day_of_week: scheduler.day_of_week ?? 1,
+        categoryId: scheduler.categoryId || null,
+        dayOfWeek: scheduler.dayOfWeek ?? 1,
         time: scheduler.time || '09:00',
-        variation_group_id: scheduler.variation_group_id || null,
-        is_active: scheduler.is_active ?? true,
+        variationGroupId: scheduler.variationGroupId || null,
+        isActive: scheduler.isActive ?? true,
         note: scheduler.note || '',
       })
     } else if (open && !scheduler) {
@@ -94,11 +94,11 @@ export function SchedulerDialog({
     setFormData({
       ...formData,
       category: categoryName,
-      category_id: selectedCategory?.id || null,
+      categoryId: selectedCategory?.id || null,
     })
   }
 
-  const isValid = formData.category && formData.time && formData.variation_group_id
+  const isValid = formData.category && formData.time && formData.variationGroupId
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -159,9 +159,9 @@ export function SchedulerDialog({
                 Day of Week
               </label>
               <Select
-                value={String(formData.day_of_week)}
+                value={String(formData.dayOfWeek)}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, day_of_week: parseInt(value, 10) as DayOfWeek })
+                  setFormData({ ...formData, dayOfWeek: parseInt(value, 10) as DayOfWeek })
                 }
               >
                 <SelectTrigger id="scheduler-day">
@@ -196,9 +196,9 @@ export function SchedulerDialog({
               Variation Group (content source)
             </label>
             <Select
-              value={formData.variation_group_id || ''}
+              value={formData.variationGroupId || ''}
               onValueChange={(value) =>
-                setFormData({ ...formData, variation_group_id: value || null })
+                setFormData({ ...formData, variationGroupId: value || null })
               }
               disabled={groupsLoading}
             >
@@ -209,7 +209,7 @@ export function SchedulerDialog({
               </SelectTrigger>
               <SelectContent>
                 {variationGroups
-                  .filter((g) => g.is_active)
+                  .filter((g) => g.isActive)
                   .map((group) => (
                     <SelectItem key={group.id} value={group.id}>
                       {group.name}
@@ -245,8 +245,8 @@ export function SchedulerDialog({
             </div>
             <Switch
               id="scheduler-active"
-              checked={formData.is_active}
-              onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+              checked={formData.isActive}
+              onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
             />
           </div>
         </div>

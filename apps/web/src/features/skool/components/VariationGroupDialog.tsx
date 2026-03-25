@@ -18,7 +18,7 @@ export interface VariationGroupFormData {
   id?: string
   name: string
   description: string
-  is_active: boolean
+  isActive: boolean
 }
 
 interface VariationGroupDialogProps {
@@ -32,7 +32,7 @@ interface VariationGroupDialogProps {
 const defaultFormData: VariationGroupFormData = {
   name: '',
   description: '',
-  is_active: true,
+  isActive: true,
 }
 
 export function VariationGroupDialog({
@@ -52,7 +52,7 @@ export function VariationGroupDialog({
         id: group.id,
         name: group.name || '',
         description: group.description || '',
-        is_active: group.is_active ?? true,
+        isActive: group.isActive ?? true,
       })
     } else if (open && !group) {
       setFormData(defaultFormData)
@@ -117,8 +117,8 @@ export function VariationGroupDialog({
             </div>
             <Switch
               id="group-active"
-              checked={formData.is_active}
-              onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+              checked={formData.isActive}
+              onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
             />
           </div>
         </div>

@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const includeStats = searchParams.get('include_stats') === 'true'
+    const includeStats = searchParams.get('includeStats') === 'true' || searchParams.get('include_stats') === 'true'
 
     const data = await db
       .select()
@@ -63,8 +63,8 @@ export async function GET(request: NextRequest) {
 
       groupsWithStats = data.map((group) => ({
         ...group,
-        post_count: postCountMap.get(group.id) || 0,
-        scheduler_count: schedulerCountMap.get(group.id) || 0,
+        postCount: postCountMap.get(group.id) || 0,
+        schedulerCount: schedulerCountMap.get(group.id) || 0,
       }))
     }
 
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       .values({
         name: body.name,
         description: body.description || null,
-        isActive: body.is_active ?? true,
+        isActive: body.isActive ?? true,
       })
       .returning()
 
@@ -127,7 +127,7 @@ export async function PUT(request: NextRequest) {
     const setData: Record<string, unknown> = { updatedAt: new Date() }
     if (updates.name !== undefined) setData.name = updates.name
     if (updates.description !== undefined) setData.description = updates.description
-    if (updates.is_active !== undefined) setData.isActive = updates.is_active
+    if (updates.isActive !== undefined) setData.isActive = updates.isActive
 
     const [updated] = await db
       .update(skoolVariationGroups)

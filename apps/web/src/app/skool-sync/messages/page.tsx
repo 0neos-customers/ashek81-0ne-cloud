@@ -158,8 +158,8 @@ function StatusBadge({ status }: { status: RawMessage['status'] }) {
 
 // Deep links component
 function DeepLinks({ message }: { message: RawMessage }) {
-  const skoolUrl = buildSkoolSearchUrl(message.skool_community_slug, message.skool_username)
-  const ghlUrl = buildGhlContactUrl(message.ghl_location_id, message.ghl_contact_id)
+  const skoolUrl = buildSkoolSearchUrl(message.skoolCommunitySlug, message.skoolUsername)
+  const ghlUrl = buildGhlContactUrl(message.ghlLocationId, message.ghlContactId)
 
   return (
     <div className="flex items-center gap-2">
@@ -274,18 +274,18 @@ function MessagesTable({
                 <DirectionBadge direction={msg.direction} />
               </TableCell>
               <TableCell className="font-medium">
-                {msg.sender_name || usernameToDisplayName(msg.skool_username) || msg.skool_user_id.slice(0, 8)}
+                {msg.senderName || usernameToDisplayName(msg.skoolUsername) || msg.skoolUserId.slice(0, 8)}
               </TableCell>
               <TableCell className="text-muted-foreground">
-                <span title={msg.message_text || undefined}>
-                  {truncateMessage(msg.message_text)}
+                <span title={msg.messageText || undefined}>
+                  {truncateMessage(msg.messageText)}
                 </span>
               </TableCell>
               <TableCell>
                 <StatusBadge status={msg.status} />
               </TableCell>
               <TableCell className="text-muted-foreground text-sm">
-                {formatTimestamp(msg.created_at)}
+                {formatTimestamp(msg.createdAt)}
               </TableCell>
               <TableCell className="text-right">
                 <DeepLinks message={msg} />

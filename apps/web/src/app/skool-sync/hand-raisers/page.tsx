@@ -30,11 +30,11 @@ export default function HandRaisersPage() {
   const handleEdit = (campaign: HandRaiserCampaignWithStats) => {
     setSelectedCampaign({
       id: campaign.id,
-      post_url: campaign.post_url,
-      dm_template: campaign.dm_template || '',
-      keyword_filter: campaign.keyword_filter || '',
-      ghl_tag: campaign.ghl_tag || '',
-      is_active: campaign.is_active,
+      postUrl: campaign.postUrl,
+      dmTemplate: campaign.dmTemplate || '',
+      keywordFilter: campaign.keywordFilter || '',
+      ghlTag: campaign.ghlTag || '',
+      isActive: campaign.isActive,
     })
     setDialogOpen(true)
   }
@@ -52,11 +52,11 @@ export default function HandRaisersPage() {
         result = await updateHandRaiser(data.id, data)
       } else {
         result = await createHandRaiser({
-          post_url: data.post_url,
-          dm_template: data.dm_template,
-          keyword_filter: data.keyword_filter || null,
-          ghl_tag: data.ghl_tag || null,
-          is_active: data.is_active,
+          postUrl: data.postUrl,
+          dmTemplate: data.dmTemplate,
+          keywordFilter: data.keywordFilter || null,
+          ghlTag: data.ghlTag || null,
+          isActive: data.isActive,
         })
       }
       if (result.error) {
@@ -135,19 +135,19 @@ export default function HandRaisersPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {campaigns.map((campaign) => (
-            <Card key={campaign.id} className={!campaign.is_active ? 'opacity-60' : ''}>
+            <Card key={campaign.id} className={!campaign.isActive ? 'opacity-60' : ''}>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
-                    <CardTitle className="text-sm font-mono truncate" title={campaign.post_url}>
-                      {truncateUrl(campaign.post_url)}
+                    <CardTitle className="text-sm font-mono truncate" title={campaign.postUrl}>
+                      {truncateUrl(campaign.postUrl)}
                     </CardTitle>
-                    {!campaign.is_active && (
+                    {!campaign.isActive && (
                       <span className="inline-block mt-1 text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                         Inactive
                       </span>
                     )}
-                    {campaign.is_active && (
+                    {campaign.isActive && (
                       <span className="inline-block mt-1 text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
                         Active
                       </span>
@@ -166,17 +166,17 @@ export default function HandRaisersPage() {
               <CardContent className="space-y-3">
                 {/* Badges */}
                 <div className="flex flex-wrap gap-2">
-                  {campaign.keyword_filter && (
+                  {campaign.keywordFilter && (
                     <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
                       <Filter className="h-3 w-3" />
-                      {campaign.keyword_filter.split(',').length} keyword
-                      {campaign.keyword_filter.split(',').length > 1 ? 's' : ''}
+                      {campaign.keywordFilter.split(',').length} keyword
+                      {campaign.keywordFilter.split(',').length > 1 ? 's' : ''}
                     </span>
                   )}
-                  {campaign.ghl_tag && (
+                  {campaign.ghlTag && (
                     <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
                       <Tag className="h-3 w-3" />
-                      {campaign.ghl_tag}
+                      {campaign.ghlTag}
                     </span>
                   )}
                 </div>
@@ -185,12 +185,12 @@ export default function HandRaisersPage() {
                 <div className="flex gap-4 text-sm">
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <Send className="h-4 w-4" />
-                    <span>{campaign.stats.sent_count} sent</span>
+                    <span>{campaign.stats.sentCount} sent</span>
                   </div>
-                  {campaign.stats.last_sent_at && (
+                  {campaign.stats.lastSentAt && (
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <Clock className="h-4 w-4" />
-                      <span>{formatRelativeTime(campaign.stats.last_sent_at)}</span>
+                      <span>{formatRelativeTime(campaign.stats.lastSentAt)}</span>
                     </div>
                   )}
                 </div>

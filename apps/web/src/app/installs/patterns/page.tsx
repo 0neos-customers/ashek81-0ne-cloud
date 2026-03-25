@@ -116,8 +116,8 @@ function DocumentFixForm({
   onSave: (patternId: string, knownFix: string, autoFixable: boolean) => Promise<void>
   onCancel: () => void
 }) {
-  const [knownFix, setKnownFix] = useState(pattern.known_fix || '')
-  const [autoFixable, setAutoFixable] = useState(pattern.auto_fixable)
+  const [knownFix, setKnownFix] = useState(pattern.knownFix || '')
+  const [autoFixable, setAutoFixable] = useState(pattern.autoFixable)
   const [isSaving, setIsSaving] = useState(false)
 
   const handleSave = async () => {
@@ -238,8 +238,8 @@ export default function PatternsPage() {
     if (!patterns) return { total: 0, withFix: 0, autoFixable: 0 }
     return {
       total: patterns.length,
-      withFix: patterns.filter((p) => p.known_fix).length,
-      autoFixable: patterns.filter((p) => p.auto_fixable).length,
+      withFix: patterns.filter((p) => p.knownFix).length,
+      autoFixable: patterns.filter((p) => p.autoFixable).length,
     }
   }, [patterns])
 
@@ -356,8 +356,8 @@ export default function PatternsPage() {
                   <div key={pattern.id}>
                     <div className="grid grid-cols-[1fr_100px_90px_90px_90px_2fr_80px_100px] gap-4 px-5 py-3 items-center">
                       {/* Failure Name */}
-                      <div className="text-sm font-medium truncate" title={pattern.failure_name}>
-                        {pattern.failure_name}
+                      <div className="text-sm font-medium truncate" title={pattern.failureName}>
+                        {pattern.failureName}
                       </div>
 
                       {/* Category */}
@@ -379,25 +379,25 @@ export default function PatternsPage() {
                       {/* Occurrences */}
                       <div className="text-right">
                         <span className="text-sm font-semibold tabular-nums">
-                          {pattern.occurrence_count}
+                          {pattern.occurrenceCount}
                         </span>
                       </div>
 
                       {/* First Seen */}
                       <div className="text-xs text-muted-foreground">
-                        {formatDate(pattern.first_seen)}
+                        {formatDate(pattern.firstSeen)}
                       </div>
 
                       {/* Last Seen */}
                       <div className="text-xs text-muted-foreground">
-                        {formatDate(pattern.last_seen)}
+                        {formatDate(pattern.lastSeen)}
                       </div>
 
                       {/* Known Fix */}
-                      <div className="text-sm text-muted-foreground" title={pattern.known_fix || undefined}>
-                        {pattern.known_fix ? (
+                      <div className="text-sm text-muted-foreground" title={pattern.knownFix || undefined}>
+                        {pattern.knownFix ? (
                           <div className="space-y-1">
-                            <div className="truncate">{pattern.known_fix}</div>
+                            <div className="truncate">{pattern.knownFix}</div>
                             <span className="inline-flex items-center rounded-full bg-sky-50 dark:bg-sky-950/30 px-1.5 py-0.5 text-[10px] font-medium text-sky-600 dark:text-sky-400">
                               Auto-learned
                             </span>
@@ -409,7 +409,7 @@ export default function PatternsPage() {
 
                       {/* Auto-Fixable */}
                       <div className="text-center">
-                        {pattern.auto_fixable ? (
+                        {pattern.autoFixable ? (
                           <CheckCircle2 className="h-4 w-4 text-green-500 mx-auto" />
                         ) : (
                           <X className="h-4 w-4 text-muted-foreground/40 mx-auto" />
@@ -432,7 +432,7 @@ export default function PatternsPage() {
                           )}
                         >
                           <Wrench className="h-3 w-3" />
-                          {pattern.known_fix ? 'Edit Fix' : 'Document Fix'}
+                          {pattern.knownFix ? 'Edit Fix' : 'Document Fix'}
                         </button>
                       </div>
                     </div>

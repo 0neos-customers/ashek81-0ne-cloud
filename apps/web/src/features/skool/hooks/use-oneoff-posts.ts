@@ -28,7 +28,7 @@ export interface UseOneOffPostsReturn {
  */
 export function useOneOffPosts(options: UseOneOffPostsOptions = {}): UseOneOffPostsReturn {
   const params = new URLSearchParams()
-  if (options.campaignId) params.set('campaign_id', options.campaignId)
+  if (options.campaignId) params.set('campaignId', options.campaignId)
   if (options.status) params.set('status', options.status)
   if (options.upcoming) params.set('upcoming', 'true')
   if (options.limit) params.set('limit', String(options.limit))

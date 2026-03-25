@@ -91,7 +91,7 @@ export default function VariationGroupDetailPage() {
       const result = await updateVariationGroup(group.id, {
         name: data.name,
         description: data.description || null,
-        is_active: data.is_active,
+        isActive: data.isActive,
       })
       if (result.error) {
         toast.error(result.error)
@@ -127,14 +127,14 @@ export default function VariationGroupDetailPage() {
         // Update existing
         const result = await updatePost(data.id, {
           category: data.category,
-          day_of_week: data.day_of_week,
+          dayOfWeek: data.dayOfWeek,
           time: data.time,
           title: data.title,
           body: data.body,
-          image_url: data.image_url || null,
-          video_url: data.video_url || null,
-          is_active: data.is_active,
-          variation_group_id: groupId,
+          imageUrl: data.imageUrl || null,
+          videoUrl: data.videoUrl || null,
+          isActive: data.isActive,
+          variationGroupId: groupId,
         })
         if (result.error) {
           toast.error(result.error)
@@ -145,14 +145,14 @@ export default function VariationGroupDetailPage() {
         // Create new - pre-set the variation group
         const result = await createPost({
           category: '', // kept for backward compatibility
-          day_of_week: null,
+          dayOfWeek: null,
           time: null,
           title: data.title,
           body: data.body,
-          image_url: data.image_url || null,
-          video_url: data.video_url || null,
-          is_active: data.is_active,
-          variation_group_id: groupId,
+          imageUrl: data.imageUrl || null,
+          videoUrl: data.videoUrl || null,
+          isActive: data.isActive,
+          variationGroupId: groupId,
         })
         if (result.error) {
           toast.error(result.error)
@@ -227,8 +227,8 @@ export default function VariationGroupDetailPage() {
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold">{group.name}</h1>
-              <Badge variant={group.is_active ? 'default' : 'secondary'}>
-                {group.is_active ? 'Active' : 'Inactive'}
+              <Badge variant={group.isActive ? 'default' : 'secondary'}>
+                {group.isActive ? 'Active' : 'Inactive'}
               </Badge>
             </div>
             {group.description && (
@@ -237,11 +237,11 @@ export default function VariationGroupDetailPage() {
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <FileText className="h-4 w-4" />
-                <span>{group.post_count || 0} posts</span>
+                <span>{group.postCount || 0} posts</span>
               </div>
               <div className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                <span>{group.scheduler_count || 0} schedulers</span>
+                <span>{group.schedulerCount || 0} schedulers</span>
               </div>
             </div>
           </div>
@@ -288,10 +288,10 @@ export default function VariationGroupDetailPage() {
               {posts
                 .sort((a, b) => {
                   // Sort by last_used_at (nulls first for unused), then by title
-                  if (!a.last_used_at && b.last_used_at) return -1
-                  if (a.last_used_at && !b.last_used_at) return 1
-                  if (a.last_used_at && b.last_used_at) {
-                    return new Date(a.last_used_at).getTime() - new Date(b.last_used_at).getTime()
+                  if (!a.lastUsedAt && b.lastUsedAt) return -1
+                  if (a.lastUsedAt && !b.lastUsedAt) return 1
+                  if (a.lastUsedAt && b.lastUsedAt) {
+                    return new Date(a.lastUsedAt).getTime() - new Date(b.lastUsedAt).getTime()
                   }
                   return a.title.localeCompare(b.title)
                 })
@@ -307,22 +307,22 @@ export default function VariationGroupDetailPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
-                        {post.image_url && <Image className="h-4 w-4 text-muted-foreground" />}
-                        {post.video_url && <Video className="h-4 w-4 text-muted-foreground" />}
-                        {!post.image_url && !post.video_url && (
+                        {post.imageUrl && <Image className="h-4 w-4 text-muted-foreground" />}
+                        {post.videoUrl && <Video className="h-4 w-4 text-muted-foreground" />}
+                        {!post.imageUrl && !post.videoUrl && (
                           <span className="text-muted-foreground">-</span>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>{post.use_count}x</TableCell>
+                    <TableCell>{post.useCount}x</TableCell>
                     <TableCell className="text-muted-foreground">
-                      {post.last_used_at
-                        ? new Date(post.last_used_at).toLocaleDateString()
+                      {post.lastUsedAt
+                        ? new Date(post.lastUsedAt).toLocaleDateString()
                         : 'Never'}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={post.is_active ? 'default' : 'secondary'}>
-                        {post.is_active ? 'Active' : 'Inactive'}
+                      <Badge variant={post.isActive ? 'default' : 'secondary'}>
+                        {post.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -363,7 +363,7 @@ export default function VariationGroupDetailPage() {
             id: group.id,
             name: group.name,
             description: group.description || '',
-            is_active: group.is_active,
+            isActive: group.isActive,
           }}
           onSave={handleSaveGroup}
           isSaving={isSavingGroup}
@@ -379,25 +379,25 @@ export default function VariationGroupDetailPage() {
             ? {
                 id: editingPost.id,
                 category: editingPost.category,
-                day_of_week: editingPost.day_of_week,
+                dayOfWeek: editingPost.dayOfWeek,
                 time: editingPost.time,
-                variation_group_id: groupId,
+                variationGroupId: groupId,
                 title: editingPost.title,
                 body: editingPost.body,
-                image_url: editingPost.image_url || '',
-                video_url: editingPost.video_url || '',
-                is_active: editingPost.is_active,
+                imageUrl: editingPost.imageUrl || '',
+                videoUrl: editingPost.videoUrl || '',
+                isActive: editingPost.isActive,
               }
             : {
                 category: '',
-                day_of_week: null,
+                dayOfWeek: null,
                 time: null,
-                variation_group_id: groupId,
+                variationGroupId: groupId,
                 title: '',
                 body: '',
-                image_url: '',
-                video_url: '',
-                is_active: true,
+                imageUrl: '',
+                videoUrl: '',
+                isActive: true,
               }
         }
         onSave={handleSavePost}

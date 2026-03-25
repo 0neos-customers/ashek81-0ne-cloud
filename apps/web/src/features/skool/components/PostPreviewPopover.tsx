@@ -35,11 +35,11 @@ export function PostPreviewPopover({ post, children }: PostPreviewPopoverProps) 
           </div>
 
           {/* Image preview */}
-          {post.image_url && (
+          {post.imageUrl && (
             <div className="rounded-md overflow-hidden border">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={post.image_url}
+                src={post.imageUrl}
                 alt="Post image"
                 className="w-full h-24 object-cover"
                 onError={(e) => {
@@ -50,7 +50,7 @@ export function PostPreviewPopover({ post, children }: PostPreviewPopoverProps) 
           )}
 
           {/* Video indicator */}
-          {post.video_url && (
+          {post.videoUrl && (
             <div className="text-xs text-muted-foreground flex items-center gap-1">
               <span className="inline-block w-2 h-2 rounded-full bg-blue-500" />
               Has video attachment
@@ -59,9 +59,9 @@ export function PostPreviewPopover({ post, children }: PostPreviewPopoverProps) 
 
           {/* Stats */}
           <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
-            <span>Used: {post.use_count}x</span>
-            {post.last_used_at && (
-              <span>Last: {new Date(post.last_used_at).toLocaleDateString()}</span>
+            <span>Used: {post.useCount}x</span>
+            {post.lastUsedAt && (
+              <span>Last: {new Date(post.lastUsedAt).toLocaleDateString()}</span>
             )}
           </div>
         </div>

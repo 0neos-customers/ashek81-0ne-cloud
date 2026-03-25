@@ -6,14 +6,14 @@ import type { HandRaiserCampaignRow } from '../types'
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 /**
- * Input for creating a hand-raiser campaign (API format - snake_case)
+ * Input for creating a hand-raiser campaign (API format - camelCase)
  */
 export interface CreateHandRaiserInput {
-  post_url: string
-  dm_template?: string | null  // Optional - if null, GHL-only mode (no DM sent)
-  keyword_filter?: string | null
-  ghl_tag?: string | null
-  is_active?: boolean
+  postUrl: string
+  dmTemplate?: string | null  // Optional - if null, GHL-only mode (no DM sent)
+  keywordFilter?: string | null
+  ghlTag?: string | null
+  isActive?: boolean
 }
 
 /**
@@ -21,8 +21,8 @@ export interface CreateHandRaiserInput {
  */
 export interface HandRaiserCampaignWithStats extends HandRaiserCampaignRow {
   stats: {
-    sent_count: number
-    last_sent_at: string | null
+    sentCount: number
+    lastSentAt: string | null
   }
 }
 

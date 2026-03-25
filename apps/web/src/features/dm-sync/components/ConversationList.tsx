@@ -52,15 +52,15 @@ export function ConversationList({ selectedId, onSelect }: ConversationListProps
     const searchLower = debouncedSearch.toLowerCase()
     return conversations.filter(
       (c) =>
-        c.participant.display_name?.toLowerCase().includes(searchLower) ||
+        c.participant.displayName?.toLowerCase().includes(searchLower) ||
         c.participant.username?.toLowerCase().includes(searchLower)
     )
   }, [conversations, debouncedSearch])
 
   // Status filter tabs
   const statusTabs: { value: StatusFilter; label: string; count?: number }[] = [
-    { value: 'all', label: 'All', count: summary.total_conversations },
-    { value: 'pending', label: 'Pending', count: summary.total_pending },
+    { value: 'all', label: 'All', count: summary.totalConversations },
+    { value: 'pending', label: 'Pending', count: summary.totalPending },
     { value: 'synced', label: 'Synced' },
   ]
 
@@ -142,10 +142,10 @@ export function ConversationList({ selectedId, onSelect }: ConversationListProps
           <div className="divide-y">
             {filteredConversations.map((conversation) => (
               <ConversationItem
-                key={conversation.conversation_id}
+                key={conversation.conversationId}
                 conversation={conversation}
-                isSelected={selectedId === conversation.conversation_id}
-                onClick={() => onSelect(conversation.conversation_id)}
+                isSelected={selectedId === conversation.conversationId}
+                onClick={() => onSelect(conversation.conversationId)}
               />
             ))}
           </div>
@@ -155,12 +155,12 @@ export function ConversationList({ selectedId, onSelect }: ConversationListProps
       {/* Footer - Conversation Count */}
       <div className="p-3 border-t bg-muted/30">
         <p className="text-xs text-muted-foreground text-center">
-          {summary.total_conversations.toLocaleString()} conversation
-          {summary.total_conversations !== 1 ? 's' : ''}
-          {summary.total_pending > 0 && (
+          {summary.totalConversations.toLocaleString()} conversation
+          {summary.totalConversations !== 1 ? 's' : ''}
+          {summary.totalPending > 0 && (
             <span className="ml-2">
               <Badge variant="outline" className="text-xs py-0">
-                {summary.total_pending} pending
+                {summary.totalPending} pending
               </Badge>
             </span>
           )}

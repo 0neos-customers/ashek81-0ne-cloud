@@ -20,10 +20,10 @@ export const dynamic = 'force-dynamic'
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const dayOfWeek = searchParams.get('day_of_week')
+    const dayOfWeek = searchParams.get('dayOfWeek') || searchParams.get('day_of_week')
     const time = searchParams.get('time')
-    const variationGroupId = searchParams.get('variation_group_id')
-    const isActive = searchParams.get('is_active')
+    const variationGroupId = searchParams.get('variationGroupId') || searchParams.get('variation_group_id')
+    const isActive = searchParams.get('isActive') || searchParams.get('is_active')
     const status = searchParams.get('status')
     const source = searchParams.get('source')
 
@@ -97,11 +97,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate day_of_week range (0-6) if provided
-    if (body.day_of_week !== undefined && body.day_of_week !== null) {
-      if (body.day_of_week < 0 || body.day_of_week > 6) {
+    // Validate dayOfWeek range (0-6) if provided
+    if (body.dayOfWeek !== undefined && body.dayOfWeek !== null) {
+      if (body.dayOfWeek < 0 || body.dayOfWeek > 6) {
         return NextResponse.json(
-          { error: 'day_of_week must be between 0 (Sunday) and 6 (Saturday)' },
+          { error: 'dayOfWeek must be between 0 (Sunday) and 6 (Saturday)' },
           { status: 400 }
         )
       }
@@ -119,14 +119,14 @@ export async function POST(request: NextRequest) {
       .insert(skoolPostLibrary)
       .values({
         category: body.category || '',
-        dayOfWeek: body.day_of_week ?? null,
+        dayOfWeek: body.dayOfWeek ?? null,
         time: body.time || null,
-        variationGroupId: body.variation_group_id || null,
+        variationGroupId: body.variationGroupId || null,
         title: body.title,
         body: body.body,
-        imageUrl: body.image_url || null,
-        videoUrl: body.video_url || null,
-        isActive: body.is_active ?? true,
+        imageUrl: body.imageUrl || null,
+        videoUrl: body.videoUrl || null,
+        isActive: body.isActive ?? true,
         status: body.status || 'active',
         source: body.source || 'manual',
       })
@@ -165,11 +165,11 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Missing id' }, { status: 400 })
     }
 
-    // Validate day_of_week if provided
-    if (updates.day_of_week !== undefined) {
-      if (updates.day_of_week < 0 || updates.day_of_week > 6) {
+    // Validate dayOfWeek if provided
+    if (updates.dayOfWeek !== undefined) {
+      if (updates.dayOfWeek < 0 || updates.dayOfWeek > 6) {
         return NextResponse.json(
-          { error: 'day_of_week must be between 0 (Sunday) and 6 (Saturday)' },
+          { error: 'dayOfWeek must be between 0 (Sunday) and 6 (Saturday)' },
           { status: 400 }
         )
       }
@@ -183,17 +183,17 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Map snake_case input to camelCase schema columns
+    // Map input to schema columns
     const setData: Record<string, unknown> = { updatedAt: new Date() }
     if (updates.category !== undefined) setData.category = updates.category
-    if (updates.day_of_week !== undefined) setData.dayOfWeek = updates.day_of_week
+    if (updates.dayOfWeek !== undefined) setData.dayOfWeek = updates.dayOfWeek
     if (updates.time !== undefined) setData.time = updates.time
-    if (updates.variation_group_id !== undefined) setData.variationGroupId = updates.variation_group_id
+    if (updates.variationGroupId !== undefined) setData.variationGroupId = updates.variationGroupId
     if (updates.title !== undefined) setData.title = updates.title
     if (updates.body !== undefined) setData.body = updates.body
-    if (updates.image_url !== undefined) setData.imageUrl = updates.image_url
-    if (updates.video_url !== undefined) setData.videoUrl = updates.video_url
-    if (updates.is_active !== undefined) setData.isActive = updates.is_active
+    if (updates.imageUrl !== undefined) setData.imageUrl = updates.imageUrl
+    if (updates.videoUrl !== undefined) setData.videoUrl = updates.videoUrl
+    if (updates.isActive !== undefined) setData.isActive = updates.isActive
     if (updates.status !== undefined) setData.status = updates.status
     if (updates.source !== undefined) setData.source = updates.source
 

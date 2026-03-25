@@ -17,7 +17,7 @@ const COOLDOWN_HOURS = 72
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const groupSlug = searchParams.get('group_slug') || 'fruitful'
+    const groupSlug = searchParams.get('groupSlug') || searchParams.get('group_slug') || 'fruitful'
 
     const [data] = await db
       .select()
@@ -41,13 +41,13 @@ export async function GET(request: NextRequest) {
 
     const emailBlastStatus: EmailBlastStatus = {
       available,
-      hours_until_available: hoursUntilAvailable,
-      last_blast_at: data?.lastEmailBlastAt?.toISOString() || null,
+      hoursUntilAvailable,
+      lastBlastAt: data?.lastEmailBlastAt?.toISOString() || null,
     }
 
     return NextResponse.json({
       settings: data || { groupSlug, lastEmailBlastAt: null },
-      email_blast_status: emailBlastStatus,
+      emailBlastStatus,
     })
   } catch (error) {
     console.error('[Group Settings API] GET exception:', error)
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const groupSlug = body.group_slug || 'fruitful'
+    const groupSlug = body.groupSlug || body.group_slug || 'fruitful'
 
     const now = new Date()
 

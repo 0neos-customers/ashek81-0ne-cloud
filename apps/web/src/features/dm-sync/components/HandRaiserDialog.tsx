@@ -16,11 +16,11 @@ import { Loader2, Eye, AlertCircle, CheckCircle2 } from 'lucide-react'
 
 export interface HandRaiserFormData {
   id?: string
-  post_url: string
-  dm_template: string
-  keyword_filter: string
-  ghl_tag: string
-  is_active: boolean
+  postUrl: string
+  dmTemplate: string
+  keywordFilter: string
+  ghlTag: string
+  isActive: boolean
 }
 
 interface HandRaiserDialogProps {
@@ -32,11 +32,11 @@ interface HandRaiserDialogProps {
 }
 
 const DEFAULT_FORM_DATA: HandRaiserFormData = {
-  post_url: '',
-  dm_template: '',
-  keyword_filter: '',
-  ghl_tag: '',
-  is_active: true,
+  postUrl: '',
+  dmTemplate: '',
+  keywordFilter: '',
+  ghlTag: '',
+  isActive: true,
 }
 
 /**
@@ -81,17 +81,17 @@ export function HandRaiserDialog({
 
   // URL validation state
   const urlValidation = useMemo(
-    () => validateSkoolUrl(formData.post_url),
-    [formData.post_url]
+    () => validateSkoolUrl(formData.postUrl),
+    [formData.postUrl]
   )
 
   // Template preview with sample data
   const previewText = useMemo(
     () =>
-      formData.dm_template
+      formData.dmTemplate
         .replace(/\{\{name\}\}/g, 'John')
         .replace(/\{\{username\}\}/g, 'johndoe'),
-    [formData.dm_template]
+    [formData.dmTemplate]
   )
 
   // Reset form when dialog opens/closes or campaign changes
@@ -101,11 +101,11 @@ export function HandRaiserDialog({
         campaign
           ? {
               id: campaign.id,
-              post_url: campaign.post_url || '',
-              dm_template: campaign.dm_template || '',
-              keyword_filter: campaign.keyword_filter || '',
-              ghl_tag: campaign.ghl_tag || '',
-              is_active: campaign.is_active ?? true,
+              postUrl: campaign.postUrl || '',
+              dmTemplate: campaign.dmTemplate || '',
+              keywordFilter: campaign.keywordFilter || '',
+              ghlTag: campaign.ghlTag || '',
+              isActive: campaign.isActive ?? true,
             }
           : DEFAULT_FORM_DATA
       )
@@ -121,7 +121,7 @@ export function HandRaiserDialog({
 
   const handleSubmit = async () => {
     // Validate required fields
-    if (!formData.post_url.trim()) {
+    if (!formData.postUrl.trim()) {
       setError('Post URL is required')
       return
     }
@@ -138,10 +138,10 @@ export function HandRaiserDialog({
     try {
       await onSave({
         ...formData,
-        post_url: formData.post_url.trim(),
-        dm_template: formData.dm_template.trim(),
-        keyword_filter: formData.keyword_filter.trim(),
-        ghl_tag: formData.ghl_tag.trim(),
+        postUrl: formData.postUrl.trim(),
+        dmTemplate: formData.dmTemplate.trim(),
+        keywordFilter: formData.keywordFilter.trim(),
+        ghlTag: formData.ghlTag.trim(),
       })
       onOpenChange(false)
     } catch (err) {
@@ -149,7 +149,7 @@ export function HandRaiserDialog({
     }
   }
 
-  const hasTemplate = formData.dm_template.trim().length > 0
+  const hasTemplate = formData.dmTemplate.trim().length > 0
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -174,10 +174,10 @@ export function HandRaiserDialog({
             <Input
               id="post-url"
               placeholder="https://www.skool.com/community/post~abc123"
-              value={formData.post_url}
-              onChange={(e) => handleFieldChange('post_url', e.target.value)}
+              value={formData.postUrl}
+              onChange={(e) => handleFieldChange('postUrl', e.target.value)}
             />
-            {formData.post_url && (
+            {formData.postUrl && (
               <div className="flex items-center gap-1.5 text-xs">
                 {urlValidation.isValid ? (
                   <>
@@ -192,7 +192,7 @@ export function HandRaiserDialog({
                 )}
               </div>
             )}
-            {!formData.post_url && (
+            {!formData.postUrl && (
               <p className="text-xs text-muted-foreground">
                 Enter the full URL of the Skool post to monitor for comments
               </p>
@@ -219,8 +219,8 @@ export function HandRaiserDialog({
             <textarea
               id="dm-template"
               placeholder="Hey {{name}}! Thanks for commenting..."
-              value={formData.dm_template}
-              onChange={(e) => handleFieldChange('dm_template', e.target.value)}
+              value={formData.dmTemplate}
+              onChange={(e) => handleFieldChange('dmTemplate', e.target.value)}
               rows={4}
               className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none"
             />
@@ -256,8 +256,8 @@ export function HandRaiserDialog({
             <Input
               id="keyword-filter"
               placeholder="interested, sign me up, how do I join"
-              value={formData.keyword_filter}
-              onChange={(e) => handleFieldChange('keyword_filter', e.target.value)}
+              value={formData.keywordFilter}
+              onChange={(e) => handleFieldChange('keywordFilter', e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
               Comma-separated keywords. Only comments containing these words will trigger a DM.
@@ -273,8 +273,8 @@ export function HandRaiserDialog({
             <Input
               id="ghl-tag"
               placeholder="hand-raiser-campaign-1"
-              value={formData.ghl_tag}
-              onChange={(e) => handleFieldChange('ghl_tag', e.target.value)}
+              value={formData.ghlTag}
+              onChange={(e) => handleFieldChange('ghlTag', e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
               Tag to apply in GoHighLevel when a DM is sent
@@ -288,15 +288,15 @@ export function HandRaiserDialog({
                 Campaign Active
               </label>
               <p className="text-xs text-muted-foreground">
-                {formData.is_active
+                {formData.isActive
                   ? 'Campaign will monitor and send DMs'
                   : 'Campaign is paused'}
               </p>
             </div>
             <Switch
               id="is-active"
-              checked={formData.is_active}
-              onCheckedChange={(checked) => handleFieldChange('is_active', checked)}
+              checked={formData.isActive}
+              onCheckedChange={(checked) => handleFieldChange('isActive', checked)}
             />
           </div>
 
@@ -319,7 +319,7 @@ export function HandRaiserDialog({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={isSaving || !formData.post_url.trim()}
+            disabled={isSaving || !formData.postUrl.trim()}
           >
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isEditMode ? 'Save Changes' : 'Create Campaign'}

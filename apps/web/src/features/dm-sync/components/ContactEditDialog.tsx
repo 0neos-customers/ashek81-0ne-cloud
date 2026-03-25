@@ -109,17 +109,17 @@ export function ContactEditDialog({
   const { updateContact, isLoading: isUpdating } = useContactUpdate()
   const { createSynthetic, isLoading: isCreating } = useSyntheticCreate()
 
-  const isMatched = !!contact?.ghl_contact_id
+  const isMatched = !!contact?.ghlContactId
   const isSaving = isUpdating || isCreating
 
   // Reset form when dialog opens
   useEffect(() => {
     if (open && contact) {
-      setDisplayName(contact.skool_display_name || '')
-      setUsername(contact.skool_username || '')
+      setDisplayName(contact.skoolDisplayName || '')
+      setUsername(contact.skoolUsername || '')
       setEmail(contact.email || '')
       setPhone(contact.phone || '')
-      setGhlContactId(contact.ghl_contact_id || '')
+      setGhlContactId(contact.ghlContactId || '')
       setCopied(false)
       setError(null)
     }
@@ -129,16 +129,16 @@ export function ContactEditDialog({
 
   const getChangedFields = (): Record<string, string> => {
     const changes: Record<string, string> = {}
-    if (displayName.trim() !== (contact.skool_display_name || ''))
-      changes.display_name = displayName.trim()
-    if (username.trim() !== (contact.skool_username || ''))
+    if (displayName.trim() !== (contact.skoolDisplayName || ''))
+      changes.displayName = displayName.trim()
+    if (username.trim() !== (contact.skoolUsername || ''))
       changes.username = username.trim()
     if (email.trim() !== (contact.email || ''))
       changes.email = email.trim()
     if (phone.trim() !== (contact.phone || ''))
       changes.phone = phone.trim()
-    if (ghlContactId.trim() !== (contact.ghl_contact_id || ''))
-      changes.ghl_contact_id = ghlContactId.trim()
+    if (ghlContactId.trim() !== (contact.ghlContactId || ''))
+      changes.ghlContactId = ghlContactId.trim()
     return changes
   }
 
@@ -149,7 +149,7 @@ export function ContactEditDialog({
     if (Object.keys(changes).length === 0) return
     setError(null)
 
-    const success = await updateContact(contact.skool_user_id, changes)
+    const success = await updateContact(contact.skoolUserId, changes)
     if (success) {
       onSuccess?.()
       onOpenChange(false)
@@ -160,7 +160,7 @@ export function ContactEditDialog({
 
   const handleSyntheticCreate = async () => {
     setError(null)
-    const result = await createSynthetic(contact.skool_user_id)
+    const result = await createSynthetic(contact.skoolUserId)
     if (result) {
       onSuccess?.()
       onOpenChange(false)
@@ -195,7 +195,7 @@ export function ContactEditDialog({
               onChange={(val) => { setDisplayName(val); setError(null) }}
             />
             <div className="mt-1">
-              <ContactTypeBadge type={contact.contact_type} />
+              <ContactTypeBadge type={contact.contactType} />
             </div>
           </div>
 
@@ -211,9 +211,9 @@ export function ContactEditDialog({
           <div className="grid gap-1">
             <label className="text-sm font-medium text-muted-foreground">Skool User ID</label>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-mono text-xs">{contact.skool_user_id}</span>
+              <span className="text-sm font-mono text-xs">{contact.skoolUserId}</span>
               <button
-                onClick={() => handleCopy(contact.skool_user_id)}
+                onClick={() => handleCopy(contact.skoolUserId)}
                 className="text-muted-foreground hover:text-foreground"
                 title="Copy"
               >
@@ -241,11 +241,11 @@ export function ContactEditDialog({
           />
 
           {/* Survey Answers */}
-          {contact.survey_answers && contact.survey_answers.length > 0 && (
+          {contact.surveyAnswers && contact.surveyAnswers.length > 0 && (
             <div className="grid gap-2">
               <label className="text-sm font-medium text-muted-foreground">Survey Answers</label>
               <div className="rounded-md border bg-muted/30 p-3 space-y-2">
-                {contact.survey_answers.map((qa, i) => (
+                {contact.surveyAnswers.map((qa, i) => (
                   <div key={i}>
                     <p className="text-xs font-medium text-muted-foreground">{qa.question}</p>
                     <p className="text-sm">{qa.answer || '\u2014'}</p>
@@ -262,9 +262,9 @@ export function ContactEditDialog({
             placeholder="Paste GHL contact ID here..."
             onChange={(val) => { setGhlContactId(val); setError(null) }}
             suffix={
-              isMatched && contact.ghl_location_id && contact.ghl_contact_id ? (
+              isMatched && contact.ghlLocationId && contact.ghlContactId ? (
                 <a
-                  href={`https://app.gohighlevel.com/v2/location/${contact.ghl_location_id}/contacts/detail/${contact.ghl_contact_id}`}
+                  href={`https://app.gohighlevel.com/v2/location/${contact.ghlLocationId}/contacts/detail/${contact.ghlContactId}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center h-9 w-9 rounded-md border text-primary hover:text-primary/80 hover:bg-muted shrink-0"

@@ -52,9 +52,9 @@ function InboxContent() {
         const response = await fetch('/api/settings/staff-users')
         if (response.ok) {
           const data = await response.json()
-          const defaultStaff = data.data?.find((s: { is_default: boolean }) => s.is_default)
-          if (defaultStaff?.skool_user_id) {
-            setStaffSkoolId(defaultStaff.skool_user_id)
+          const defaultStaff = data.data?.find((s: { isDefault: boolean }) => s.isDefault)
+          if (defaultStaff?.skoolUserId) {
+            setStaffSkoolId(defaultStaff.skoolUserId)
           }
         }
       } catch (error) {

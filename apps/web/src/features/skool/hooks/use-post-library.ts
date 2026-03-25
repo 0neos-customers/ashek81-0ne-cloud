@@ -6,9 +6,9 @@ import type { SkoolPostLibraryItem, PostLibraryStatus, PostLibrarySource } from 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export interface PostLibraryFilters {
-  day_of_week?: number
+  dayOfWeek?: number
   time?: string
-  is_active?: boolean
+  isActive?: boolean
   variationGroupId?: string // 'none' for posts with no group
   status?: PostLibraryStatus
   source?: PostLibrarySource
@@ -26,10 +26,10 @@ export interface UsePostLibraryReturn {
  */
 export function usePostLibrary(filters?: PostLibraryFilters): UsePostLibraryReturn {
   const params = new URLSearchParams()
-  if (filters?.day_of_week !== undefined) params.set('day_of_week', String(filters.day_of_week))
+  if (filters?.dayOfWeek !== undefined) params.set('dayOfWeek', String(filters.dayOfWeek))
   if (filters?.time) params.set('time', filters.time)
-  if (filters?.is_active !== undefined) params.set('is_active', String(filters.is_active))
-  if (filters?.variationGroupId) params.set('variation_group_id', filters.variationGroupId) // 'none' for null filter
+  if (filters?.isActive !== undefined) params.set('isActive', String(filters.isActive))
+  if (filters?.variationGroupId) params.set('variationGroupId', filters.variationGroupId) // 'none' for null filter
   if (filters?.status) params.set('status', filters.status)
   if (filters?.source) params.set('source', filters.source)
 
@@ -49,7 +49,7 @@ export function usePostLibrary(filters?: PostLibraryFilters): UsePostLibraryRetu
  * Create a new post in the library
  */
 export async function createPost(
-  input: Omit<SkoolPostLibraryItem, 'id' | 'created_at' | 'updated_at' | 'last_used_at' | 'use_count'>
+  input: Omit<SkoolPostLibraryItem, 'id' | 'createdAt' | 'updatedAt' | 'lastUsedAt' | 'useCount'>
 ): Promise<{ post?: SkoolPostLibraryItem; error?: string }> {
   try {
     const response = await fetch('/api/skool/posts', {

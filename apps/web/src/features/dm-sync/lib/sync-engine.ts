@@ -230,8 +230,8 @@ export async function syncExtensionMessages(
               )
               if (staffUser) {
                 staffInfo = {
-                  skoolUserId: staffUser.skool_user_id,
-                  displayName: staffUser.display_name,
+                  skoolUserId: staffUser.skoolUserId,
+                  displayName: staffUser.displayName,
                 }
               }
             }

@@ -103,12 +103,12 @@ export default function CampaignsPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {campaigns.map((campaign) => (
-            <Card key={campaign.id} className={!campaign.is_active ? 'opacity-60' : ''}>
+            <Card key={campaign.id} className={!campaign.isActive ? 'opacity-60' : ''}>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div>
                     <CardTitle className="text-lg">{campaign.name}</CardTitle>
-                    {!campaign.is_active && (
+                    {!campaign.isActive && (
                       <span className="text-xs text-muted-foreground">(Inactive)</span>
                     )}
                   </div>
@@ -121,9 +121,9 @@ export default function CampaignsPage() {
                           id: campaign.id,
                           name: campaign.name,
                           description: campaign.description || '',
-                          start_date: campaign.start_date || '',
-                          end_date: campaign.end_date || '',
-                          is_active: campaign.is_active,
+                          startDate: campaign.startDate || '',
+                          endDate: campaign.endDate || '',
+                          isActive: campaign.isActive,
                         })
                       }
                     >
@@ -140,12 +140,12 @@ export default function CampaignsPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {/* Date Range */}
-                {(campaign.start_date || campaign.end_date) && (
+                {(campaign.startDate || campaign.endDate) && (
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <CalendarDays className="h-4 w-4" />
                     <span>
-                      {formatDate(campaign.start_date) || 'No start'} -{' '}
-                      {formatDate(campaign.end_date) || 'No end'}
+                      {formatDate(campaign.startDate) || 'No start'} -{' '}
+                      {formatDate(campaign.endDate) || 'No end'}
                     </span>
                   </div>
                 )}
@@ -155,16 +155,16 @@ export default function CampaignsPage() {
                   <div className="flex gap-4 text-sm">
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <Clock className="h-4 w-4" />
-                      <span>{campaign.stats.pending_posts} pending</span>
+                      <span>{campaign.stats.pendingPosts} pending</span>
                     </div>
                     <div className="flex items-center gap-1 text-green-600">
                       <CheckCircle className="h-4 w-4" />
-                      <span>{campaign.stats.published_posts} published</span>
+                      <span>{campaign.stats.publishedPosts} published</span>
                     </div>
-                    {campaign.stats.failed_posts > 0 && (
+                    {campaign.stats.failedPosts > 0 && (
                       <div className="flex items-center gap-1 text-red-600">
                         <XCircle className="h-4 w-4" />
-                        <span>{campaign.stats.failed_posts} failed</span>
+                        <span>{campaign.stats.failedPosts} failed</span>
                       </div>
                     )}
                   </div>
@@ -175,7 +175,7 @@ export default function CampaignsPage() {
                   href={`/skool/scheduler?campaign_id=${campaign.id}`}
                   className="text-sm text-primary hover:underline"
                 >
-                  View {campaign.stats?.total_posts || 0} posts
+                  View {campaign.stats?.totalPosts || 0} posts
                 </Link>
               </CardContent>
             </Card>

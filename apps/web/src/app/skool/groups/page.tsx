@@ -151,18 +151,18 @@ function VariationGroupsContent() {
                   <TableCell>
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <FileText className="h-4 w-4" />
-                      <span>{group.post_count || 0}</span>
+                      <span>{group.postCount || 0}</span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <Calendar className="h-4 w-4" />
-                      <span>{group.scheduler_count || 0}</span>
+                      <span>{group.schedulerCount || 0}</span>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={group.is_active ? 'default' : 'secondary'}>
-                      {group.is_active ? 'Active' : 'Inactive'}
+                    <Badge variant={group.isActive ? 'default' : 'secondary'}>
+                      {group.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -180,7 +180,7 @@ function VariationGroupsContent() {
                                 id: group.id,
                                 name: group.name,
                                 description: group.description || '',
-                                is_active: group.is_active,
+                                isActive: group.isActive,
                               },
                               e
                             )

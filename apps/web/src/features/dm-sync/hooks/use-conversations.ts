@@ -8,8 +8,8 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json())
  * Participant info for a conversation
  */
 export interface ConversationParticipant {
-  skool_user_id: string
-  display_name: string | null
+  skoolUserId: string
+  displayName: string | null
   username: string | null
 }
 
@@ -19,27 +19,27 @@ export interface ConversationParticipant {
 export interface ConversationLastMessage {
   text: string | null
   direction: 'inbound' | 'outbound'
-  created_at: string
+  createdAt: string
 }
 
 /**
  * Conversation summary for list view
  */
 export interface Conversation {
-  conversation_id: string
+  conversationId: string
   participant: ConversationParticipant
-  last_message: ConversationLastMessage
-  message_count: number
-  pending_count: number
-  synced_count: number
+  lastMessage: ConversationLastMessage
+  messageCount: number
+  pendingCount: number
+  syncedCount: number
 }
 
 /**
  * Summary statistics for all conversations
  */
 export interface ConversationsSummary {
-  total_conversations: number
-  total_pending: number
+  totalConversations: number
+  totalPending: number
 }
 
 /**
@@ -90,8 +90,8 @@ export function useConversations(options: UseConversationsOptions = {}): UseConv
   return {
     conversations: data?.conversations || [],
     summary: data?.summary || {
-      total_conversations: 0,
-      total_pending: 0,
+      totalConversations: 0,
+      totalPending: 0,
     },
     isLoading: enabled && !error && !data,
     error,

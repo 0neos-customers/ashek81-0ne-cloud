@@ -353,7 +353,7 @@ export function StaffUsersManager() {
       const response = await fetch(`/api/settings/staff-users/${user.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive: !user.is_active }),
+        body: JSON.stringify({ isActive: !user.isActive }),
       })
 
       if (!response.ok) {
@@ -437,8 +437,8 @@ export function StaffUsersManager() {
                     <TableRow key={user.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <span className="font-medium">{user.display_name}</span>
-                          {user.is_default && (
+                          <span className="font-medium">{user.displayName}</span>
+                          {user.isDefault && (
                             <Badge variant="outline" className="gap-1">
                               <Star className="h-3 w-3" />
                               Default
@@ -447,15 +447,15 @@ export function StaffUsersManager() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {user.skool_username ? (
-                          <code className="text-sm">@{user.skool_username}</code>
+                        {user.skoolUsername ? (
+                          <code className="text-sm">@{user.skoolUsername}</code>
                         ) : (
                           <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
                       <TableCell>
-                        {user.ghl_user_id ? (
-                          <code className="text-xs">{user.ghl_user_id.slice(0, 12)}...</code>
+                        {user.ghlUserId ? (
+                          <code className="text-xs">{user.ghlUserId.slice(0, 12)}...</code>
                         ) : (
                           <span className="text-muted-foreground">-</span>
                         )}
@@ -465,7 +465,7 @@ export function StaffUsersManager() {
                           onClick={() => handleToggleActive(user)}
                           className="flex items-center gap-1 text-sm"
                         >
-                          {user.is_active ? (
+                          {user.isActive ? (
                             <Badge className="bg-green-100 text-green-800 border-green-200 gap-1">
                               <Check className="h-3 w-3" />
                               Active
@@ -537,12 +537,12 @@ export function StaffUsersManager() {
           onOpenChange={(open) => !open && setEditingUser(null)}
           onSubmit={handleEdit}
           initialData={{
-            skoolUserId: editingUser.skool_user_id,
-            skoolUsername: editingUser.skool_username || '',
-            displayName: editingUser.display_name,
-            ghlUserId: editingUser.ghl_user_id || '',
-            isDefault: editingUser.is_default,
-            isActive: editingUser.is_active,
+            skoolUserId: editingUser.skoolUserId,
+            skoolUsername: editingUser.skoolUsername || '',
+            displayName: editingUser.displayName,
+            ghlUserId: editingUser.ghlUserId || '',
+            isDefault: editingUser.isDefault,
+            isActive: editingUser.isActive,
           }}
           isEditing
           isSubmitting={isSubmitting}

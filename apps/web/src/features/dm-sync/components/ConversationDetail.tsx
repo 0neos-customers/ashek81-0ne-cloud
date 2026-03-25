@@ -104,7 +104,7 @@ export function ConversationDetail({ conversationId, staffSkoolId }: Conversatio
   }
 
   const { participant } = conversation
-  const displayName = participant.display_name || participant.username || 'Unknown'
+  const displayName = participant.displayName || participant.username || 'Unknown'
 
   return (
     <div className="flex flex-col h-full">
@@ -119,7 +119,7 @@ export function ConversationDetail({ conversationId, staffSkoolId }: Conversatio
         <div className="flex items-center gap-2">
           {/* Skool Profile Link */}
           <a
-            href={`https://www.skool.com/@${participant.username || participant.skool_user_id}`}
+            href={`https://www.skool.com/@${participant.username || participant.skoolUserId}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
@@ -128,9 +128,9 @@ export function ConversationDetail({ conversationId, staffSkoolId }: Conversatio
             <ExternalLink className="h-3 w-3" />
           </a>
           {/* GHL Contact Link (if available) */}
-          {participant.ghl_contact_id && (
+          {participant.ghlContactId && (
             <a
-              href={`https://app.gohighlevel.com/v2/location/${SKOOL_COMMUNITY_SLUG}/contacts/detail/${participant.ghl_contact_id}`}
+              href={`https://app.gohighlevel.com/v2/location/${SKOOL_COMMUNITY_SLUG}/contacts/detail/${participant.ghlContactId}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"

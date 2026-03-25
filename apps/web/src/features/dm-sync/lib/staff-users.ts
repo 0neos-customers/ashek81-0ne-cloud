@@ -305,9 +305,9 @@ export async function resolveOutboundStaff(
     if (staffByGhl) {
       return {
         staff: {
-          skoolUserId: staffByGhl.skool_user_id,
-          displayName: staffByGhl.display_name,
-          ghlUserId: staffByGhl.ghl_user_id,
+          skoolUserId: staffByGhl.skoolUserId,
+          displayName: staffByGhl.displayName,
+          ghlUserId: staffByGhl.ghlUserId,
           matchMethod: 'ghl_user',
         },
         processedMessage: messageText,
@@ -357,9 +357,9 @@ export async function resolveOutboundStaff(
   if (defaultStaff) {
     return {
       staff: {
-        skoolUserId: defaultStaff.skool_user_id,
-        displayName: defaultStaff.display_name,
-        ghlUserId: defaultStaff.ghl_user_id,
+        skoolUserId: defaultStaff.skoolUserId,
+        displayName: defaultStaff.displayName,
+        ghlUserId: defaultStaff.ghlUserId,
         matchMethod: 'default',
       },
       processedMessage: messageText,

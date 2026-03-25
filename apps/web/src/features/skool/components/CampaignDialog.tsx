@@ -18,9 +18,9 @@ export interface CampaignFormData {
   id?: string
   name: string
   description: string
-  start_date: string
-  end_date: string
-  is_active: boolean
+  startDate: string
+  endDate: string
+  isActive: boolean
 }
 
 interface CampaignDialogProps {
@@ -34,9 +34,9 @@ interface CampaignDialogProps {
 const defaultFormData: CampaignFormData = {
   name: '',
   description: '',
-  start_date: '',
-  end_date: '',
-  is_active: true,
+  startDate: '',
+  endDate: '',
+  isActive: true,
 }
 
 export function CampaignDialog({
@@ -56,9 +56,9 @@ export function CampaignDialog({
         id: campaign.id,
         name: campaign.name || '',
         description: campaign.description || '',
-        start_date: campaign.start_date || '',
-        end_date: campaign.end_date || '',
-        is_active: campaign.is_active ?? true,
+        startDate: campaign.startDate || '',
+        endDate: campaign.endDate || '',
+        isActive: campaign.isActive ?? true,
       })
     } else if (open && !campaign) {
       setFormData(defaultFormData)
@@ -120,8 +120,8 @@ export function CampaignDialog({
               <Input
                 id="campaign-start"
                 type="date"
-                value={formData.start_date}
-                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                value={formData.startDate}
+                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
               />
             </div>
             <div className="grid gap-2">
@@ -131,8 +131,8 @@ export function CampaignDialog({
               <Input
                 id="campaign-end"
                 type="date"
-                value={formData.end_date}
-                onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                value={formData.endDate}
+                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
               />
             </div>
           </div>
@@ -149,8 +149,8 @@ export function CampaignDialog({
             </div>
             <Switch
               id="campaign-active"
-              checked={formData.is_active}
-              onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+              checked={formData.isActive}
+              onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
             />
           </div>
         </div>

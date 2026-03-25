@@ -9,20 +9,20 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json())
  */
 export interface RawMessage {
   id: string
-  skool_conversation_id: string
-  skool_message_id: string
-  skool_user_id: string
-  sender_name: string | null
-  skool_username: string | null
+  skoolConversationId: string
+  skoolMessageId: string
+  skoolUserId: string
+  senderName: string | null
+  skoolUsername: string | null
   direction: 'inbound' | 'outbound'
-  message_text: string | null
+  messageText: string | null
   status: 'synced' | 'pending' | 'failed'
-  ghl_message_id: string | null
-  ghl_contact_id: string | null
-  ghl_location_id: string | null
-  skool_community_slug: string | null
-  created_at: string
-  synced_at: string | null
+  ghlMessageId: string | null
+  ghlContactId: string | null
+  ghlLocationId: string | null
+  skoolCommunitySlug: string | null
+  createdAt: string
+  syncedAt: string | null
 }
 
 /**

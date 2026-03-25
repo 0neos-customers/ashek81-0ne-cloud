@@ -7,32 +7,32 @@ import { useState, useEffect, useCallback } from 'react'
 // =============================================================================
 
 export interface FixAction {
-  check_name: string
+  checkName: string
   category: string
-  before_status: string
-  before_detail: string
-  action_taken: string
-  after_status: string
-  after_detail: string
+  beforeStatus: string
+  beforeDetail: string
+  actionTaken: string
+  afterStatus: string
+  afterDetail: string
   success: boolean
   error?: string
 }
 
 export interface FixSummary {
-  fixes_attempted: number
-  fixes_succeeded: number
-  fixes_failed: number
+  fixesAttempted: number
+  fixesSucceeded: number
+  fixesFailed: number
 }
 
 export interface TelemetryEvent {
   id: string
-  event_type: 'doctor' | 'install'
-  principal_name: string | null
+  eventType: 'doctor' | 'install'
+  principalName: string | null
   platform: string | null
   arch: string | null
-  os_version: string | null
-  bun_version: string | null
-  one_version: string | null
+  osVersion: string | null
+  bunVersion: string | null
+  oneVersion: string | null
   summary: {
     pass?: number
     fail?: number
@@ -41,67 +41,67 @@ export interface TelemetryEvent {
     total?: number
   } | null
   results: Record<string, unknown>[] | null
-  system_info: Record<string, unknown> | null
-  fix_actions: FixAction[] | null
-  fix_summary: FixSummary | null
+  systemInfo: Record<string, unknown> | null
+  fixActions: FixAction[] | null
+  fixSummary: FixSummary | null
   status: 'new' | 'triaged' | 'fixed' | 'deployed'
-  fix_notes: string | null
-  fix_commit: string | null
-  triaged_at: string | null
-  fixed_at: string | null
-  deployed_at: string | null
-  created_at: string
+  fixNotes: string | null
+  fixCommit: string | null
+  triagedAt: string | null
+  fixedAt: string | null
+  deployedAt: string | null
+  createdAt: string
 }
 
 export interface StatusHistoryEntry {
   id: string
-  event_id: string
-  old_status: string | null
-  new_status: string
+  eventId: string
+  oldStatus: string | null
+  newStatus: string
   note: string | null
-  created_at: string
+  createdAt: string
 }
 
 export interface TelemetryEventDetail {
   event: TelemetryEvent
-  status_history: StatusHistoryEntry[]
+  statusHistory: StatusHistoryEntry[]
 }
 
 export interface TelemetryStats {
-  total_installs: number
-  total_doctor_runs: number
-  success_rate: number
-  avg_issues: number
-  total_fixes: number
+  totalInstalls: number
+  totalDoctorRuns: number
+  successRate: number
+  avgIssues: number
+  totalFixes: number
 }
 
 export interface InstallsFilters {
-  event_type?: string
+  eventType?: string
   platform?: string
   status?: string
-  principal_name?: string
-  date_from?: string
-  date_to?: string
+  principalName?: string
+  dateFrom?: string
+  dateTo?: string
 }
 
 export interface PaginatedResponse {
   data: TelemetryEvent[]
   total: number
   page: number
-  per_page: number
+  perPage: number
 }
 
 export interface FailurePattern {
   id: string
-  pattern_key: string
-  failure_name: string
+  patternKey: string
+  failureName: string
   category: string | null
-  occurrence_count: number
-  first_seen: string
-  last_seen: string
-  known_fix: string | null
-  auto_fixable: boolean
-  updated_at: string
+  occurrenceCount: number
+  firstSeen: string
+  lastSeen: string
+  knownFix: string | null
+  autoFixable: boolean
+  updatedAt: string
 }
 
 // =============================================================================
@@ -165,12 +165,12 @@ export function useInstallsEvents(filters: InstallsFilters = {}, page = 1, perPa
       params.set('page', String(page))
       params.set('per_page', String(perPage))
 
-      if (filters.event_type) params.set('event_type', filters.event_type)
+      if (filters.eventType) params.set('event_type', filters.eventType)
       if (filters.platform) params.set('platform', filters.platform)
       if (filters.status) params.set('status', filters.status)
-      if (filters.principal_name) params.set('principal_name', filters.principal_name)
-      if (filters.date_from) params.set('date_from', filters.date_from)
-      if (filters.date_to) params.set('date_to', filters.date_to)
+      if (filters.principalName) params.set('principal_name', filters.principalName)
+      if (filters.dateFrom) params.set('date_from', filters.dateFrom)
+      if (filters.dateTo) params.set('date_to', filters.dateTo)
 
       const response = await fetch(`/api/installs/dashboard?${params.toString()}`)
       if (!response.ok) {
@@ -185,7 +185,7 @@ export function useInstallsEvents(filters: InstallsFilters = {}, page = 1, perPa
     } finally {
       setIsLoading(false)
     }
-  }, [page, perPage, filters.event_type, filters.platform, filters.status, filters.principal_name, filters.date_from, filters.date_to])
+  }, [page, perPage, filters.eventType, filters.platform, filters.status, filters.principalName, filters.dateFrom, filters.dateTo])
 
   useEffect(() => {
     fetchEvents()
@@ -353,8 +353,8 @@ export function useDocumentFix(id: string) {
   const [error, setError] = useState<Error | null>(null)
 
   const documentFix = useCallback(async (payload: {
-    known_fix: string
-    auto_fixable?: boolean
+    knownFix: string
+    autoFixable?: boolean
   }) => {
     setIsLoading(true)
     setError(null)

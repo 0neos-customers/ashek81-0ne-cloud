@@ -63,8 +63,8 @@ function truncateText(text: string | null, maxLength: number): string {
 // =============================================================================
 
 export function ConversationItem({ conversation, isSelected, onClick }: ConversationItemProps) {
-  const { participant, last_message, message_count, pending_count } = conversation
-  const displayName = participant.display_name || participant.username || 'Unknown'
+  const { participant, lastMessage, messageCount, pendingCount } = conversation
+  const displayName = participant.displayName || participant.username || 'Unknown'
 
   return (
     <button
@@ -92,31 +92,31 @@ export function ConversationItem({ conversation, isSelected, onClick }: Conversa
           <div className="flex items-center justify-between gap-2">
             <span className="font-medium text-sm truncate">{displayName}</span>
             <span className="text-xs text-muted-foreground flex-shrink-0">
-              {formatRelativeTime(last_message.created_at)}
+              {formatRelativeTime(lastMessage.createdAt)}
             </span>
           </div>
 
           {/* Preview + Badge Row */}
           <div className="flex items-center justify-between gap-2 mt-0.5">
             <span className="text-sm text-muted-foreground truncate">
-              {last_message.direction === 'outbound' && (
+              {lastMessage.direction === 'outbound' && (
                 <span className="text-muted-foreground/70">You: </span>
               )}
-              {truncateText(last_message.text, 40) || 'No message'}
+              {truncateText(lastMessage.text, 40) || 'No message'}
             </span>
 
             {/* Pending Badge */}
-            {pending_count > 0 && (
+            {pendingCount > 0 && (
               <Badge
                 className="flex-shrink-0 bg-[#FF692D] text-white text-xs px-1.5 py-0 h-5 min-w-[20px] justify-center"
               >
-                {pending_count}
+                {pendingCount}
               </Badge>
             )}
           </div>
 
           {/* Username (if different from display name) */}
-          {participant.username && participant.username !== participant.display_name && (
+          {participant.username && participant.username !== participant.displayName && (
             <span className="text-xs text-muted-foreground/70">@{participant.username}</span>
           )}
         </div>

@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     // Optional filters
     const status = searchParams.get('status')
-    const schedulerId = searchParams.get('scheduler_id')
+    const schedulerId = searchParams.get('schedulerId') || searchParams.get('scheduler_id')
 
     // Apply filters
     const conditions: ReturnType<typeof eq>[] = []

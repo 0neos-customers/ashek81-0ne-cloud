@@ -87,9 +87,9 @@ export async function POST(request: NextRequest) {
       .values({
         name: body.name,
         description: body.description || null,
-        startDate: body.start_date || null,
-        endDate: body.end_date || null,
-        isActive: body.is_active ?? true,
+        startDate: body.startDate || null,
+        endDate: body.endDate || null,
+        isActive: body.isActive ?? true,
       })
       .returning()
 
@@ -120,9 +120,9 @@ export async function PUT(request: NextRequest) {
     const setData: Record<string, unknown> = { updatedAt: new Date() }
     if (updates.name !== undefined) setData.name = updates.name
     if (updates.description !== undefined) setData.description = updates.description
-    if (updates.start_date !== undefined) setData.startDate = updates.start_date
-    if (updates.end_date !== undefined) setData.endDate = updates.end_date
-    if (updates.is_active !== undefined) setData.isActive = updates.is_active
+    if (updates.startDate !== undefined) setData.startDate = updates.startDate
+    if (updates.endDate !== undefined) setData.endDate = updates.endDate
+    if (updates.isActive !== undefined) setData.isActive = updates.isActive
 
     const [updated] = await db
       .update(skoolCampaigns)

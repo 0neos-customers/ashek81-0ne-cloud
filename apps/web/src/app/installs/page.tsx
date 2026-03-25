@@ -238,11 +238,11 @@ export default function InstallsPage() {
   // Build filters object (memoized to avoid unnecessary re-fetches)
   const filters: InstallsFilters = useMemo(
     () => ({
-      event_type: eventType || undefined,
+      eventType: eventType || undefined,
       platform: platform || undefined,
       status: status || undefined,
-      date_from: dateFrom || undefined,
-      date_to: dateTo || undefined,
+      dateFrom: dateFrom || undefined,
+      dateTo: dateTo || undefined,
     }),
     [eventType, platform, status, dateFrom, dateTo]
   )
@@ -259,7 +259,7 @@ export default function InstallsPage() {
   const { data: stats, isLoading: isStatsLoading } = useInstallsStats()
   const { data: events, isLoading: isEventsLoading, error } = useInstallsEvents(filters, page, perPage)
 
-  const totalPages = events ? Math.ceil(events.total / events.per_page) : 0
+  const totalPages = events ? Math.ceil(events.total / events.perPage) : 0
 
   // Loading state
   if (isStatsLoading && isEventsLoading) {
@@ -314,31 +314,31 @@ export default function InstallsPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <StatCard
             title="Total Installs"
-            value={stats?.total_installs?.toLocaleString() ?? '--'}
+            value={stats?.totalInstalls?.toLocaleString() ?? '--'}
             icon={Download}
             description="Install wizard runs"
           />
           <StatCard
             title="Doctor Runs"
-            value={stats?.total_doctor_runs?.toLocaleString() ?? '--'}
+            value={stats?.totalDoctorRuns?.toLocaleString() ?? '--'}
             icon={Stethoscope}
             description="Health check runs"
           />
           <StatCard
             title="Success Rate"
-            value={stats?.success_rate != null ? `${stats.success_rate}%` : '--'}
+            value={stats?.successRate != null ? `${stats.successRate}%` : '--'}
             icon={CheckCircle2}
             description="Events with zero failures"
           />
           <StatCard
             title="Avg Issues"
-            value={stats?.avg_issues != null ? stats.avg_issues.toFixed(1) : '--'}
+            value={stats?.avgIssues != null ? stats.avgIssues.toFixed(1) : '--'}
             icon={AlertTriangle}
             description="Average failures per event"
           />
           <StatCard
             title="Fixes Applied"
-            value={stats?.total_fixes?.toLocaleString() ?? '--'}
+            value={stats?.totalFixes?.toLocaleString() ?? '--'}
             icon={Wrench}
             description="Auto-fix resolutions"
           />
@@ -430,14 +430,14 @@ export default function InstallsPage() {
               {/* Table Rows */}
               <div className="divide-y divide-border">
                 {events.data.map((event) => {
-                  const fixSummary = event.fix_summary
+                  const fixSummary = event.fixSummary
                   let fixesLabel = '\u2014'
                   let fixesColor = 'text-muted-foreground'
-                  if (fixSummary && fixSummary.fixes_attempted > 0) {
-                    fixesLabel = `${fixSummary.fixes_succeeded}/${fixSummary.fixes_attempted}`
-                    if (fixSummary.fixes_succeeded === fixSummary.fixes_attempted) {
+                  if (fixSummary && fixSummary.fixesAttempted > 0) {
+                    fixesLabel = `${fixSummary.fixesSucceeded}/${fixSummary.fixesAttempted}`
+                    if (fixSummary.fixesSucceeded === fixSummary.fixesAttempted) {
                       fixesColor = 'text-green-600 dark:text-green-400'
-                    } else if (fixSummary.fixes_succeeded > 0) {
+                    } else if (fixSummary.fixesSucceeded > 0) {
                       fixesColor = 'text-amber-600 dark:text-amber-400'
                     } else {
                       fixesColor = 'text-muted-foreground'
@@ -451,15 +451,15 @@ export default function InstallsPage() {
                       className="grid grid-cols-[100px_80px_1fr_100px_140px_70px_90px] gap-4 px-5 py-3 items-center hover:bg-accent/50 transition-colors cursor-pointer"
                     >
                       <div className="text-sm text-muted-foreground">
-                        {formatDate(event.created_at)}
+                        {formatDate(event.createdAt)}
                       </div>
                       <div>
-                        <Badge className={TYPE_COLORS[event.event_type] || 'bg-gray-100 text-gray-700'}>
-                          {event.event_type}
+                        <Badge className={TYPE_COLORS[event.eventType] || 'bg-gray-100 text-gray-700'}>
+                          {event.eventType}
                         </Badge>
                       </div>
                       <div className="text-sm font-medium truncate">
-                        {event.principal_name || '--'}
+                        {event.principalName || '--'}
                       </div>
                       <div>
                         <PlatformLabel platform={event.platform} />

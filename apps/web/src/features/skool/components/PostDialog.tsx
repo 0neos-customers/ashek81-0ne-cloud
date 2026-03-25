@@ -26,14 +26,14 @@ import { MediaPickerDialog } from '@/features/media'
 export interface PostFormData {
   id?: string
   category?: string // kept for backward compatibility
-  day_of_week?: DayOfWeek | null // kept for backward compatibility
+  dayOfWeek?: DayOfWeek | null // kept for backward compatibility
   time?: string | null // kept for backward compatibility
-  variation_group_id: string | null
+  variationGroupId: string | null
   title: string
   body: string
-  image_url: string
-  video_url: string
-  is_active: boolean
+  imageUrl: string
+  videoUrl: string
+  isActive: boolean
   status?: PostLibraryStatus
   source?: PostLibrarySource
 }
@@ -47,12 +47,12 @@ interface PostDialogProps {
 }
 
 const defaultFormData: PostFormData = {
-  variation_group_id: null,
+  variationGroupId: null,
   title: '',
   body: '',
-  image_url: '',
-  video_url: '',
-  is_active: true,
+  imageUrl: '',
+  videoUrl: '',
+  isActive: true,
   status: 'active',
   source: 'manual',
 }
@@ -72,19 +72,19 @@ export function PostDialog({
   const [isCreatingGroup, setIsCreatingGroup] = useState(false)
   const { groups: variationGroups, isLoading: groupsLoading, refresh: refreshGroups } = useVariationGroups()
   const isEditMode = !!post?.id
-  const isEditingOrphan = isEditMode && !post?.variation_group_id
+  const isEditingOrphan = isEditMode && !post?.variationGroupId
 
   // Reset form when dialog opens/closes or post changes
   useEffect(() => {
     if (open && post) {
       setFormData({
         id: post.id,
-        variation_group_id: post.variation_group_id || null,
+        variationGroupId: post.variationGroupId || null,
         title: post.title || '',
         body: post.body || '',
-        image_url: post.image_url || '',
-        video_url: post.video_url || '',
-        is_active: post.is_active ?? true,
+        imageUrl: post.imageUrl || '',
+        videoUrl: post.videoUrl || '',
+        isActive: post.isActive ?? true,
         status: post.status || 'active',
         source: post.source || 'manual',
       })
@@ -103,7 +103,7 @@ export function PostDialog({
       const result = await createVariationGroup({
         name: data.name,
         description: data.description,
-        is_active: data.is_active,
+        isActive: data.isActive,
       })
       if (result.error) {
         console.error('Failed to create group:', result.error)
@@ -111,7 +111,7 @@ export function PostDialog({
       }
       if (result.group) {
         // Auto-select the new group
-        setFormData({ ...formData, variation_group_id: result.group.id })
+        setFormData({ ...formData, variationGroupId: result.group.id })
         // Refresh the groups list
         refreshGroups()
         setGroupDialogOpen(false)
@@ -121,7 +121,7 @@ export function PostDialog({
     }
   }
 
-  const isValid = formData.title && formData.body && (isEditMode || formData.variation_group_id)
+  const isValid = formData.title && formData.body && (isEditMode || formData.variationGroupId)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -142,12 +142,12 @@ export function PostDialog({
               Variation Group
             </label>
             <Select
-              value={formData.variation_group_id || (isEditingOrphan ? 'none' : '')}
+              value={formData.variationGroupId || (isEditingOrphan ? 'none' : '')}
               onValueChange={(value) => {
                 if (value === 'create-new') {
                   setGroupDialogOpen(true)
                 } else {
-                  setFormData({ ...formData, variation_group_id: value === 'none' ? null : value })
+                  setFormData({ ...formData, variationGroupId: value === 'none' ? null : value })
                 }
               }}
               disabled={groupsLoading}
@@ -166,7 +166,7 @@ export function PostDialog({
                   </span>
                 </SelectItem>
                 {variationGroups
-                  .filter((g) => g.is_active)
+                  .filter((g) => g.isActive)
                   .map((group) => (
                     <SelectItem key={group.id} value={group.id}>
                       {group.name}
@@ -223,8 +223,8 @@ export function PostDialog({
                 <Input
                   id="post-image"
                   placeholder="https://... or use picker"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                  value={formData.imageUrl}
+                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
                   className="flex-1"
                 />
                 <Button
@@ -247,8 +247,8 @@ export function PostDialog({
                 <Input
                   id="post-video"
                   placeholder="https://... or use picker"
-                  value={formData.video_url}
-                  onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
+                  value={formData.videoUrl}
+                  onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
                   className="flex-1"
                 />
                 <Button
@@ -265,12 +265,12 @@ export function PostDialog({
           </div>
 
           {/* Image Preview */}
-          {formData.image_url && (
+          {formData.imageUrl && (
             <div className="rounded-md border p-2">
               <p className="text-xs text-muted-foreground mb-2">Image Preview:</p>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={formData.image_url}
+                src={formData.imageUrl}
                 alt="Preview"
                 className="max-h-32 rounded-md object-contain"
                 onError={(e) => {
@@ -292,8 +292,8 @@ export function PostDialog({
             </div>
             <Switch
               id="post-active"
-              checked={formData.is_active}
-              onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+              checked={formData.isActive}
+              onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
             />
           </div>
 
@@ -364,7 +364,7 @@ export function PostDialog({
         onOpenChange={setImagePickerOpen}
         onSelect={(files) => {
           if (files.length > 0) {
-            setFormData({ ...formData, image_url: files[0].url })
+            setFormData({ ...formData, imageUrl: files[0].url })
           }
         }}
         mode="single"
@@ -375,7 +375,7 @@ export function PostDialog({
         onOpenChange={setVideoPickerOpen}
         onSelect={(files) => {
           if (files.length > 0) {
-            setFormData({ ...formData, video_url: files[0].url })
+            setFormData({ ...formData, videoUrl: files[0].url })
           }
         }}
         mode="single"

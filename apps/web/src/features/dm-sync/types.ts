@@ -53,13 +53,13 @@ export interface SkoolMessage {
  */
 export interface DmSyncConfigRow {
   id: string
-  clerk_user_id: string
-  skool_community_slug: string
-  ghl_location_id: string
-  skool_community_id: string | null
+  clerkUserId: string
+  skoolCommunitySlug: string
+  ghlLocationId: string
+  skoolCommunityId: string | null
   enabled: boolean
-  created_at: string
-  updated_at: string
+  createdAt: string
+  updatedAt: string
 }
 
 /**
@@ -67,13 +67,13 @@ export interface DmSyncConfigRow {
  */
 export interface ContactChannelRow {
   id: string
-  clerk_user_id: string
-  skool_user_id: string
-  staff_skool_id: string
-  skool_channel_id: string
-  resolved_at: string
-  created_at: string
-  updated_at: string
+  clerkUserId: string
+  skoolUserId: string
+  staffSkoolId: string
+  skoolChannelId: string
+  resolvedAt: string
+  createdAt: string
+  updatedAt: string
 }
 
 /**
@@ -81,17 +81,17 @@ export interface ContactChannelRow {
  */
 export interface ContactMappingRow {
   id: string
-  clerk_user_id: string
-  skool_user_id: string
-  skool_username: string | null
-  skool_display_name: string | null
-  ghl_contact_id: string | null
-  match_method: 'skool_id' | 'email' | 'name' | 'synthetic' | 'manual' | 'no_email' | null
+  clerkUserId: string
+  skoolUserId: string
+  skoolUsername: string | null
+  skoolDisplayName: string | null
+  ghlContactId: string | null
+  matchMethod: 'skool_id' | 'email' | 'name' | 'synthetic' | 'manual' | 'no_email' | null
   email: string | null
   phone: string | null
-  contact_type: 'community_member' | 'dm_contact' | 'unknown' | null
-  created_at: string
-  updated_at: string | null
+  contactType: 'community_member' | 'dm_contact' | 'unknown' | null
+  createdAt: string
+  updatedAt: string | null
 }
 
 /**
@@ -99,21 +99,21 @@ export interface ContactMappingRow {
  */
 export interface DmMessageRow {
   id: string
-  clerk_user_id: string
-  skool_conversation_id: string
-  skool_message_id: string
-  ghl_message_id: string | null
-  skool_user_id: string
+  clerkUserId: string
+  skoolConversationId: string
+  skoolMessageId: string
+  ghlMessageId: string | null
+  skoolUserId: string
   direction: 'inbound' | 'outbound'
-  message_text: string | null
+  messageText: string | null
   status: 'synced' | 'pending' | 'failed'
-  created_at: string
-  synced_at: string | null
-  sender_name?: string | null
+  createdAt: string
+  syncedAt: string | null
+  senderName?: string | null
   // Phase 5: Multi-staff support
-  staff_skool_id?: string | null
-  staff_display_name?: string | null
-  ghl_user_id?: string | null
+  staffSkoolId?: string | null
+  staffDisplayName?: string | null
+  ghlUserId?: string | null
   // Hand-raiser extension routing
   source?: 'ghl' | 'hand-raiser' | 'manual'
 }
@@ -123,15 +123,15 @@ export interface DmMessageRow {
  */
 export interface StaffUserRow {
   id: string
-  clerk_user_id: string
-  skool_user_id: string
-  skool_username: string | null
-  display_name: string
-  ghl_user_id: string | null
-  is_default: boolean
-  is_active: boolean
-  created_at: string
-  updated_at: string
+  clerkUserId: string
+  skoolUserId: string
+  skoolUsername: string | null
+  displayName: string
+  ghlUserId: string | null
+  isDefault: boolean
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
 }
 
 /**
@@ -139,15 +139,15 @@ export interface StaffUserRow {
  */
 export interface HandRaiserCampaignRow {
   id: string
-  clerk_user_id: string
-  post_url: string
-  skool_post_id: string | null
-  keyword_filter: string | null
-  dm_template: string | null  // Now optional - if null, only tags GHL (no DM sent)
-  ghl_tag: string | null
-  is_active: boolean
-  created_at: string
-  updated_at: string
+  clerkUserId: string
+  postUrl: string
+  skoolPostId: string | null
+  keywordFilter: string | null
+  dmTemplate: string | null  // Now optional - if null, only tags GHL (no DM sent)
+  ghlTag: string | null
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
 }
 
 /**
@@ -155,9 +155,9 @@ export interface HandRaiserCampaignRow {
  */
 export interface HandRaiserSentRow {
   id: string
-  campaign_id: string
-  skool_user_id: string
-  sent_at: string
+  campaignId: string
+  skoolUserId: string
+  sentAt: string
 }
 
 // =============================================================================
@@ -410,10 +410,10 @@ export interface HandRaiserResult {
  * Participant info for a conversation
  */
 export interface InboxConversationParticipant {
-  skool_user_id: string
-  display_name: string | null
+  skoolUserId: string
+  displayName: string | null
   username: string | null
-  ghl_contact_id?: string | null
+  ghlContactId?: string | null
 }
 
 /**
@@ -422,27 +422,27 @@ export interface InboxConversationParticipant {
 export interface InboxConversationLastMessage {
   text: string | null
   direction: 'inbound' | 'outbound'
-  created_at: string
+  createdAt: string
 }
 
 /**
  * Conversation summary for list view
  */
 export interface InboxConversation {
-  conversation_id: string
+  conversationId: string
   participant: InboxConversationParticipant
-  last_message: InboxConversationLastMessage
-  message_count: number
-  pending_count: number
-  synced_count: number
+  lastMessage: InboxConversationLastMessage
+  messageCount: number
+  pendingCount: number
+  syncedCount: number
 }
 
 /**
  * Summary statistics for all conversations
  */
 export interface InboxConversationsSummary {
-  total_conversations: number
-  total_pending: number
+  totalConversations: number
+  totalPending: number
 }
 
 /**
@@ -451,10 +451,10 @@ export interface InboxConversationsSummary {
 export interface InboxMessage {
   id: string
   direction: 'inbound' | 'outbound'
-  message_text: string | null
-  sender_name: string | null
+  messageText: string | null
+  senderName: string | null
   status: 'synced' | 'pending' | 'failed'
-  created_at: string
+  createdAt: string
 }
 
 /**
@@ -463,5 +463,5 @@ export interface InboxMessage {
 export interface InboxConversationDetail {
   id: string
   participant: InboxConversationParticipant
-  message_count: number
+  messageCount: number
 }

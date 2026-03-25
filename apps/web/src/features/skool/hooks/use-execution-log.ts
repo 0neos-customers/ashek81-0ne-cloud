@@ -6,7 +6,7 @@ import type { SkoolPostExecutionLog, SchedulerExecutionStatus } from '@0ne/db'
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export interface ExecutionLogWithJoins extends SkoolPostExecutionLog {
-  scheduler?: { category: string; day_of_week: number; time: string } | null
+  scheduler?: { category: string; dayOfWeek: number; time: string } | null
   post?: { title: string } | null
 }
 
@@ -14,7 +14,7 @@ export interface ExecutionLogOptions {
   limit?: number
   offset?: number
   status?: SchedulerExecutionStatus
-  scheduler_id?: string
+  schedulerId?: string
 }
 
 export interface UseExecutionLogReturn {
@@ -34,7 +34,7 @@ export function useExecutionLog(options?: ExecutionLogOptions): UseExecutionLogR
   if (options?.limit) params.set('limit', String(options.limit))
   if (options?.offset) params.set('offset', String(options.offset))
   if (options?.status) params.set('status', options.status)
-  if (options?.scheduler_id) params.set('scheduler_id', options.scheduler_id)
+  if (options?.schedulerId) params.set('schedulerId', options.schedulerId)
 
   const url = `/api/skool/execution-log?${params.toString()}`
 

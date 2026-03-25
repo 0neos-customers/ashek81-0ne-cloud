@@ -38,7 +38,7 @@ interface Invite {
   name: string | null
   token: string
   status: 'pending' | 'accepted' | 'expired' | 'revoked'
-  created_at: string
+  createdAt: string
 }
 
 export default function AdminPermissionsPage() {
@@ -347,7 +347,7 @@ export default function AdminPermissionsPage() {
                           </span>
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {new Date(invite.created_at).toLocaleDateString()}
+                          {new Date(invite.createdAt).toLocaleDateString()}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">

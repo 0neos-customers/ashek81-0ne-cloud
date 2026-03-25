@@ -73,7 +73,7 @@ function convertToUTC(localDatetime: string, timezone: string = 'America/New_Yor
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const campaignId = searchParams.get('campaign_id')
+    const campaignId = searchParams.get('campaignId') || searchParams.get('campaign_id')
     const status = searchParams.get('status')
     const upcoming = searchParams.get('upcoming') === 'true'
     const limit = parseInt(searchParams.get('limit') || '100', 10)
@@ -128,16 +128,16 @@ export async function POST(request: NextRequest) {
     const body: SkoolOneOffPostInput = await request.json()
 
     // Validate required fields
-    if (!body.category || !body.scheduled_at || !body.title || !body.body) {
+    if (!body.category || !body.scheduledAt || !body.title || !body.body) {
       return NextResponse.json(
-        { error: 'Missing required fields: category, scheduled_at, title, body' },
+        { error: 'Missing required fields: category, scheduledAt, title, body' },
         { status: 400 }
       )
     }
 
-    // Convert scheduled_at from local timezone to UTC
+    // Convert scheduledAt from local timezone to UTC
     const timezone = body.timezone || 'America/New_York'
-    const scheduledAtUTC = convertToUTC(body.scheduled_at, timezone)
+    const scheduledAtUTC = convertToUTC(body.scheduledAt, timezone)
 
     // Validate the converted date
     const scheduledDate = new Date(scheduledAtUTC)
@@ -148,17 +148,17 @@ export async function POST(request: NextRequest) {
     const [inserted] = await db
       .insert(skoolOneoffPosts)
       .values({
-        groupSlug: body.group_slug || 'fruitful',
+        groupSlug: body.groupSlug || 'fruitful',
         category: body.category,
-        categoryId: body.category_id || null,
+        categoryId: body.categoryId || null,
         scheduledAt: scheduledDate,
         timezone: body.timezone || 'America/New_York',
         title: body.title,
         body: body.body,
-        imageUrl: body.image_url || null,
-        videoUrl: body.video_url || null,
-        campaignId: body.campaign_id || null,
-        sendEmailBlast: body.send_email_blast ?? false,
+        imageUrl: body.imageUrl || null,
+        videoUrl: body.videoUrl || null,
+        campaignId: body.campaignId || null,
+        sendEmailBlast: body.sendEmailBlast ?? false,
         status: body.status || 'pending',
       })
       .returning()
@@ -196,30 +196,30 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Missing id' }, { status: 400 })
     }
 
-    // Convert scheduled_at from local timezone to UTC if provided
-    if (updates.scheduled_at) {
+    // Convert scheduledAt from local timezone to UTC if provided
+    if (updates.scheduledAt) {
       const timezone = updates.timezone || 'America/New_York'
-      updates.scheduled_at = convertToUTC(updates.scheduled_at, timezone)
+      updates.scheduledAt = convertToUTC(updates.scheduledAt, timezone)
 
-      const scheduledDate = new Date(updates.scheduled_at)
+      const scheduledDate = new Date(updates.scheduledAt)
       if (isNaN(scheduledDate.getTime())) {
-        return NextResponse.json({ error: 'Invalid scheduled_at date format' }, { status: 400 })
+        return NextResponse.json({ error: 'Invalid scheduledAt date format' }, { status: 400 })
       }
     }
 
-    // Map snake_case input to camelCase schema columns
+    // Map input to schema columns
     const setData: Record<string, unknown> = { updatedAt: new Date() }
-    if (updates.group_slug !== undefined) setData.groupSlug = updates.group_slug
+    if (updates.groupSlug !== undefined) setData.groupSlug = updates.groupSlug
     if (updates.category !== undefined) setData.category = updates.category
-    if (updates.category_id !== undefined) setData.categoryId = updates.category_id
-    if (updates.scheduled_at !== undefined) setData.scheduledAt = new Date(updates.scheduled_at)
+    if (updates.categoryId !== undefined) setData.categoryId = updates.categoryId
+    if (updates.scheduledAt !== undefined) setData.scheduledAt = new Date(updates.scheduledAt)
     if (updates.timezone !== undefined) setData.timezone = updates.timezone
     if (updates.title !== undefined) setData.title = updates.title
     if (updates.body !== undefined) setData.body = updates.body
-    if (updates.image_url !== undefined) setData.imageUrl = updates.image_url
-    if (updates.video_url !== undefined) setData.videoUrl = updates.video_url
-    if (updates.campaign_id !== undefined) setData.campaignId = updates.campaign_id
-    if (updates.send_email_blast !== undefined) setData.sendEmailBlast = updates.send_email_blast
+    if (updates.imageUrl !== undefined) setData.imageUrl = updates.imageUrl
+    if (updates.videoUrl !== undefined) setData.videoUrl = updates.videoUrl
+    if (updates.campaignId !== undefined) setData.campaignId = updates.campaignId
+    if (updates.sendEmailBlast !== undefined) setData.sendEmailBlast = updates.sendEmailBlast
     if (updates.status !== undefined) setData.status = updates.status
 
     const [updated] = await db

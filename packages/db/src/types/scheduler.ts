@@ -58,9 +58,9 @@ export interface SkoolVariationGroup {
   id: string
   name: string
   description: string | null
-  is_active: boolean
-  created_at: string
-  updated_at: string
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
 }
 
 /**
@@ -68,19 +68,19 @@ export interface SkoolVariationGroup {
  */
 export interface SkoolScheduledPost {
   id: string
-  group_slug: string
+  groupSlug: string
   category: string
-  category_id: string | null
-  day_of_week: DayOfWeek
+  categoryId: string | null
+  dayOfWeek: DayOfWeek
   time: string // "HH:MM" format (24hr)
-  variation_group_id: string | null // Reference to variation group for content
-  is_active: boolean
-  last_run_at: string | null
+  variationGroupId: string | null // Reference to variation group for content
+  isActive: boolean
+  lastRunAt: string | null
   note: string | null
-  created_at: string
-  updated_at: string
+  createdAt: string
+  updatedAt: string
   // Joined data (optional)
-  variation_group?: SkoolVariationGroup | null
+  variationGroup?: SkoolVariationGroup | null
 }
 
 /**
@@ -89,23 +89,23 @@ export interface SkoolScheduledPost {
 export interface SkoolPostLibraryItem {
   id: string
   category: string
-  day_of_week: DayOfWeek | null // Now nullable (legacy, not used for matching)
+  dayOfWeek: DayOfWeek | null // Now nullable (legacy, not used for matching)
   time: string | null // Now nullable (legacy, not used for matching)
-  variation_group_id: string | null // Reference to variation group for matching
+  variationGroupId: string | null // Reference to variation group for matching
   title: string
   body: string // Full post body (markdown)
-  image_url: string | null
-  video_url: string | null
-  is_active: boolean
-  last_used_at: string | null
-  use_count: number
+  imageUrl: string | null
+  videoUrl: string | null
+  isActive: boolean
+  lastUsedAt: string | null
+  useCount: number
   status?: PostLibraryStatus // draft, approved, active (has DB default)
   source?: PostLibrarySource // manual, api, import (has DB default)
-  approved_at?: string | null
-  created_at: string
-  updated_at: string
+  approvedAt?: string | null
+  createdAt: string
+  updatedAt: string
   // Joined data (optional)
-  variation_group?: SkoolVariationGroup | null
+  variationGroup?: SkoolVariationGroup | null
 }
 
 /**
@@ -113,15 +113,15 @@ export interface SkoolPostLibraryItem {
  */
 export interface SkoolPostExecutionLog {
   id: string
-  scheduler_id: string | null
-  post_library_id: string | null
-  oneoff_post_id: string | null
-  executed_at: string
+  schedulerId: string | null
+  postLibraryId: string | null
+  oneoffPostId: string | null
+  executedAt: string
   status: SchedulerExecutionStatus
-  skool_post_id: string | null
-  skool_post_url: string | null
-  error_message: string | null
-  email_blast_sent: boolean
+  skoolPostId: string | null
+  skoolPostUrl: string | null
+  errorMessage: string | null
+  emailBlastSent: boolean
 }
 
 /**
@@ -131,11 +131,11 @@ export interface SkoolCampaign {
   id: string
   name: string
   description: string | null
-  start_date: string | null
-  end_date: string | null
-  is_active: boolean
-  created_at: string
-  updated_at: string
+  startDate: string | null
+  endDate: string | null
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
 }
 
 /**
@@ -143,24 +143,24 @@ export interface SkoolCampaign {
  */
 export interface SkoolOneOffPost {
   id: string
-  group_slug: string
+  groupSlug: string
   category: string
-  category_id: string | null
-  scheduled_at: string
+  categoryId: string | null
+  scheduledAt: string
   timezone: string
   title: string
   body: string
-  image_url: string | null
-  video_url: string | null
-  campaign_id: string | null
-  send_email_blast: boolean
+  imageUrl: string | null
+  videoUrl: string | null
+  campaignId: string | null
+  sendEmailBlast: boolean
   status: OneOffPostStatus
-  published_at: string | null
-  skool_post_id: string | null
-  skool_post_url: string | null
-  error_message: string | null
-  created_at: string
-  updated_at: string
+  publishedAt: string | null
+  skoolPostId: string | null
+  skoolPostUrl: string | null
+  errorMessage: string | null
+  createdAt: string
+  updatedAt: string
   // Joined data (optional)
   campaign?: SkoolCampaign | null
 }
@@ -169,9 +169,9 @@ export interface SkoolOneOffPost {
  * Group settings including email blast tracking (database row)
  */
 export interface SkoolGroupSettings {
-  group_slug: string
-  last_email_blast_at: string | null
-  updated_at: string
+  groupSlug: string
+  lastEmailBlastAt: string | null
+  updatedAt: string
 }
 
 /**
@@ -180,20 +180,20 @@ export interface SkoolGroupSettings {
 export interface SkoolVariationGroupInput {
   name: string
   description?: string | null
-  is_active?: boolean
+  isActive?: boolean
 }
 
 /**
  * Input for creating a new scheduled post
  */
 export interface SkoolScheduledPostInput {
-  group_slug?: string
+  groupSlug?: string
   category: string
-  category_id?: string | null
-  day_of_week: DayOfWeek
+  categoryId?: string | null
+  dayOfWeek: DayOfWeek
   time: string
-  variation_group_id?: string | null
-  is_active?: boolean
+  variationGroupId?: string | null
+  isActive?: boolean
   note?: string | null
 }
 
@@ -202,14 +202,14 @@ export interface SkoolScheduledPostInput {
  */
 export interface SkoolPostLibraryItemInput {
   category?: string
-  day_of_week?: DayOfWeek | null
+  dayOfWeek?: DayOfWeek | null
   time?: string | null
-  variation_group_id?: string | null
+  variationGroupId?: string | null
   title: string
   body: string
-  image_url?: string | null
-  video_url?: string | null
-  is_active?: boolean
+  imageUrl?: string | null
+  videoUrl?: string | null
+  isActive?: boolean
   status?: PostLibraryStatus
   source?: PostLibrarySource
 }
@@ -220,26 +220,26 @@ export interface SkoolPostLibraryItemInput {
 export interface SkoolCampaignInput {
   name: string
   description?: string | null
-  start_date?: string | null
-  end_date?: string | null
-  is_active?: boolean
+  startDate?: string | null
+  endDate?: string | null
+  isActive?: boolean
 }
 
 /**
  * Input for creating a new one-off post
  */
 export interface SkoolOneOffPostInput {
-  group_slug?: string
+  groupSlug?: string
   category: string
-  category_id?: string | null
-  scheduled_at: string
+  categoryId?: string | null
+  scheduledAt: string
   timezone?: string
   title: string
   body: string
-  image_url?: string | null
-  video_url?: string | null
-  campaign_id?: string | null
-  send_email_blast?: boolean
+  imageUrl?: string | null
+  videoUrl?: string | null
+  campaignId?: string | null
+  sendEmailBlast?: boolean
   status?: OneOffPostStatus
 }
 
@@ -247,26 +247,26 @@ export interface SkoolOneOffPostInput {
  * Input for logging an execution
  */
 export interface SkoolPostExecutionLogInput {
-  scheduler_id?: string | null
-  post_library_id?: string | null
-  oneoff_post_id?: string | null
+  schedulerId?: string | null
+  postLibraryId?: string | null
+  oneoffPostId?: string | null
   status: SchedulerExecutionStatus
-  skool_post_id?: string | null
-  skool_post_url?: string | null
-  error_message?: string | null
-  email_blast_sent?: boolean
+  skoolPostId?: string | null
+  skoolPostUrl?: string | null
+  errorMessage?: string | null
+  emailBlastSent?: boolean
 }
 
 /**
  * Stats returned by get_scheduler_stats function
  */
 export interface SchedulerStats {
-  total_executions: number
-  successful_executions: number
-  failed_executions: number
-  skipped_executions: number
-  last_execution_at: string | null
-  last_status: SchedulerExecutionStatus | null
+  totalExecutions: number
+  successfulExecutions: number
+  failedExecutions: number
+  skippedExecutions: number
+  lastExecutionAt: string | null
+  lastStatus: SchedulerExecutionStatus | null
 }
 
 /**
@@ -276,9 +276,9 @@ export interface NextPostResult {
   id: string
   title: string
   body: string
-  image_url: string | null
-  video_url: string | null
-  use_count: number
+  imageUrl: string | null
+  videoUrl: string | null
+  useCount: number
 }
 
 /**
@@ -286,10 +286,10 @@ export interface NextPostResult {
  */
 export interface DueSchedule {
   id: string
-  group_slug: string
+  groupSlug: string
   category: string
-  category_id: string | null
-  variation_group_id: string | null
+  categoryId: string | null
+  variationGroupId: string | null
   note: string | null
 }
 
@@ -297,18 +297,18 @@ export interface DueSchedule {
  * Stats for a variation group
  */
 export interface VariationGroupStats {
-  post_count: number
-  scheduler_count: number
+  postCount: number
+  schedulerCount: number
 }
 
 /**
  * Stats for a campaign
  */
 export interface CampaignStats {
-  total_posts: number
-  pending_posts: number
-  published_posts: number
-  failed_posts: number
+  totalPosts: number
+  pendingPosts: number
+  publishedPosts: number
+  failedPosts: number
 }
 
 /**
@@ -316,8 +316,8 @@ export interface CampaignStats {
  */
 export interface EmailBlastStatus {
   available: boolean
-  hours_until_available: number
-  last_blast_at: string | null
+  hoursUntilAvailable: number
+  lastBlastAt: string | null
 }
 
 /**

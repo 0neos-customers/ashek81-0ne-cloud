@@ -33,7 +33,7 @@ export function useSchedulers(): UseSchedulersReturn {
  * Create a new scheduler slot
  */
 export async function createScheduler(
-  input: Omit<SkoolScheduledPost, 'id' | 'created_at' | 'updated_at' | 'last_run_at'>
+  input: Omit<SkoolScheduledPost, 'id' | 'createdAt' | 'updatedAt' | 'lastRunAt'>
 ): Promise<{ scheduler?: SkoolScheduledPost; error?: string }> {
   try {
     const response = await fetch('/api/skool/schedulers', {

@@ -8,47 +8,47 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json())
  * Contact activity data returned from the API
  */
 export interface ContactChannelInfo {
-  staff_skool_id: string
-  skool_channel_id: string
-  staff_display_name: string | null
+  staffSkoolId: string
+  skoolChannelId: string
+  staffDisplayName: string | null
 }
 
 export interface ContactActivity {
   id: string
-  skool_user_id: string
-  skool_username: string | null
-  skool_display_name: string | null
-  ghl_contact_id: string | null
-  match_method: 'skool_id' | 'email' | 'name' | 'synthetic' | 'manual' | 'no_email' | null
+  skoolUserId: string
+  skoolUsername: string | null
+  skoolDisplayName: string | null
+  ghlContactId: string | null
+  matchMethod: 'skool_id' | 'email' | 'name' | 'synthetic' | 'manual' | 'no_email' | null
   email: string | null
   phone: string | null
-  contact_type: 'community_member' | 'dm_contact' | 'unknown' | null
-  created_at: string
-  skool_conversation_id: string | null
+  contactType: 'community_member' | 'dm_contact' | 'unknown' | null
+  createdAt: string
+  skoolConversationId: string | null
   channels: ContactChannelInfo[]
   stats: {
-    inbound_count: number
-    outbound_count: number
-    synced_count: number
-    pending_count: number
-    failed_count: number
-    last_activity_at: string | null
+    inboundCount: number
+    outboundCount: number
+    syncedCount: number
+    pendingCount: number
+    failedCount: number
+    lastActivityAt: string | null
   }
-  survey_answers: Array<{ question: string; answer: string }> | null
-  ghl_location_id: string
-  skool_community_slug: string
+  surveyAnswers: Array<{ question: string; answer: string }> | null
+  ghlLocationId: string
+  skoolCommunitySlug: string
 }
 
 /**
  * Summary statistics for contacts
  */
 export interface ContactActivitySummary {
-  total_contacts: number
-  matched_contacts: number
-  unmatched_contacts: number
-  total_messages: number
-  contacts_with_pending: number
-  contacts_with_failed: number
+  totalContacts: number
+  matchedContacts: number
+  unmatchedContacts: number
+  totalMessages: number
+  contactsWithPending: number
+  contactsWithFailed: number
 }
 
 /**
@@ -109,12 +109,12 @@ export function useContactActivity(
   return {
     contacts: data?.contacts || [],
     summary: data?.summary || {
-      total_contacts: 0,
-      matched_contacts: 0,
-      unmatched_contacts: 0,
-      total_messages: 0,
-      contacts_with_pending: 0,
-      contacts_with_failed: 0,
+      totalContacts: 0,
+      matchedContacts: 0,
+      unmatchedContacts: 0,
+      totalMessages: 0,
+      contactsWithPending: 0,
+      contactsWithFailed: 0,
     },
     total: data?.total || 0,
     isLoading: !error && !data,
