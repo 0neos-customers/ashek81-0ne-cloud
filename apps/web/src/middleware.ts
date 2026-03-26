@@ -66,6 +66,7 @@ const isPublicRoute = createRouteMatcher([
   '/privacy',
   '/security-policy',
   '/access-control',
+  '/subscription-required', // Paywall page (must be accessible to blocked users)
   '/site(.*)', // Marketing site pages (no auth)
   '/api/public(.*)',
   '/api/cron(.*)',
@@ -77,6 +78,18 @@ const isPublicRoute = createRouteMatcher([
   '/api/widget(.*)', // Widget API uses its own token auth
   '/api/admin/invites/validate', // Invite validation (pre-auth)
 ])
+
+// Statuses that grant access. All others (canceled, past_due, paused, undefined) block.
+const ACTIVE_SUBSCRIPTION_STATUSES = ['active', 'trialing', 'comped']
+
+// Routes exempt from the subscription paywall (user needs access even when blocked)
+const SUBSCRIPTION_EXEMPT_ROUTES = [
+  '/api/',          // API routes have their own auth
+  '/settings',      // Let users see their account/status
+  '/sign-out',      // Must be able to sign out
+  '/onboarding',    // Onboarding flow
+  '/get-started',   // Initial setup
+]
 
 const appRoutes: Record<string, AppId> = {
   '/kpi': 'kpi',
@@ -105,13 +118,34 @@ export default clerkMiddleware(async (auth, request) => {
     pathname.startsWith('/onboarding') ||
     pathname.startsWith('/sign-out')
 
+  const metadata = sessionClaims?.metadata as {
+    onboardingComplete?: boolean
+    permissions?: { isAdmin?: boolean }
+    role?: string
+    subscriptionStatus?: string
+  } | undefined
+
   if (!skipOnboardingCheck) {
-    const metadata = sessionClaims?.metadata as { onboardingComplete?: boolean; permissions?: { isAdmin?: boolean } } | undefined
     const isAdmin = metadata?.permissions?.isAdmin === true
     // Admins without onboardingComplete are treated as complete (existing users)
     if (!metadata?.onboardingComplete && !isAdmin) {
       return NextResponse.redirect(new URL('/onboarding', request.url))
     }
+  }
+
+  // Subscription paywall: block access when subscription is not active
+  const isAdmin = metadata?.role === 'admin' || metadata?.role === 'owner' || metadata?.permissions?.isAdmin === true
+  const subscriptionStatus = metadata?.subscriptionStatus
+  const hasActiveSubscription = ACTIVE_SUBSCRIPTION_STATUSES.includes(subscriptionStatus || '')
+  const isSubscriptionExempt = SUBSCRIPTION_EXEMPT_ROUTES.some(route => pathname.startsWith(route))
+
+  if (!isAdmin && !hasActiveSubscription && !isSubscriptionExempt) {
+    const paywallUrl = new URL('/subscription-required', request.url)
+    // Pass status as query param so the page can show the right message
+    if (subscriptionStatus) {
+      paywallUrl.searchParams.set('status', subscriptionStatus)
+    }
+    return NextResponse.redirect(paywallUrl)
   }
 
   for (const [route, appId] of Object.entries(appRoutes)) {
