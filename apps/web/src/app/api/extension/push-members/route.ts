@@ -167,10 +167,13 @@ export async function POST(request: NextRequest) {
         if (member.questionsAndAnswers) memberRow.surveyAnswers = member.questionsAndAnswers
         if (effectivePhone) memberRow.phone = effectivePhone
 
+        // Include updatedAt for conflict updates
+        const updateSet = { ...memberRow, updatedAt: new Date() }
+
         await db.insert(skoolMembers).values(memberRow as typeof skoolMembers.$inferInsert)
           .onConflictDoUpdate({
             target: skoolMembers.skoolUserId,
-            set: memberRow as Record<string, unknown>,
+            set: updateSet as Record<string, unknown>,
           })
 
         upserted++
@@ -308,28 +311,19 @@ export async function POST(request: NextRequest) {
               if (contact && matchMethod) {
                 if (matchMethod !== 'auto_created') matched++
 
-                // Update skool_members with the match
-                await db.update(skoolMembers).set({
-                  ghlContactId: contact.id,
-                  matchedAt: new Date(),
-                  matchMethod,
-                }).where(eq(skoolMembers.skoolUserId, member.skoolUserId))
-
-                // Also upsert into dm_contact_mappings so it shows in the contacts UI
+                // Update skool_members + upsert dm_contact_mappings atomically
                 const clerkUserId = authResult.userId || authResult.skoolUserId || staffSkoolId
-                await db.insert(dmContactMappings).values({
-                  clerkUserId,
-                  skoolUserId: member.skoolUserId,
-                  skoolUsername: member.username,
-                  skoolDisplayName: member.displayName,
-                  ghlContactId: contact.id,
-                  matchMethod,
-                  email: member.email,
-                  contactType: 'community_member',
-                  updatedAt: new Date(),
-                }).onConflictDoUpdate({
-                  target: [dmContactMappings.clerkUserId, dmContactMappings.skoolUserId],
-                  set: {
+                await db.transaction(async (tx) => {
+                  await tx.update(skoolMembers).set({
+                    ghlContactId: contact.id,
+                    matchedAt: new Date(),
+                    matchMethod,
+                    updatedAt: new Date(),
+                  }).where(eq(skoolMembers.skoolUserId, member.skoolUserId))
+
+                  await tx.insert(dmContactMappings).values({
+                    clerkUserId,
+                    skoolUserId: member.skoolUserId,
                     skoolUsername: member.username,
                     skoolDisplayName: member.displayName,
                     ghlContactId: contact.id,
@@ -337,7 +331,18 @@ export async function POST(request: NextRequest) {
                     email: member.email,
                     contactType: 'community_member',
                     updatedAt: new Date(),
-                  },
+                  }).onConflictDoUpdate({
+                    target: [dmContactMappings.clerkUserId, dmContactMappings.skoolUserId],
+                    set: {
+                      skoolUsername: member.username,
+                      skoolDisplayName: member.displayName,
+                      ghlContactId: contact.id,
+                      matchMethod,
+                      email: member.email,
+                      contactType: 'community_member',
+                      updatedAt: new Date(),
+                    },
+                  })
                 })
 
                 console.log(`[Extension API] ${matchMethod === 'auto_created' ? 'Created' : 'Matched'} ${member.email || member.phone} → GHL ${contact.id}`)

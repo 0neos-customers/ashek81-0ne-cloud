@@ -73,24 +73,23 @@ export async function POST(request: NextRequest) {
     let inserted = 0
     const errors: string[] = []
 
-    // Insert KPIs (always create new records for time-series data)
-    for (const kpi of kpis) {
-      try {
-        await db.insert(skoolKpis).values({
-          staffSkoolId,
-          groupId,
-          metricName: kpi.metricName,
-          metricValue: kpi.metricValue != null ? kpi.metricValue : null,
-          recordedAt: now,
-        })
+    // Batch insert KPIs (always create new records for time-series data)
+    const kpiRows = kpis.map((kpi) => ({
+      staffSkoolId,
+      groupId,
+      metricName: kpi.metricName,
+      metricValue: kpi.metricValue != null ? kpi.metricValue : null,
+      recordedAt: now,
+    }))
 
-        inserted++
-      } catch (kpiError) {
-        console.error(`[Extension API] Exception processing KPI ${kpi.metricName}:`, kpiError)
-        errors.push(
-          `KPI ${kpi.metricName}: ${kpiError instanceof Error ? kpiError.message : 'Unknown error'}`
-        )
+    try {
+      if (kpiRows.length > 0) {
+        await db.insert(skoolKpis).values(kpiRows)
+        inserted = kpiRows.length
       }
+    } catch (kpiError) {
+      console.error(`[Extension API] Batch KPI insert failed:`, kpiError)
+      errors.push(`Batch insert: ${kpiError instanceof Error ? kpiError.message : 'Unknown error'}`)
     }
 
     console.log(

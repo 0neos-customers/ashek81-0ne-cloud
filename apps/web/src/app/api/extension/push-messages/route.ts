@@ -111,22 +111,12 @@ export async function POST(request: NextRequest) {
       existingMessages.map((m) => m.skoolMessageId)
     )
 
-    // Process messages - only insert new ones
-    // The dm_messages table uses (clerk_user_id, skool_message_id) as unique constraint
-    for (const msg of messages) {
-      // Skip if already exists
-      if (existingMessageIds.has(msg.id)) {
-        skipped++
-        continue
-      }
-
-      try {
-        // Map to existing dm_messages schema
-        // Extension-captured inbound messages need GHL sync → status='pending'
-        // Extension-captured outbound messages are already sent in Skool → status='synced'
+    // Batch insert new messages (skip already-existing ones)
+    const newMessageRows = messages
+      .filter((msg) => !existingMessageIds.has(msg.id))
+      .map((msg) => {
         const isOutbound = msg.isOwnMessage
-
-        await db.insert(dmMessages).values({
+        return {
           clerkUserId,
           skoolConversationId: conversationId,
           skoolMessageId: msg.id,
@@ -136,24 +126,27 @@ export async function POST(request: NextRequest) {
           messageText: msg.content,
           status: isOutbound ? 'synced' : 'pending',
           syncedAt: isOutbound ? new Date() : null,
-          source: 'extension',
+          source: 'extension' as const,
           createdAt: msg.timestamp ? new Date(msg.timestamp) : new Date(),
           staffSkoolId: isOutbound ? staffSkoolId : null,
           staffDisplayName: isOutbound ? (staffDisplayName || null) : null,
-        })
-
-        synced++
-      } catch (msgError: unknown) {
-        // Handle race condition - message was inserted between our check and insert
-        const errCode = (msgError as { code?: string })?.code
-        if (errCode === '23505') {
-          skipped++
-        } else {
-          console.error(`[Extension API] Error inserting message ${msg.id}:`, msgError)
-          errors.push(
-            `Message ${msg.id}: ${msgError instanceof Error ? msgError.message : 'Unknown error'}`
-          )
         }
+      })
+
+    skipped = messages.length - newMessageRows.length
+
+    if (newMessageRows.length > 0) {
+      try {
+        // Use onConflictDoNothing to gracefully handle race conditions
+        const result = await db.insert(dmMessages).values(newMessageRows)
+          .onConflictDoUpdate({
+            target: [dmMessages.clerkUserId, dmMessages.skoolMessageId],
+            set: {}, // no-op update = ignoreDuplicates equivalent
+          })
+        synced = newMessageRows.length
+      } catch (batchError) {
+        console.error(`[Extension API] Batch message insert failed:`, batchError)
+        errors.push(`Batch insert: ${batchError instanceof Error ? batchError.message : 'Unknown error'}`)
       }
     }
 

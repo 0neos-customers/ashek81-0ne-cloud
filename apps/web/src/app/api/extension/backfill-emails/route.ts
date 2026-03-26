@@ -113,6 +113,7 @@ export async function POST(request: NextRequest) {
       }
 
       if (Object.keys(updates).length > 0) {
+        updates.updatedAt = new Date()
         await db.update(skoolMembers)
           .set(updates)
           .where(eq(skoolMembers.skoolUserId, member.skoolUserId))
@@ -418,18 +419,21 @@ export async function POST(request: NextRequest) {
               if (matchMethod === 'email') stats.ghl_matched++
               if (matchMethod === 'phone') stats.ghl_phone_matched++
 
-              await db.update(skoolMembers).set({
-                ghlContactId: contact.id,
-                matchedAt: new Date(),
-                matchMethod,
-              }).where(eq(skoolMembers.skoolUserId, member.skoolUserId))
+              await db.transaction(async (tx) => {
+                await tx.update(skoolMembers).set({
+                  ghlContactId: contact.id,
+                  matchedAt: new Date(),
+                  matchMethod,
+                  updatedAt: new Date(),
+                }).where(eq(skoolMembers.skoolUserId, member.skoolUserId))
 
-              await db.update(dmContactMappings).set({
-                ghlContactId: contact.id,
-                matchMethod,
-                email: member.email,
-                updatedAt: new Date(),
-              }).where(eq(dmContactMappings.skoolUserId, member.skoolUserId))
+                await tx.update(dmContactMappings).set({
+                  ghlContactId: contact.id,
+                  matchMethod,
+                  email: member.email,
+                  updatedAt: new Date(),
+                }).where(eq(dmContactMappings.skoolUserId, member.skoolUserId))
+              })
             }
           } catch (matchError) {
             console.error(`[Backfill] Match error for ${member.email || member.phone}:`, matchError)

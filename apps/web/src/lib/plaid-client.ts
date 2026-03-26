@@ -51,7 +51,11 @@ export async function syncTransactions(accessToken: string, cursor?: string | nu
   let hasMore = true
   let nextCursor = cursor || undefined
 
-  while (hasMore) {
+  const MAX_PAGES = 100
+  let pageCount = 0
+
+  while (hasMore && pageCount < MAX_PAGES) {
+    pageCount++
     const response = await getPlaidClient().transactionsSync({
       access_token: accessToken,
       cursor: nextCursor,
@@ -62,6 +66,10 @@ export async function syncTransactions(accessToken: string, cursor?: string | nu
     allRemoved.push(...response.data.removed)
     hasMore = response.data.has_more
     nextCursor = response.data.next_cursor
+  }
+
+  if (pageCount >= MAX_PAGES) {
+    console.warn('[Plaid] syncTransactions hit max page limit')
   }
 
   return {

@@ -71,14 +71,7 @@ export async function POST(request: NextRequest) {
 
     const now = new Date()
 
-    // Delete existing categories for this group, then insert fresh
-    try {
-      await db.delete(skoolCategories).where(eq(skoolCategories.groupSlug, body.groupSlug))
-    } catch (deleteError) {
-      console.error('[Extension API] Failed to clear old categories:', deleteError)
-    }
-
-    // Insert new categories
+    // Delete existing categories for this group, then insert fresh (atomic)
     const rows = body.categories.map((c, index) => ({
       groupSlug: body.groupSlug,
       skoolId: c.id,
@@ -88,11 +81,14 @@ export async function POST(request: NextRequest) {
     }))
 
     try {
-      await db.insert(skoolCategories).values(rows)
-    } catch (insertError) {
-      console.error('[Extension API] Failed to insert categories:', insertError)
+      await db.transaction(async (tx) => {
+        await tx.delete(skoolCategories).where(eq(skoolCategories.groupSlug, body.groupSlug))
+        await tx.insert(skoolCategories).values(rows)
+      })
+    } catch (txError) {
+      console.error('[Extension API] Failed to replace categories:', txError)
       return NextResponse.json(
-        { success: false, count: 0, error: insertError instanceof Error ? insertError.message : 'Unknown error' } as PushCategoriesResponse,
+        { success: false, count: 0, error: txError instanceof Error ? txError.message : 'Unknown error' } as PushCategoriesResponse,
         { status: 500, headers: corsHeaders }
       )
     }

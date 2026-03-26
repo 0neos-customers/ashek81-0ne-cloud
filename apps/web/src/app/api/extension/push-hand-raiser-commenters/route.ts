@@ -258,49 +258,46 @@ export async function POST(request: NextRequest) {
           tagged++
         }
 
-        // 6. Queue DM if template exists
-        if (campaign.dmTemplate?.trim()) {
-          const dmMessage = interpolateTemplate(campaign.dmTemplate, {
-            name: commenter.displayName || commenter.username,
-            username: commenter.username,
-          })
-
-          // Queue in dm_messages with source='hand-raiser' for extension pickup
-          try {
-            await db.insert(dmMessages).values({
-              clerkUserId,
-              staffSkoolId,
-              skoolConversationId: `hr-pending-${commenter.skoolUserId}`, // Placeholder — extension will resolve actual conversation
-              skoolMessageId: `hr-${commenter.campaignId}-${commenter.skoolUserId}-${Date.now()}`,
-              ghlMessageId: null,
-              skoolUserId: commenter.skoolUserId,
-              direction: 'outbound',
-              messageText: dmMessage,
-              status: 'pending',
-              source: 'hand-raiser',
-              createdAt: new Date(),
-              syncedAt: null,
-            })
-            dmsQueued++
-          } catch (insertError) {
-            console.error(`[Extension API] Failed to queue DM:`, insertError)
-            errors.push(`DM queue for ${commenter.username}: ${insertError instanceof Error ? insertError.message : 'Unknown error'}`)
-          }
-        }
-
-        // 7. Insert dedup record — only if we have a GHL contact
+        // 6. Queue DM + insert dedup record atomically (if we have a GHL contact)
         if (contactResult.ghlContactId) {
           try {
-            await db.insert(dmHandRaiserSent).values({
-              campaignId: commenter.campaignId,
-              skoolUserId: commenter.skoolUserId,
+            await db.transaction(async (tx) => {
+              // Queue DM if template exists
+              if (campaign.dmTemplate?.trim()) {
+                const dmMessage = interpolateTemplate(campaign.dmTemplate, {
+                  name: commenter.displayName || commenter.username,
+                  username: commenter.username,
+                })
+
+                await tx.insert(dmMessages).values({
+                  clerkUserId,
+                  staffSkoolId,
+                  skoolConversationId: `hr-pending-${commenter.skoolUserId}`,
+                  skoolMessageId: `hr-${commenter.campaignId}-${commenter.skoolUserId}-${Date.now()}`,
+                  ghlMessageId: null,
+                  skoolUserId: commenter.skoolUserId,
+                  direction: 'outbound',
+                  messageText: dmMessage,
+                  status: 'pending',
+                  source: 'hand-raiser',
+                  createdAt: new Date(),
+                  syncedAt: null,
+                })
+                dmsQueued++
+              }
+
+              // Insert dedup record
+              await tx.insert(dmHandRaiserSent).values({
+                campaignId: commenter.campaignId,
+                skoolUserId: commenter.skoolUserId,
+              })
             })
-          } catch (sentError: unknown) {
+          } catch (txError: unknown) {
             // Duplicate insert is OK (race condition safety)
-            const errCode = (sentError as { code?: string })?.code
+            const errCode = (txError as { code?: string })?.code
             if (errCode !== '23505') {
-              console.error(`[Extension API] Failed to record sent:`, sentError)
-              errors.push(`Dedup record for ${commenter.username}: ${sentError instanceof Error ? sentError.message : 'Unknown error'}`)
+              console.error(`[Extension API] Failed to queue DM + dedup:`, txError)
+              errors.push(`DM+dedup for ${commenter.username}: ${txError instanceof Error ? txError.message : 'Unknown error'}`)
             }
           }
 

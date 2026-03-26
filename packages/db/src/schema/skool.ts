@@ -134,6 +134,7 @@ export const skoolKpis = pgTable('skool_kpis', {
   index('skool_kpis_group_idx').on(table.groupId),
   index('skool_kpis_metric_name_idx').on(table.metricName),
   index('skool_kpis_recorded_at_idx').on(table.recordedAt),
+  index('skool_kpis_group_metric_recorded_idx').on(table.groupId, table.metricName, table.recordedAt),
 ])
 
 // ── skool_analytics ────────────────────────────────────────────────────────────

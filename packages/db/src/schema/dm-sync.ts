@@ -104,7 +104,7 @@ export const dmHandRaiserCampaigns = pgTable('dm_hand_raiser_campaigns', {
 
 export const dmHandRaiserSent = pgTable('dm_hand_raiser_sent', {
   id: uuid('id').primaryKey().defaultRandom(),
-  campaignId: uuid('campaign_id').references(() => dmHandRaiserCampaigns.id),
+  campaignId: uuid('campaign_id').references(() => dmHandRaiserCampaigns.id, { onDelete: 'cascade' }),
   skoolUserId: text('skool_user_id').notNull(),
   sentAt: timestamp('sent_at', { withTimezone: true }).defaultNow(),
 }, (table) => [
