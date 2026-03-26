@@ -180,7 +180,7 @@ export async function GET(request: Request) {
       success: true,
       synced: totalSynced,
       errors,
-      items_processed: items.length,
+      itemsProcessed: items.length,
       timestamp: new Date().toISOString(),
     })
   } catch (error) {

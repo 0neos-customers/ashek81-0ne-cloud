@@ -2,32 +2,10 @@
  * Cookie Encryption Utilities
  * Phase 6: Secure storage of Skool cookies
  *
- * Uses AES-256-CBC encryption with a server-side key
+ * Uses shared AES-256-CBC encryption with COOKIE_ENCRYPTION_KEY.
  */
 
-import { createCipheriv, createDecipheriv, randomBytes } from 'crypto'
-
-// ============================================
-// Configuration
-// ============================================
-
-/**
- * Get the encryption key from environment
- * Key should be 32 bytes (64 hex characters)
- */
-function getEncryptionKey(): Buffer {
-  const keyHex = process.env.COOKIE_ENCRYPTION_KEY
-
-  if (!keyHex) {
-    throw new Error('COOKIE_ENCRYPTION_KEY environment variable not set')
-  }
-
-  if (keyHex.length !== 64) {
-    throw new Error('COOKIE_ENCRYPTION_KEY must be 64 hex characters (32 bytes)')
-  }
-
-  return Buffer.from(keyHex, 'hex')
-}
+import { encrypt, decrypt, resolveKey, generateEncryptionKey } from './encryption'
 
 // ============================================
 // Encryption Functions
@@ -38,15 +16,7 @@ function getEncryptionKey(): Buffer {
  * Returns format: IV:encryptedData (both in hex)
  */
 export function encryptCookies(plaintext: string): string {
-  const key = getEncryptionKey()
-  const iv = randomBytes(16) // 16 bytes for AES
-
-  const cipher = createCipheriv('aes-256-cbc', key, iv)
-  let encrypted = cipher.update(plaintext, 'utf8', 'hex')
-  encrypted += cipher.final('hex')
-
-  // Return IV:encrypted format
-  return iv.toString('hex') + ':' + encrypted
+  return encrypt(plaintext, resolveKey('COOKIE_ENCRYPTION_KEY'))
 }
 
 /**
@@ -54,35 +24,14 @@ export function encryptCookies(plaintext: string): string {
  * Input format: IV:encryptedData (both in hex)
  */
 export function decryptCookies(encrypted: string): string {
-  const key = getEncryptionKey()
-
-  // Split IV and encrypted data
-  const parts = encrypted.split(':')
-  if (parts.length !== 2) {
-    throw new Error('Invalid encrypted format - expected IV:data')
-  }
-
-  const [ivHex, encryptedText] = parts
-  const iv = Buffer.from(ivHex, 'hex')
-
-  const decipher = createDecipheriv('aes-256-cbc', key, iv)
-  let decrypted = decipher.update(encryptedText, 'hex', 'utf8')
-  decrypted += decipher.final('utf8')
-
-  return decrypted
+  return decrypt(encrypted, resolveKey('COOKIE_ENCRYPTION_KEY'))
 }
 
 // ============================================
 // Helper Functions
 // ============================================
 
-/**
- * Generate a new encryption key (for setup)
- * Returns a 64-character hex string
- */
-export function generateEncryptionKey(): string {
-  return randomBytes(32).toString('hex')
-}
+export { generateEncryptionKey }
 
 /**
  * Check if encryption is properly configured

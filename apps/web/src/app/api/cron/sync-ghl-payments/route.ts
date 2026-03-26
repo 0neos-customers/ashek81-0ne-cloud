@@ -91,43 +91,45 @@ export async function GET(request: Request) {
     let skipped = 0
     const errors: string[] = []
 
-    for (const txn of transactions) {
-      try {
-        const record = mapTransactionToRecord(txn)
+    await db.transaction(async (tx) => {
+      for (const txn of transactions) {
+        try {
+          const record = mapTransactionToRecord(txn)
 
-        await db
-          .insert(ghlTransactions)
-          .values(record)
-          .onConflictDoUpdate({
-            target: [ghlTransactions.ghlTransactionId],
-            set: {
-              ghlContactId: record.ghlContactId,
-              ghlInvoiceId: record.ghlInvoiceId,
-              ghlSubscriptionId: record.ghlSubscriptionId,
-              contactName: record.contactName,
-              contactEmail: record.contactEmail,
-              amount: record.amount,
-              currency: record.currency,
-              status: record.status,
-              entityType: record.entityType,
-              entitySourceType: record.entitySourceType,
-              entitySourceName: record.entitySourceName,
-              paymentMethod: record.paymentMethod,
-              invoiceNumber: record.invoiceNumber,
-              isLiveMode: record.isLiveMode,
-              transactionDate: record.transactionDate,
-              updatedAt: new Date(),
-              syncedAt: new Date(),
-            },
-          })
+          await tx
+            .insert(ghlTransactions)
+            .values(record)
+            .onConflictDoUpdate({
+              target: [ghlTransactions.ghlTransactionId],
+              set: {
+                ghlContactId: record.ghlContactId,
+                ghlInvoiceId: record.ghlInvoiceId,
+                ghlSubscriptionId: record.ghlSubscriptionId,
+                contactName: record.contactName,
+                contactEmail: record.contactEmail,
+                amount: record.amount,
+                currency: record.currency,
+                status: record.status,
+                entityType: record.entityType,
+                entitySourceType: record.entitySourceType,
+                entitySourceName: record.entitySourceName,
+                paymentMethod: record.paymentMethod,
+                invoiceNumber: record.invoiceNumber,
+                isLiveMode: record.isLiveMode,
+                transactionDate: record.transactionDate,
+                updatedAt: new Date(),
+                syncedAt: new Date(),
+              },
+            })
 
-        synced++
-      } catch (err) {
-        console.error(`[sync-ghl-payments] Error processing ${txn._id}:`, err)
-        errors.push(`${txn._id}: ${String(err)}`)
-        skipped++
+          synced++
+        } catch (err) {
+          console.error(`[sync-ghl-payments] Error processing ${txn._id}:`, err)
+          errors.push(`${txn._id}: ${String(err)}`)
+          skipped++
+        }
       }
-    }
+    })
 
     console.log(`[sync-ghl-payments] Synced ${synced} transactions, skipped ${skipped}`)
 

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
-import { db, eq, gte, lte, lt, and, inArray, isNull, asc, count } from '@0ne/db/server'
+import { db, eq, gte, lte, lt, and, inArray, isNull, asc, count, rawSql } from '@0ne/db/server'
 import { dailyAggregates, contacts, skoolAboutPageDaily, skoolMembersDaily, skoolMembers } from '@0ne/db/server'
 import {
   FUNNEL_STAGE_ORDER,
@@ -85,22 +85,19 @@ export async function GET(request: Request) {
       .from(dailyAggregates)
       .where(and(...previousFilters))
 
-    // Get contact counts by stage - fetch all contacts' stages arrays
+    // Get contact counts by stage using SQL unnest (avoids loading all contacts into memory)
     const stageCountsMap: Record<string, number> = {}
 
-    const allContactsStages = await db
-      .select({ stages: contacts.stages })
-      .from(contacts)
+    const stageCountRows = await db.execute(
+      rawSql`SELECT s AS stage, COUNT(*)::int AS cnt FROM contacts, unnest(contacts.stages) AS s GROUP BY s`
+    )
 
-    // Count by stage - contacts can be in MULTIPLE stages (tags accumulate)
-    allContactsStages.forEach((contact) => {
-      const stages = contact.stages as string[] || []
-      stages.forEach((stage) => {
-        if (stage) {
-          stageCountsMap[stage] = (stageCountsMap[stage] || 0) + 1
-        }
-      })
-    })
+    for (const row of stageCountRows.rows) {
+      const r = row as { stage: string; cnt: number }
+      if (r.stage) {
+        stageCountsMap[r.stage] = r.cnt
+      }
+    }
 
     // Fetch Skool metrics (source of truth for members) and revenue snapshot
     const [skoolMetrics, revenueSnapshot] = await Promise.all([

@@ -179,21 +179,13 @@ export async function GET(request: Request) {
 
     const adInsights = await fetchPagedInsights(insightsUrl.toString(), 200)
 
+    // Pre-fetch all campaigns into a Map to avoid N+1 per-insight lookups
+    const allCampaigns = await db.select({ id: campaigns.id, name: campaigns.name }).from(campaigns)
+    const campaignMap = new Map(allCampaigns.map(c => [c.name, c.id]))
+
     for (const insight of adInsights) {
       try {
-        let campaignId = null
-
-        if (insight.campaign_name) {
-          const [campaign] = await db
-            .select({ id: campaigns.id })
-            .from(campaigns)
-            .where(eq(campaigns.name, insight.campaign_name))
-            .limit(1)
-
-          if (campaign) {
-            campaignId = campaign.id
-          }
-        }
+        const campaignId = insight.campaign_name ? (campaignMap.get(insight.campaign_name) ?? null) : null
 
         const landingPageViews = sumActionValues(insight.actions, ['landing_page_view'])
         // Match Ads Manager "Results" for complete_registration

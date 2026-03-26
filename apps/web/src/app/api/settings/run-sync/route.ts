@@ -13,7 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { safeErrorResponse } from '@/lib/security'
-import { auth } from '@clerk/nextjs/server'
+import { requireAdmin, AuthError } from '@/lib/auth-helpers'
 import type { SyncType } from '@/lib/sync-log'
 import {
   CRON_REGISTRY,
@@ -31,15 +31,8 @@ interface RunSyncRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    // Check for user authentication (browser request)
-    const { userId } = await auth()
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Unauthorized - Please log in' },
-        { status: 401 }
-      )
-    }
+    // Require admin role — triggering syncs is admin-only
+    await requireAdmin()
 
     // Parse request body
     let body: RunSyncRequest
@@ -108,6 +101,9 @@ export async function POST(request: NextRequest) {
       cronId: cron.id,
     })
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
     console.error('[run-sync API] Error:', error)
     return safeErrorResponse('Internal server error', error)
   }

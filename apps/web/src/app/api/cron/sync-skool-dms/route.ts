@@ -10,7 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { secureCompare } from '@/lib/security'
+import { secureCompare, safeErrorResponse } from '@/lib/security'
 import {
   syncExtensionMessages,
   getEnabledSyncConfigs,
@@ -33,9 +33,8 @@ export async function GET(request: NextRequest) {
   // Verify cron secret (allow localhost bypass for development)
   const authHeader = request.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
-  const host = request.headers.get('host') || ''
-  const isLocalhost = host === 'localhost:3000' || host === 'localhost'
-  const bypassAuth = isLocalhost && request.nextUrl.searchParams.get('dev') === 'true'
+  const isDev = process.env.NODE_ENV === 'development'
+  const bypassAuth = isDev && request.nextUrl.searchParams.get('dev') === 'true'
 
   if (!bypassAuth && (!cronSecret || !authHeader || !secureCompare(authHeader, `Bearer ${cronSecret}`))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -151,13 +150,6 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('[sync-skool-dms] Fatal error:', error)
     await syncLogger.fail(error instanceof Error ? error.message : 'Unknown error')
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        duration: `${((Date.now() - startTime) / 1000).toFixed(1)}s`,
-      },
-      { status: 500 }
-    )
+    return safeErrorResponse('Skool DM sync failed', error)
   }
 }

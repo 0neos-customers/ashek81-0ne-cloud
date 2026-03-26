@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { getUserPermissions } from '@0ne/auth/permissions'
+import { safeErrorResponse } from '@/lib/security'
 import { db, eq, and, desc } from '@0ne/db/server'
 import { invites } from '@0ne/db/server'
 
@@ -21,7 +22,7 @@ export async function GET() {
 
     return NextResponse.json({ invites: data })
   } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 })
+    return safeErrorResponse('Failed to fetch invites', error)
   }
 }
 
@@ -61,6 +62,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ invite: data })
   } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 })
+    return safeErrorResponse('Failed to create invite', error)
   }
 }

@@ -15,17 +15,6 @@ import { telemetryEvents, telemetryFailurePatterns, userInstalls } from '@0ne/db
 
 export const dynamic = 'force-dynamic'
 
-// CORS headers for CLI tools (not browsers, but good practice)
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-}
-
-export async function OPTIONS() {
-  return new NextResponse(null, { status: 200, headers: corsHeaders })
-}
-
 // =============================================
 // Types
 // =============================================
@@ -147,7 +136,7 @@ export async function POST(request: NextRequest) {
     console.error('[Telemetry API] TELEMETRY_API_KEY environment variable not set')
     return NextResponse.json(
       { error: 'Server configuration error' },
-      { status: 500, headers: corsHeaders }
+      { status: 500 }
     )
   }
 
@@ -155,7 +144,7 @@ export async function POST(request: NextRequest) {
   if (!bearerMatch || !secureCompare(bearerMatch[1], expectedKey)) {
     return NextResponse.json(
       { error: 'Invalid or missing authorization' },
-      { status: 401, headers: corsHeaders }
+      { status: 401 }
     )
   }
 
@@ -166,14 +155,14 @@ export async function POST(request: NextRequest) {
     if (!body.event_type || !['doctor', 'install'].includes(body.event_type)) {
       return NextResponse.json(
         { error: 'event_type must be "doctor" or "install"' },
-        { status: 400, headers: corsHeaders }
+        { status: 400 }
       )
     }
 
     if (!body.results) {
       return NextResponse.json(
         { error: 'results field is required' },
-        { status: 400, headers: corsHeaders }
+        { status: 400 }
       )
     }
 
@@ -232,7 +221,7 @@ export async function POST(request: NextRequest) {
       console.error('[Telemetry API] Insert returned no rows')
       return NextResponse.json(
         { success: false, error: 'Insert failed' },
-        { status: 500, headers: corsHeaders }
+        { status: 500 }
       )
     }
 
@@ -356,19 +345,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        id: inserted.id,
-        known_fixes: knownFixes.length > 0 ? knownFixes : undefined,
-      },
-      { headers: corsHeaders }
-    )
+    return NextResponse.json({
+      success: true,
+      id: inserted.id,
+      known_fixes: knownFixes.length > 0 ? knownFixes : undefined,
+    })
   } catch (error) {
     console.error('[Telemetry API] Unexpected error:', error)
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
-      { status: 500, headers: corsHeaders }
+      { status: 500 }
     )
   }
 }

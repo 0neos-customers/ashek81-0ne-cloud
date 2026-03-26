@@ -9,7 +9,7 @@
  */
 
 import { NextResponse } from 'next/server'
-import { secureCompare } from '@/lib/security'
+import { secureCompare, safeErrorResponse } from '@/lib/security'
 import { db } from '@0ne/db/server'
 import { syncActivityLog } from '@0ne/db/server'
 import { sendScheduledSnapshots } from '@/features/notifications/lib/send-notification'
@@ -104,14 +104,6 @@ export async function GET(request: Request) {
       // Ignore logging errors
     }
 
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        hour: currentHour,
-        timestamp: new Date().toISOString(),
-      },
-      { status: 500 }
-    )
+    return safeErrorResponse('Snapshot send failed', error)
   }
 }

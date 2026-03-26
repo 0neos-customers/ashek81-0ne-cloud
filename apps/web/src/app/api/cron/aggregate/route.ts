@@ -222,49 +222,51 @@ export async function GET(request: Request) {
       }
     }
 
-    // Batch upsert all aggregates
-    for (const agg of aggregatesToUpsert) {
-      const record = {
-        date: agg.date,
-        campaignId: agg.campaign_id,
-        source: agg.source,
-        newLeads: agg.new_members,
-        newHandRaisers: agg.new_hand_raisers,
-        newQualified: agg.new_qualified_premium + agg.new_qualified_vip,
-        newVip: agg.new_vip,
-        newPremium: agg.new_premium,
-        newFunded: 0,
-        totalRevenue: agg.total_revenue,
-        vipRevenue: agg.vip_revenue,
-        premiumRevenue: agg.premium_revenue,
-        successFeeRevenue: agg.success_fee_revenue,
-        adSpend: agg.ad_spend,
-        expenses: 0,
-        totalFundedAmount: agg.total_funded_amount,
-        fundedCount: agg.funded_count,
-      }
+    // Batch upsert all aggregates in a single transaction
+    await db.transaction(async (tx) => {
+      for (const agg of aggregatesToUpsert) {
+        const record = {
+          date: agg.date,
+          campaignId: agg.campaign_id,
+          source: agg.source,
+          newLeads: agg.new_members,
+          newHandRaisers: agg.new_hand_raisers,
+          newQualified: agg.new_qualified_premium + agg.new_qualified_vip,
+          newVip: agg.new_vip,
+          newPremium: agg.new_premium,
+          newFunded: 0,
+          totalRevenue: agg.total_revenue,
+          vipRevenue: agg.vip_revenue,
+          premiumRevenue: agg.premium_revenue,
+          successFeeRevenue: agg.success_fee_revenue,
+          adSpend: agg.ad_spend,
+          expenses: 0,
+          totalFundedAmount: agg.total_funded_amount,
+          fundedCount: agg.funded_count,
+        }
 
-      await db
-        .insert(dailyAggregates)
-        .values(record)
-        .onConflictDoUpdate({
-          target: [dailyAggregates.date, dailyAggregates.campaignId, dailyAggregates.source],
-          set: {
-            newLeads: record.newLeads,
-            newHandRaisers: record.newHandRaisers,
-            newQualified: record.newQualified,
-            newVip: record.newVip,
-            newPremium: record.newPremium,
-            totalRevenue: record.totalRevenue,
-            vipRevenue: record.vipRevenue,
-            premiumRevenue: record.premiumRevenue,
-            successFeeRevenue: record.successFeeRevenue,
-            adSpend: record.adSpend,
-            totalFundedAmount: record.totalFundedAmount,
-            fundedCount: record.fundedCount,
-          },
-        })
-    }
+        await tx
+          .insert(dailyAggregates)
+          .values(record)
+          .onConflictDoUpdate({
+            target: [dailyAggregates.date, dailyAggregates.campaignId, dailyAggregates.source],
+            set: {
+              newLeads: record.newLeads,
+              newHandRaisers: record.newHandRaisers,
+              newQualified: record.newQualified,
+              newVip: record.newVip,
+              newPremium: record.newPremium,
+              totalRevenue: record.totalRevenue,
+              vipRevenue: record.vipRevenue,
+              premiumRevenue: record.premiumRevenue,
+              successFeeRevenue: record.successFeeRevenue,
+              adSpend: record.adSpend,
+              totalFundedAmount: record.totalFundedAmount,
+              fundedCount: record.fundedCount,
+            },
+          })
+      }
+    })
 
     // =============================================================================
     // EXPENSES BY CATEGORY
@@ -297,46 +299,50 @@ export async function GET(request: Request) {
       isSystem: data.isSystem,
     }))
 
-    for (const row of expenseCategoryRows) {
-      await db
-        .insert(dailyExpensesByCategory)
-        .values(row)
-        .onConflictDoUpdate({
-          target: [dailyExpensesByCategory.date, dailyExpensesByCategory.category],
-          set: {
-            amount: row.amount,
-            expenseCount: row.expenseCount,
-            isSystem: row.isSystem,
-          },
-        })
-    }
+    await db.transaction(async (tx) => {
+      for (const row of expenseCategoryRows) {
+        await tx
+          .insert(dailyExpensesByCategory)
+          .values(row)
+          .onConflictDoUpdate({
+            target: [dailyExpensesByCategory.date, dailyExpensesByCategory.category],
+            set: {
+              amount: row.amount,
+              expenseCount: row.expenseCount,
+              isSystem: row.isSystem,
+            },
+          })
+      }
+    })
 
     // =============================================================================
     // UPDATE DIMENSION TABLES
     // =============================================================================
 
     // Update source dimensions
-    for (const source of sources) {
-      const cnt = contactsRows.filter(c => c.source === source).length
-      await db
-        .insert(dimensionSources)
-        .values({
-          source,
-          displayName: formatSourceName(source),
-          contactCount: cnt,
-          lastSeenDate: dateStr,
-          isActive: true,
-        })
-        .onConflictDoUpdate({
-          target: [dimensionSources.source],
-          set: {
+    await db.transaction(async (tx) => {
+      for (const source of sources) {
+        const cnt = contactsRows.filter(c => c.source === source).length
+        await tx
+          .insert(dimensionSources)
+          .values({
+            source,
             displayName: formatSourceName(source),
             contactCount: cnt,
             lastSeenDate: dateStr,
             isActive: true,
-          },
-        })
-    }
+          })
+          .onConflictDoUpdate({
+            target: [dimensionSources.source],
+            set: {
+              displayName: formatSourceName(source),
+              contactCount: cnt,
+              lastSeenDate: dateStr,
+              isActive: true,
+            },
+          })
+      }
+    })
 
     // Update stage dimensions with current counts
     const stageCounts = new Map<string, number>()
@@ -392,56 +398,58 @@ export async function GET(request: Request) {
           bySource.get(src)!.push(agg)
         }
 
-        for (const [src, aggs] of bySource) {
-          const totals = aggs.reduce((acc, agg) => ({
-            newLeads: acc.newLeads + (agg.newLeads || 0),
-            newHandRaisers: acc.newHandRaisers + (agg.newHandRaisers || 0),
-            newQualified: acc.newQualified + (agg.newQualified || 0),
-            newClients: acc.newClients + (agg.newPremium || 0) + (agg.newVip || 0),
-            totalRevenue: acc.totalRevenue + Number(agg.totalRevenue || 0),
-            adSpend: acc.adSpend + Number(agg.adSpend || 0),
-          }), {
-            newLeads: 0,
-            newHandRaisers: 0,
-            newQualified: 0,
-            newClients: 0,
-            totalRevenue: 0,
-            adSpend: 0,
-          })
-
-          const record = {
-            weekStart: weekStartStr,
-            weekNumber: weekLabel,
-            source: src,
-            campaignId: null,
-            newLeads: totals.newLeads,
-            newHandRaisers: totals.newHandRaisers,
-            newQualified: totals.newQualified,
-            newClients: totals.newClients,
-            totalRevenue: totals.totalRevenue,
-            adSpend: totals.adSpend,
-            costPerLead: totals.newLeads > 0 ? totals.adSpend / totals.newLeads : null,
-            costPerClient: totals.newClients > 0 ? totals.adSpend / totals.newClients : null,
-          }
-
-          await db
-            .insert(weeklyTrends)
-            .values(record)
-            .onConflictDoUpdate({
-              target: [weeklyTrends.weekStart, weeklyTrends.source, weeklyTrends.campaignId],
-              set: {
-                weekNumber: record.weekNumber,
-                newLeads: record.newLeads,
-                newHandRaisers: record.newHandRaisers,
-                newQualified: record.newQualified,
-                newClients: record.newClients,
-                totalRevenue: record.totalRevenue,
-                adSpend: record.adSpend,
-                costPerLead: record.costPerLead,
-                costPerClient: record.costPerClient,
-              },
+        await db.transaction(async (tx) => {
+          for (const [src, aggs] of bySource) {
+            const totals = aggs.reduce((acc, agg) => ({
+              newLeads: acc.newLeads + (agg.newLeads || 0),
+              newHandRaisers: acc.newHandRaisers + (agg.newHandRaisers || 0),
+              newQualified: acc.newQualified + (agg.newQualified || 0),
+              newClients: acc.newClients + (agg.newPremium || 0) + (agg.newVip || 0),
+              totalRevenue: acc.totalRevenue + Number(agg.totalRevenue || 0),
+              adSpend: acc.adSpend + Number(agg.adSpend || 0),
+            }), {
+              newLeads: 0,
+              newHandRaisers: 0,
+              newQualified: 0,
+              newClients: 0,
+              totalRevenue: 0,
+              adSpend: 0,
             })
-        }
+
+            const record = {
+              weekStart: weekStartStr,
+              weekNumber: weekLabel,
+              source: src,
+              campaignId: null,
+              newLeads: totals.newLeads,
+              newHandRaisers: totals.newHandRaisers,
+              newQualified: totals.newQualified,
+              newClients: totals.newClients,
+              totalRevenue: totals.totalRevenue,
+              adSpend: totals.adSpend,
+              costPerLead: totals.newLeads > 0 ? totals.adSpend / totals.newLeads : null,
+              costPerClient: totals.newClients > 0 ? totals.adSpend / totals.newClients : null,
+            }
+
+            await tx
+              .insert(weeklyTrends)
+              .values(record)
+              .onConflictDoUpdate({
+                target: [weeklyTrends.weekStart, weeklyTrends.source, weeklyTrends.campaignId],
+                set: {
+                  weekNumber: record.weekNumber,
+                  newLeads: record.newLeads,
+                  newHandRaisers: record.newHandRaisers,
+                  newQualified: record.newQualified,
+                  newClients: record.newClients,
+                  totalRevenue: record.totalRevenue,
+                  adSpend: record.adSpend,
+                  costPerLead: record.costPerLead,
+                  costPerClient: record.costPerClient,
+                },
+              })
+          }
+        })
       }
     }
 
