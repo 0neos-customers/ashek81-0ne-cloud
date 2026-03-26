@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { db, eq, desc, inArray, asc } from '@0ne/db/server'
 import { plaidItems, plaidAccounts } from '@0ne/db/server'
@@ -45,9 +46,6 @@ export async function GET() {
     return NextResponse.json({ items: result })
   } catch (error) {
     console.error('Plaid accounts GET error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch accounts', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch accounts', error)
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { getLatestMetrics } from '@/features/skool/lib/metrics-sync'
 
@@ -20,9 +21,6 @@ export async function GET() {
     return NextResponse.json(metrics)
   } catch (error) {
     console.error('Skool metrics error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch Skool metrics', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch Skool metrics', error)
   }
 }

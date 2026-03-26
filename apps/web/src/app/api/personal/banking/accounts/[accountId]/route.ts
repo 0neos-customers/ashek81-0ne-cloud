@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { db, eq } from '@0ne/db/server'
 import { plaidAccounts } from '@0ne/db/server'
@@ -40,9 +41,6 @@ export async function PATCH(
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Account PATCH error:', error)
-    return NextResponse.json(
-      { error: 'Failed to update account', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to update account', error)
   }
 }

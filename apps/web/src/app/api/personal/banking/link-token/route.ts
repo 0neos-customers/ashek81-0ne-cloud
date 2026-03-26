@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { createLinkToken } from '@/lib/plaid-client'
 
@@ -15,9 +16,6 @@ export async function POST() {
     return NextResponse.json({ link_token: linkToken })
   } catch (error) {
     console.error('Create link token error:', error)
-    return NextResponse.json(
-      { error: 'Failed to create link token', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to create link token', error)
   }
 }

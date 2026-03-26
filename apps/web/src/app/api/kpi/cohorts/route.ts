@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { db, eq, gte, lte, and, or, inArray, isNull, asc } from '@0ne/db/server'
 import { contacts, skoolMembers, cohortSnapshots, ghlTransactions } from '@0ne/db/server'
@@ -268,9 +269,6 @@ export async function GET(request: Request) {
     return NextResponse.json(response)
   } catch (error) {
     console.error('KPI Cohorts error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch cohort data', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch cohort data', error)
   }
 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { requireAuth, AuthError } from '@/lib/auth-helpers'
 import { db, eq, desc, and, or, count, inArray, isNull, isNotNull, ilike } from '@0ne/db/server'
 import { dmContactMappings, dmMessages, dmSyncConfig, contactChannels as contactChannelsTable, skoolMembers, staffUsers as staffUsersTable } from '@0ne/db/server'
@@ -376,9 +377,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[Contacts API] GET exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch contact activity', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch contact activity', error)
   }
 }

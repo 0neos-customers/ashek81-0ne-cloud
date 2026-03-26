@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { db, eq, asc, and } from '@0ne/db/server'
 import { plaidItems, plaidAccounts } from '@0ne/db/server'
@@ -102,9 +103,6 @@ export async function GET(request: Request) {
     })
   } catch (error) {
     console.error('Balances GET error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch balances', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch balances', error)
   }
 }

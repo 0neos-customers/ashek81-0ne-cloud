@@ -12,6 +12,7 @@
  */
 
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { db, eq, gte, lte, and, count } from '@0ne/db/server'
 import { ghlTransactions } from '@0ne/db/server'
@@ -205,9 +206,6 @@ export async function GET(request: Request) {
     return NextResponse.json(response)
   } catch (error) {
     console.error('Revenue API error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch revenue data', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch revenue data', error)
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { db, eq, gte, lte, lt, and, inArray, isNull, asc, count } from '@0ne/db/server'
 import { dailyAggregates, contacts, skoolAboutPageDaily, skoolMembersDaily, skoolMembers } from '@0ne/db/server'
@@ -413,9 +414,6 @@ export async function GET(request: Request) {
     return NextResponse.json(response)
   } catch (error) {
     console.error('KPI Overview error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch KPI data', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch KPI data', error)
   }
 }

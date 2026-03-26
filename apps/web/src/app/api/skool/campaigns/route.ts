@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { requireAuth, AuthError } from '@/lib/auth-helpers'
 import { db, eq, desc, inArray } from '@0ne/db/server'
 import { skoolCampaigns, skoolOneoffPosts } from '@0ne/db/server'
@@ -67,10 +68,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[Campaigns API] GET exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch campaigns', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch campaigns', error)
   }
 }
 
@@ -105,10 +103,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[Campaigns API] POST exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to create campaign', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to create campaign', error)
   }
 }
 
@@ -150,10 +145,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[Campaigns API] PUT exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to update campaign', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to update campaign', error)
   }
 }
 
@@ -179,9 +171,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[Campaigns API] DELETE exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete campaign', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to delete campaign', error)
   }
 }

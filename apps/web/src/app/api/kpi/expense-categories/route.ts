@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { db, eq, ne, or, and, ilike, asc, desc } from '@0ne/db/server'
 import { expenseCategories, expenses } from '@0ne/db/server'
@@ -59,10 +60,7 @@ export async function GET(request: Request) {
     })
   } catch (error) {
     console.error('Expense categories GET error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch expense categories', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch expense categories', error)
   }
 }
 
@@ -139,10 +137,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, category: data })
   } catch (error) {
     console.error('Expense categories POST error:', error)
-    return NextResponse.json(
-      { error: 'Failed to create expense category', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to create expense category', error)
   }
 }
 
@@ -245,10 +240,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ success: true, category: data })
   } catch (error) {
     console.error('Expense categories PUT error:', error)
-    return NextResponse.json(
-      { error: 'Failed to update expense category', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to update expense category', error)
   }
 }
 
@@ -322,9 +314,6 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Expense categories DELETE error:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete expense category', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to delete expense category', error)
   }
 }

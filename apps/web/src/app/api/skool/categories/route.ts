@@ -14,6 +14,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { requireAuth, AuthError } from '@/lib/auth-helpers'
 import { db, eq, asc } from '@0ne/db/server'
 import { skoolCategories } from '@0ne/db/server'
@@ -136,9 +137,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[Categories API] POST exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to retrieve categories', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to retrieve categories', error)
   }
 }

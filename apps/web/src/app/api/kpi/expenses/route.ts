@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { db, eq, gte, lte, lt, ne, and, isNull, asc } from '@0ne/db/server'
 import { expenses, adMetrics, dailyAggregates, expenseCategories } from '@0ne/db/server'
@@ -317,10 +318,7 @@ export async function GET(request: Request) {
     return NextResponse.json(response)
   } catch (error) {
     console.error('KPI Expenses error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch expense data', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch expense data', error)
   }
 }
 
@@ -357,10 +355,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, expense: data })
   } catch (error) {
     console.error('Add expense error:', error)
-    return NextResponse.json(
-      { error: 'Failed to add expense', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to add expense', error)
   }
 }
 
@@ -435,10 +430,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ success: true, expense: data })
   } catch (error) {
     console.error('Update expense error:', error)
-    return NextResponse.json(
-      { error: 'Failed to update expense', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to update expense', error)
   }
 }
 
@@ -499,10 +491,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ success: true, expense: data })
   } catch (error) {
     console.error('Update expense error:', error)
-    return NextResponse.json(
-      { error: 'Failed to update expense', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to update expense', error)
   }
 }
 
@@ -553,9 +542,6 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Delete expense error:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete expense', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to delete expense', error)
   }
 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { requireAuth, AuthError } from '@/lib/auth-helpers'
 import { db, eq, and, asc, gte } from '@0ne/db/server'
 import { skoolOneoffPosts, skoolCampaigns } from '@0ne/db/server'
@@ -117,10 +118,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[One-Off Posts API] GET exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch one-off posts', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch one-off posts', error)
   }
 }
 
@@ -185,10 +183,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[One-Off Posts API] POST exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to create one-off post', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to create one-off post', error)
   }
 }
 
@@ -258,10 +253,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[One-Off Posts API] PUT exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to update one-off post', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to update one-off post', error)
   }
 }
 
@@ -287,9 +279,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[One-Off Posts API] DELETE exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete one-off post', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to delete one-off post', error)
   }
 }

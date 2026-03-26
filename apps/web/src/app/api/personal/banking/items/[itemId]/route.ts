@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { db, eq } from '@0ne/db/server'
 import { plaidItems } from '@0ne/db/server'
@@ -49,9 +50,6 @@ export async function DELETE(
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Unlink item error:', error)
-    return NextResponse.json(
-      { error: 'Failed to unlink account', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to unlink account', error)
   }
 }

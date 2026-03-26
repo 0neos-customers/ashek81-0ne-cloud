@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { db, eq, gte, lte, asc, desc, and } from '@0ne/db/server'
 import { dailyAggregates as dailyAggregatesTable, dimensionSources, dimensionStages as dimensionStagesTable, dimensionCampaigns, dimensionExpenseCategories, weeklyTrends as weeklyTrendsTable, dailyExpensesByCategory, contacts as contactsTable } from '@0ne/db/server'
@@ -396,9 +397,6 @@ export async function GET(request: Request) {
     return NextResponse.json(response)
   } catch (error) {
     console.error('KPI Dataset error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch KPI dataset', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch KPI dataset', error)
   }
 }

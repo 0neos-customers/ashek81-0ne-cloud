@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { db, eq, and } from '@0ne/db/server'
 import { plaidItems, plaidAccounts, plaidTransactions, plaidCategoryMappings } from '@0ne/db/server'
@@ -193,9 +194,6 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error('Sync error:', error)
-    return NextResponse.json(
-      { error: 'Sync failed', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Sync failed', error)
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { db, eq, asc, desc, ilike, or, ne, and } from '@0ne/db/server'
 import { personalExpenseCategories, personalExpenses } from '@0ne/db/server'
@@ -44,10 +45,7 @@ export async function GET(request: Request) {
     })
   } catch (error) {
     console.error('Personal expense categories GET error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch personal expense categories', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch personal expense categories', error)
   }
 }
 
@@ -116,10 +114,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, category })
   } catch (error) {
     console.error('Personal expense categories POST error:', error)
-    return NextResponse.json(
-      { error: 'Failed to create personal expense category', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to create personal expense category', error)
   }
 }
 
@@ -214,10 +209,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ success: true, category })
   } catch (error) {
     console.error('Personal expense categories PUT error:', error)
-    return NextResponse.json(
-      { error: 'Failed to update personal expense category', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to update personal expense category', error)
   }
 }
 
@@ -277,9 +269,6 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Personal expense categories DELETE error:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete personal expense category', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to delete personal expense category', error)
   }
 }

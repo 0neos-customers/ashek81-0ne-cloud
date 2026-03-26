@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { requireAuth, AuthError } from '@/lib/auth-helpers'
 import { db, eq, and, asc, inArray } from '@0ne/db/server'
 import { skoolVariationGroups, skoolPostLibrary, skoolScheduledPosts } from '@0ne/db/server'
@@ -76,10 +77,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[Variation Groups API] GET exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch variation groups', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch variation groups', error)
   }
 }
 
@@ -112,10 +110,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[Variation Groups API] POST exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to create variation group', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to create variation group', error)
   }
 }
 
@@ -155,10 +150,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[Variation Groups API] PUT exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to update variation group', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to update variation group', error)
   }
 }
 
@@ -186,9 +178,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[Variation Groups API] DELETE exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete variation group', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to delete variation group', error)
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { db, eq, gte, lte, and, or, desc, inArray, isNull, isNotNull } from '@0ne/db/server'
 import { contacts, skoolMembers } from '@0ne/db/server'
@@ -337,9 +338,6 @@ export async function GET(request: Request) {
     return NextResponse.json(response)
   } catch (error) {
     console.error('KPI Funnel error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch funnel data', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch funnel data', error)
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { db, eq } from '@0ne/db/server'
 import { plaidItems, plaidAccounts } from '@0ne/db/server'
@@ -85,9 +86,6 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error('Exchange token error:', error)
-    return NextResponse.json(
-      { error: 'Failed to connect bank account', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to connect bank account', error)
   }
 }

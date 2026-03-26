@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { requireAuth, AuthError } from '@/lib/auth-helpers'
 import { db, eq, asc } from '@0ne/db/server'
 import { skoolScheduledPosts, skoolVariationGroups } from '@0ne/db/server'
@@ -38,10 +39,7 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[Schedulers API] GET exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch schedulers', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch schedulers', error)
   }
 }
 
@@ -108,10 +106,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[Schedulers API] POST exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to create scheduler', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to create scheduler', error)
   }
 }
 
@@ -184,10 +179,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[Schedulers API] PUT exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to update scheduler', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to update scheduler', error)
   }
 }
 
@@ -213,9 +205,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[Schedulers API] DELETE exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete scheduler', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to delete scheduler', error)
   }
 }

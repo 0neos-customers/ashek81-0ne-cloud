@@ -8,6 +8,7 @@
  */
 
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { requireAuth, AuthError } from '@/lib/auth-helpers'
 import { db, eq, and, gte, count } from '@0ne/db/server'
 import { dmMessages, dmContactMappings } from '@0ne/db/server'
@@ -81,9 +82,6 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[dm-sync-stats API] Error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Internal server error', error)
   }
 }

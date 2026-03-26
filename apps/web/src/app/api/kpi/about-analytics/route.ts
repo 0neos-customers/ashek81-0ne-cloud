@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { db, eq, gte, lte, asc, and } from '@0ne/db/server'
 import { skoolAboutPageDaily, skoolMembersDaily } from '@0ne/db/server'
@@ -276,9 +277,6 @@ export async function GET(request: Request) {
     return NextResponse.json(response)
   } catch (error) {
     console.error('[About Analytics] Error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch about page analytics', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch about page analytics', error)
   }
 }

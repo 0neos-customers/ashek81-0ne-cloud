@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { requireAuth, AuthError } from '@/lib/auth-helpers'
 import { db, eq, and, desc, count as countFn } from '@0ne/db/server'
 import { skoolPostExecutionLog, skoolScheduledPosts, skoolPostLibrary } from '@0ne/db/server'
@@ -100,10 +101,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[ExecutionLog API] GET exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch execution logs', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch execution logs', error)
   }
 }
 
@@ -151,9 +149,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[ExecutionLog API] POST exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to create execution log', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to create execution log', error)
   }
 }

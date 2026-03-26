@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { db, eq, desc } from '@0ne/db/server'
 import { skoolPostLibrary } from '@0ne/db/server'
 import { validateExternalApiKey } from '../../auth'
@@ -113,10 +114,7 @@ export async function POST(request: NextRequest) {
     )
   } catch (error) {
     console.error('[External Posts API] POST exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to create posts', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to create posts', error)
   }
 }
 
@@ -162,9 +160,6 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('[External Posts API] GET exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch posts', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch posts', error)
   }
 }

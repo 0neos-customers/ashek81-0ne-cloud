@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { db, eq, asc } from '@0ne/db/server'
 import { plaidCategoryMappings } from '@0ne/db/server'
@@ -18,10 +19,7 @@ export async function GET() {
 
     return NextResponse.json({ mappings })
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch mappings', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch mappings', error)
   }
 }
 
@@ -55,10 +53,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, mapping })
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to save mapping', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to save mapping', error)
   }
 }
 
@@ -84,9 +79,6 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to delete mapping', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to delete mapping', error)
   }
 }

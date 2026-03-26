@@ -22,6 +22,7 @@
  */
 
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { db, eq, gte, lte, and, desc, count, ilike, arrayOverlaps, arrayContains } from '@0ne/db/server'
 import { ghlTransactions, contacts } from '@0ne/db/server'
@@ -417,9 +418,6 @@ export async function GET(request: Request) {
     return NextResponse.json(response)
   } catch (error) {
     console.error('GHL API error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch GHL data', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch GHL data', error)
   }
 }

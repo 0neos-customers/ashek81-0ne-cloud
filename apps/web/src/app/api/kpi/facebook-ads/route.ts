@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { db, eq, gte, lte, and, or, inArray } from '@0ne/db/server'
 import { adMetrics, metaAccountDaily, campaigns } from '@0ne/db/server'
@@ -323,9 +324,6 @@ export async function GET(request: Request) {
     })
   } catch (error) {
     console.error('Facebook Ads KPI error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch Facebook Ads KPI data', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch Facebook Ads KPI data', error)
   }
 }

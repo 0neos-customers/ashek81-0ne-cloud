@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { db, eq, desc } from '@0ne/db/server'
 import { events, contacts } from '@0ne/db/server'
@@ -123,9 +124,6 @@ export async function GET(request: Request) {
     }
   } catch (error) {
     console.error('Recent activity error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch recent activity', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch recent activity', error)
   }
 }

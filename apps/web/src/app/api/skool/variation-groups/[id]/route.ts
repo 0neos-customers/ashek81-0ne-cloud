@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { requireAuth, AuthError } from '@/lib/auth-helpers'
 import { db, eq, count } from '@0ne/db/server'
 import { skoolVariationGroups, skoolPostLibrary, skoolScheduledPosts } from '@0ne/db/server'
@@ -50,9 +51,6 @@ export async function GET(
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[Variation Groups API] GET by ID exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch variation group', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch variation group', error)
   }
 }

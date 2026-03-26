@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { requireAuth, AuthError } from '@/lib/auth-helpers'
 import { db, eq } from '@0ne/db/server'
 import { dmContactMappings, skoolMembers } from '@0ne/db/server'
@@ -94,9 +95,6 @@ export async function PATCH(
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[Contacts API] PATCH exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to update contact', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to update contact', error)
   }
 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { requireAuth, AuthError } from '@/lib/auth-helpers'
 import { db, eq, and, asc, isNull } from '@0ne/db/server'
 import { skoolPostLibrary, skoolVariationGroups } from '@0ne/db/server'
@@ -79,10 +80,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[Posts API] GET exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch posts', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch posts', error)
   }
 }
 
@@ -154,10 +152,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[Posts API] POST exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to create post', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to create post', error)
   }
 }
 
@@ -238,10 +233,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[Posts API] PUT exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to update post', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to update post', error)
   }
 }
 
@@ -267,9 +259,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status })
     }
     console.error('[Posts API] DELETE exception:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete post', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to delete post', error)
   }
 }

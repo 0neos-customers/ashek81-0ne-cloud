@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeErrorResponse } from '@/lib/security'
 import { auth } from '@clerk/nextjs/server'
 import { db, eq, gte, lte, ilike, or, and, desc, count } from '@0ne/db/server'
 import { plaidTransactions, plaidAccounts, plaidItems, personalExpenses } from '@0ne/db/server'
@@ -96,10 +97,7 @@ export async function GET(request: Request) {
     })
   } catch (error) {
     console.error('Transactions GET error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch transactions', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to fetch transactions', error)
   }
 }
 
@@ -171,10 +169,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, expense_id: expense.id })
   } catch (error) {
     console.error('Promote transaction error:', error)
-    return NextResponse.json(
-      { error: 'Failed to promote transaction', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to promote transaction', error)
   }
 }
 
@@ -219,9 +214,6 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ success: true, transaction })
   } catch (error) {
     console.error('Transaction PATCH error:', error)
-    return NextResponse.json(
-      { error: 'Failed to update transaction', details: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse('Failed to update transaction', error)
   }
 }
