@@ -1,31 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
-import { getInstanceSlug, getUserPermissions } from '@0ne/auth/permissions'
+import { NextResponse } from 'next/server'
+import { requireAdmin, AuthError } from '@/lib/auth-helpers'
 import { db, eq } from '@0ne/db/server'
 import { invites } from '@0ne/db/server'
 import { safeErrorResponse } from '@/lib/security'
 
 export async function DELETE(
-  request: NextRequest,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { userId } = await auth.protect()
-  const slug = getInstanceSlug(request.headers.get('host') || undefined)
-  const permissions = await getUserPermissions(userId, slug)
-  if (!permissions.isAdmin) {
-    return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+  try {
+    await requireAdmin()
+  } catch (e) {
+    if (e instanceof AuthError) {
+      return NextResponse.json({ error: e.message }, { status: e.status })
+    }
+    throw e
   }
 
   const { id } = await params
 
   try {
-    await db
-      .update(invites)
-      .set({ status: 'revoked' })
-      .where(eq(invites.id, id))
+    // Hard-delete per Jimmy's preference (feedback_hard_delete_tokens.md)
+    await db.delete(invites).where(eq(invites.id, id))
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    return safeErrorResponse('Failed to revoke invite', error)
+    return safeErrorResponse('Failed to delete invite', error)
   }
 }

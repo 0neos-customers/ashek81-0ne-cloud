@@ -1,145 +1,105 @@
 import { NextResponse } from 'next/server'
-import { auth, clerkClient } from '@clerk/nextjs/server'
-import {
-  type AppId,
-  DEFAULT_PERMISSIONS,
-  getInstanceSlug,
-  getUserPermissions,
-  hasInstanceMembership,
-  readPermissions,
-  type UserPermissions,
-} from '@0ne/auth'
+import { requireAdmin, AuthError } from '@/lib/auth-helpers'
+import { db, eq } from '@0ne/db/server'
+import { user, member } from '@0ne/db/schema'
 
-type PublicMetadata = {
-  permissions?: UserPermissions
-  instances?: Record<string, UserPermissions>
-} & Record<string, unknown>
+/**
+ * GET  /api/admin/permissions  — list members of this instance's organization
+ * POST /api/admin/permissions  — update a member's role
+ *
+ * Replaces the previous Clerk publicMetadata.instances[slug] permission model.
+ * In the per-customer Better Auth model, role lives on the `member` row
+ * (organization plugin). The legacy "isAdmin / per-app toggles" shape is
+ * collapsed to a single role field with values: owner | admin | member.
+ *
+ * The response shape is kept compatible with the existing admin UI which
+ * expects { id, email, firstName, lastName, permissions: { isAdmin, apps } }.
+ * apps is always an empty object now — customers wire per-app gating in
+ * their own fork.
+ */
 
-export async function GET(request: Request) {
-  const { userId } = await auth()
-
-  if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const hostname = request.headers.get('host') || undefined
-  const slug = getInstanceSlug(hostname)
-
-  const permissions = await getUserPermissions(userId, slug)
-  if (!permissions.isAdmin) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+export async function GET() {
+  try {
+    await requireAdmin()
+  } catch (e) {
+    if (e instanceof AuthError) {
+      return NextResponse.json({ error: e.message }, { status: e.status })
+    }
+    throw e
   }
 
   try {
-    const client = await clerkClient()
-    const users = await client.users.getUserList({ limit: 100 })
+    const rows = await db
+      .select({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        image: user.image,
+        role: member.role,
+      })
+      .from(member)
+      .innerJoin(user, eq(user.id, member.userId))
 
-    const members = users.data.filter((user) =>
-      hasInstanceMembership(user.publicMetadata as PublicMetadata, slug),
-    )
+    const users = rows.map((row) => {
+      const [first = '', ...rest] = (row.name || '').split(' ')
+      return {
+        id: row.id,
+        email: row.email,
+        firstName: first,
+        lastName: rest.join(' '),
+        imageUrl: row.image || undefined,
+        role: row.role,
+        permissions: {
+          apps: {},
+          isAdmin: row.role === 'owner' || row.role === 'admin',
+        },
+      }
+    })
 
-    const usersWithPermissions = members.map((user) => ({
-      id: user.id,
-      email: user.emailAddresses[0]?.emailAddress || '',
-      firstName: user.firstName || '',
-      lastName: user.lastName || '',
-      imageUrl: user.imageUrl,
-      permissions: readPermissions(user.publicMetadata as PublicMetadata, slug) || DEFAULT_PERMISSIONS,
-    }))
-
-    return NextResponse.json({ users: usersWithPermissions })
+    return NextResponse.json({ users })
   } catch (error) {
     console.error('Error fetching users:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch users' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
-  const { userId } = await auth()
-
-  if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const hostname = request.headers.get('host') || undefined
-  const slug = getInstanceSlug(hostname)
-
-  const permissions = await getUserPermissions(userId, slug)
-  if (!permissions.isAdmin) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  try {
+    await requireAdmin()
+  } catch (e) {
+    if (e instanceof AuthError) {
+      return NextResponse.json({ error: e.message }, { status: e.status })
+    }
+    throw e
   }
 
   try {
     const body = await request.json()
-    const { targetUserId, appId, enabled, isAdmin } = body as {
+    const { targetUserId, isAdmin } = body as {
       targetUserId: string
-      appId?: AppId
+      appId?: string
       enabled?: boolean
       isAdmin?: boolean
     }
 
     if (!targetUserId) {
-      return NextResponse.json(
-        { error: 'targetUserId is required' },
-        { status: 400 }
-      )
-    }
-
-    const client = await clerkClient()
-    const targetUser = await client.users.getUser(targetUserId)
-    const targetMeta = (targetUser.publicMetadata as PublicMetadata) || {}
-
-    if (!hasInstanceMembership(targetMeta, slug)) {
-      return NextResponse.json(
-        { error: 'Target user is not a member of this instance' },
-        { status: 400 }
-      )
-    }
-
-    const currentPermissions = readPermissions(targetMeta, slug)
-    let updatedPermissions: UserPermissions = { ...currentPermissions }
-
-    if (appId !== undefined && enabled !== undefined) {
-      updatedPermissions = {
-        ...updatedPermissions,
-        apps: {
-          ...updatedPermissions.apps,
-          [appId]: enabled,
-        },
-      }
+      return NextResponse.json({ error: 'targetUserId is required' }, { status: 400 })
     }
 
     if (isAdmin !== undefined) {
-      updatedPermissions = {
-        ...updatedPermissions,
-        isAdmin,
-      }
+      const newRole = isAdmin ? 'admin' : 'member'
+      await db
+        .update(member)
+        .set({ role: newRole })
+        .where(eq(member.userId, targetUserId))
     }
 
-    const instances = {
-      ...(targetMeta.instances || {}),
-      [slug]: updatedPermissions,
-    }
+    // Per-app toggles are no-ops in the template default — customers wire
+    // their own permission model in their fork.
 
-    await client.users.updateUser(targetUserId, {
-      publicMetadata: {
-        ...targetMeta,
-        instances,
-      },
-    })
-
-    return NextResponse.json({
-      success: true,
-      permissions: updatedPermissions,
-    })
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error updating permissions:', error)
-    return NextResponse.json(
-      { error: 'Failed to update permissions' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to update permissions' }, { status: 500 })
   }
 }

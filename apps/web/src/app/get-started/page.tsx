@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useUser } from '@clerk/nextjs'
 import { AppShell } from '@/components/shell'
 import { Button } from '@0ne/ui'
 import { X, Copy, Check, Rocket, Lightbulb } from 'lucide-react'
@@ -29,18 +28,12 @@ Start by asking me about my business!`
 
 export default function GetStartedPage() {
   const router = useRouter()
-  const { user, isLoaded } = useUser()
   const [copied, setCopied] = useState(false)
   const [showToast, setShowToast] = useState(false)
-  const [hiding, setHiding] = useState(false)
 
-  const isDismissed = (user?.publicMetadata as { onboardingDismissed?: boolean })?.onboardingDismissed === true
-
-  useEffect(() => {
-    if (isLoaded && isDismissed) {
-      router.replace('/')
-    }
-  }, [isLoaded, isDismissed, router])
+  // The Clerk-backed "dismiss" feature was removed in the Better Auth
+  // migration (no per-user metadata). The "Hide Page" button now just
+  // navigates home.
 
   const handleCopy = () => {
     navigator.clipboard.writeText(PROMPT_TEXT)
@@ -48,21 +41,9 @@ export default function GetStartedPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleHide = async () => {
-    setHiding(true)
-    try {
-      await fetch('/api/onboarding/dismiss', { method: 'POST' })
-      setShowToast(true)
-      setTimeout(() => {
-        router.push('/')
-      }, 2500)
-    } catch {
-      router.push('/')
-    }
-  }
-
-  if (!isLoaded || isDismissed) {
-    return null
+  const handleHide = () => {
+    setShowToast(true)
+    setTimeout(() => router.push('/'), 1200)
   }
 
   return (
@@ -74,7 +55,6 @@ export default function GetStartedPage() {
             variant="ghost"
             size="sm"
             onClick={handleHide}
-            disabled={hiding}
             className="text-muted-foreground hover:text-foreground gap-1.5"
           >
             Hide Page

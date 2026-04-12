@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button } from '@0ne/ui'
 import { AppShell } from '@/components/shell'
-import { Shield, Users, Rocket } from 'lucide-react'
+import { Shield, Users } from 'lucide-react'
 
 export default function SettingsPage() {
   return (
@@ -23,46 +23,9 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Account management is handled through Clerk. Click your profile
-              picture in the sidebar to manage your account.
+              Click the avatar in the sidebar to sign out. Password reset and
+              account changes are managed via the sign-in flow.
             </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>App Access</CardTitle>
-            <CardDescription>
-              Your enabled applications
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Contact an administrator to request access to additional apps.
-            </p>
-            <Button variant="outline" disabled>
-              Request Access
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Rocket className="h-5 w-5" />
-              Onboarding
-            </CardTitle>
-            <CardDescription>
-              Manage the Get Started page and feature API keys
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Link href="/settings/onboarding">
-              <Button variant="outline" className="w-full justify-start">
-                <Rocket className="mr-2 h-4 w-4" />
-                Onboarding Settings
-              </Button>
-            </Link>
           </CardContent>
         </Card>
 

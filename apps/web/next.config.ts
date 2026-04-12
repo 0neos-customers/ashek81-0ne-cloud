@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@0ne/ui", "@0ne/db", "@0ne/auth"],
+  transpilePackages: ["@0ne/ui", "@0ne/db"],
   headers: async () => [
     {
       source: "/sw.js",
@@ -38,12 +38,12 @@ const nextConfig: NextConfig = {
           key: "Content-Security-Policy",
           value: [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://*.clerk.accounts.dev https://clerk.0neos.com",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "font-src 'self' https://fonts.gstatic.com",
-            "img-src 'self' data: blob: https://*.clerk.accounts.dev https://img.clerk.com https://clerk.0neos.com",
-            "connect-src 'self' https://*.clerk.accounts.dev https://api.clerk.com https://clerk.0neos.com https://*.neon.tech wss://*.neon.tech",
-            "frame-src 'self' https://challenges.cloudflare.com https://*.clerk.accounts.dev https://clerk.0neos.com",
+            "img-src 'self' data: blob: https://lh3.googleusercontent.com",
+            "connect-src 'self' https://*.neon.tech wss://*.neon.tech https://accounts.google.com",
+            "frame-src 'self' https://challenges.cloudflare.com https://accounts.google.com",
             "worker-src 'self' blob:",
           ].join("; "),
         },

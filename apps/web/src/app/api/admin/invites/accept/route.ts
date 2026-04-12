@@ -1,18 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth, clerkClient } from '@clerk/nextjs/server'
+import { requireAuth, AuthError } from '@/lib/auth-helpers'
 import { db, eq, and } from '@0ne/db/server'
 import { invites } from '@0ne/db/server'
 import { safeErrorResponse } from '@/lib/security'
 
+/**
+ * Mark a legacy invite row as accepted. Called by the sign-up flow once a
+ * Better Auth user has been created via the invite link.
+ */
 export async function POST(request: NextRequest) {
-  const { userId } = await auth.protect()
-
-  // Verify user has admin role
-  const client = await clerkClient()
-  const user = await client.users.getUser(userId)
-  const role = user.publicMetadata?.role as string | undefined
-  if (role !== 'admin' && role !== 'owner') {
-    return NextResponse.json({ error: 'Forbidden — admin role required' }, { status: 403 })
+  let userId: string
+  try {
+    ;({ userId } = await requireAuth())
+  } catch (e) {
+    if (e instanceof AuthError) {
+      return NextResponse.json({ error: e.message }, { status: e.status })
+    }
+    throw e
   }
 
   const body = await request.json()
@@ -27,7 +31,7 @@ export async function POST(request: NextRequest) {
       .update(invites)
       .set({
         status: 'accepted',
-        clerkUserId: userId,
+        clerkUserId: userId, // column kept for backwards compat — now stores Better Auth user id
         acceptedAt: new Date(),
       })
       .where(and(eq(invites.inviteToken, invite_token), eq(invites.status, 'pending')))

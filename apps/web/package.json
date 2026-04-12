@@ -11,11 +11,11 @@
     "generate:icons": "bun run scripts/generate-pwa-icons.ts"
   },
   "dependencies": {
-    "@0ne/auth": "workspace:*",
     "@0ne/db": "workspace:*",
     "@0ne/ui": "workspace:*",
-    "@clerk/nextjs": "^6.37.2",
     "@tanstack/react-query": "^5.90.20",
+    "bcryptjs": "^3.0.2",
+    "better-auth": "1.6.2",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.563.0",
     "next": "16.1.7",
@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^3.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

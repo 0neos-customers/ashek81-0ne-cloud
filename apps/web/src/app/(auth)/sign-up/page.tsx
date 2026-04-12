@@ -1,29 +1,34 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useSignUp } from '@clerk/nextjs'
+import { Suspense, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button, Input, Label } from '@0ne/ui'
 import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react'
-import { OAuthButtons } from '../../_components/oauth-buttons'
+import { authClient } from '@/lib/auth-client'
 
 export default function SignUpPage() {
-  const { isLoaded, signUp, setActive } = useSignUp()
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>}>
+      <SignUpInner />
+    </Suspense>
+  )
+}
+
+function SignUpInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const inviteToken = searchParams.get('invite')
 
-  const [step, setStep] = useState<'form' | 'verify'>('form')
   const [inviteValid, setInviteValid] = useState<boolean | null>(null)
   const [inviteData, setInviteData] = useState<{ email: string; name: string } | null>(null)
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
 
   // Validate invite token on mount
   useEffect(() => {
@@ -33,8 +38,8 @@ export default function SignUpPage() {
     }
 
     fetch(`/api/admin/invites/validate?token=${inviteToken}`)
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         if (data.valid) {
           setInviteValid(true)
           setInviteData(data.invite)
@@ -51,13 +56,11 @@ export default function SignUpPage() {
       .catch(() => setInviteValid(false))
   }, [inviteToken])
 
-  // No invite or invalid → show request access
   if (inviteValid === false) {
     router.replace('/request-access')
     return null
   }
 
-  // Still validating
   if (inviteValid === null) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -68,101 +71,51 @@ export default function SignUpPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!isLoaded || !signUp) return
-
     setLoading(true)
     setError('')
 
-    try {
-      await signUp.create({
-        firstName,
-        lastName,
-        emailAddress: email,
-        password,
-      })
+    const fullName = `${firstName} ${lastName}`.trim() || email.split('@')[0]
 
-      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
-      setStep('verify')
-    } catch (err: unknown) {
-      const clerkError = err as { errors?: { message: string }[] }
-      setError(clerkError.errors?.[0]?.message || 'Something went wrong')
-    } finally {
+    const { error: signUpError } = await authClient.signUp.email({
+      email,
+      password,
+      name: fullName,
+    })
+
+    if (signUpError) {
+      setError(signUpError.message || 'Sign-up failed.')
       setLoading(false)
+      return
     }
+
+    // Mark invite accepted (server-side update; non-blocking)
+    if (inviteToken) {
+      fetch('/api/admin/invites/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invite_token: inviteToken }),
+      }).catch(() => {})
+    }
+
+    setSubmitted(true)
+    setLoading(false)
   }
 
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!isLoaded || !signUp) return
-
-    setLoading(true)
-    setError('')
-
-    try {
-      const result = await signUp.attemptEmailAddressVerification({ code })
-
-      if (result.status === 'complete') {
-        // Mark invite as accepted
-        if (inviteToken) {
-          fetch('/api/admin/invites/accept', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ invite_token: inviteToken }),
-          }).catch(() => {})
-        }
-
-        await setActive({ session: result.createdSessionId })
-        router.push('/onboarding')
-      }
-    } catch (err: unknown) {
-      const clerkError = err as { errors?: { message: string }[] }
-      setError(clerkError.errors?.[0]?.message || 'Invalid verification code')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (step === 'verify') {
+  if (submitted) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 text-center">
+        <div className="flex justify-center">
+          <CheckCircle2 className="h-12 w-12 text-green-600" />
+        </div>
         <div>
           <h2 className="text-2xl font-heading font-bold">Check your email</h2>
-          <p className="text-muted-foreground mt-1">
-            We sent a verification code to <strong>{email}</strong>
+          <p className="text-muted-foreground mt-2">
+            We sent a verification link to <strong>{email}</strong>. Click it to finish setting up your account.
           </p>
         </div>
-
-        {error && (
-          <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-            <AlertCircle className="h-4 w-4 flex-shrink-0" />
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleVerify} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="code">Verification code</Label>
-            <Input
-              id="code"
-              value={code}
-              onChange={e => setCode(e.target.value)}
-              placeholder="Enter 6-digit code"
-              maxLength={6}
-              autoFocus
-            />
-          </div>
-          <Button type="submit" className="w-full" disabled={loading || code.length < 6}>
-            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Verify Email
-          </Button>
-        </form>
-
-        <button
-          onClick={() => { setStep('form'); setCode(''); setError('') }}
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          Back to sign up
-        </button>
+        <Link href="/sign-in" className="text-sm text-primary hover:underline">
+          Back to sign in
+        </Link>
       </div>
     )
   }
@@ -185,17 +138,6 @@ export default function SignUpPage() {
         </div>
       )}
 
-      <OAuthButtons mode="sign-up" />
-
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">or continue with email</span>
-        </div>
-      </div>
-
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -203,7 +145,7 @@ export default function SignUpPage() {
             <Input
               id="firstName"
               value={firstName}
-              onChange={e => setFirstName(e.target.value)}
+              onChange={(e) => setFirstName(e.target.value)}
               placeholder="First name"
               required
               autoFocus
@@ -214,7 +156,7 @@ export default function SignUpPage() {
             <Input
               id="lastName"
               value={lastName}
-              onChange={e => setLastName(e.target.value)}
+              onChange={(e) => setLastName(e.target.value)}
               placeholder="Last name"
               required
             />
@@ -227,7 +169,7 @@ export default function SignUpPage() {
             id="email"
             type="email"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
             required
             readOnly={!!inviteData?.email}
@@ -247,7 +189,7 @@ export default function SignUpPage() {
             id="password"
             type="password"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="Create a password"
             required
             minLength={8}

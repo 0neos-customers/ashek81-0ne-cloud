@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { UserButton, useUser } from '@clerk/nextjs'
+import { UserButton } from '@/components/UserButton'
+import { authClient } from '@/lib/auth-client'
 import { cn } from '@0ne/ui'
 import {
   Home,
@@ -35,9 +36,14 @@ const accountNavigation: NavItem[] = [
 export function Sidebar({ navigation }: SidebarProps) {
   const pathname = usePathname()
   const { isOpen, toggle } = useSidebar()
-  const { user } = useUser()
+  const { data: session } = authClient.useSession()
+  const user = session?.user
 
-  const isDismissed = (user?.publicMetadata as { onboardingDismissed?: boolean } | undefined)?.onboardingDismissed === true
+  // Onboarding "Get Started" page dismiss state was previously stored in
+  // Clerk publicMetadata. Better Auth doesn't ship a per-user metadata bag —
+  // we now show the Get Started link to everyone. Customers can hide it via
+  // their fork if they want.
+  const isDismissed = false
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/'
@@ -124,17 +130,10 @@ export function Sidebar({ navigation }: SidebarProps) {
         {/* User Info (like Relay's account switcher) */}
         <div className="border-b border-sidebar-border px-4 pb-4">
           <div className="flex items-center gap-3">
-            <UserButton
-              afterSignOutUrl="/sign-in"
-              appearance={{
-                elements: {
-                  avatarBox: 'h-10 w-10',
-                },
-              }}
-            />
+            <UserButton />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-sidebar-foreground truncate">
-                {user?.fullName || 'User'}
+                {user?.name || 'User'}
               </p>
               <p className="text-xs text-sidebar-foreground/60 truncate">
                 {ORG_NAME}

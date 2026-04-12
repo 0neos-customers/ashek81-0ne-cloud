@@ -1,14 +1,18 @@
-import { currentUser } from '@clerk/nextjs/server'
-import { getCurrentUserPermissions, getEnabledApps } from '@0ne/auth/permissions'
+import { getSession } from '@/lib/auth-helpers'
 import { AppTile } from '@/components/shell'
 import { APPS } from '@/lib/apps'
 
 export default async function HomePage() {
-  const user = await currentUser()
-  const permissions = await getCurrentUserPermissions()
-  const enabledAppIds = permissions ? getEnabledApps(permissions) : []
+  const session = await getSession()
+  const user = session?.user
 
-  const greeting = user?.firstName ? `Welcome, ${user.firstName}` : 'Welcome'
+  // The previous template filtered apps based on Clerk publicMetadata.
+  // permissions. With Better Auth + per-customer instances, every signed-in
+  // user sees the full app list — fork-level customization decides what's
+  // visible. Customers can re-introduce per-user gating in their own fork.
+  const enabledApps = APPS
+
+  const greeting = user?.name ? `Welcome, ${user.name.split(' ')[0]}` : 'Welcome'
 
   return (
     <div className="space-y-8">
@@ -20,7 +24,7 @@ export default async function HomePage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {APPS.filter((app) => enabledAppIds.includes(app.id)).map((app) => (
+        {enabledApps.map((app) => (
           <AppTile
             key={app.id}
             name={app.name}
@@ -32,7 +36,7 @@ export default async function HomePage() {
         ))}
       </div>
 
-      {enabledAppIds.length === 0 && (
+      {enabledApps.length === 0 && (
         <div className="text-center py-12 space-y-3">
           <div className="flex justify-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
@@ -43,8 +47,7 @@ export default async function HomePage() {
           </div>
           <h3 className="text-lg font-semibold">Your 0ne is connected!</h3>
           <p className="text-muted-foreground max-w-sm mx-auto">
-            Your account is set up. Your administrator will enable apps for
-            your dashboard soon.
+            Your account is set up. Add apps to your fork to see them here.
           </p>
         </div>
       )}

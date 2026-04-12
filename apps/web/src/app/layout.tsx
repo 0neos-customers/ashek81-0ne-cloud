@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Baskervville, Montserrat, JetBrains_Mono } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@0ne/ui";
 import { AppleSplashScreens } from "@/components/pwa/AppleSplashScreens";
 import { AppOnly } from "@/components/pwa/AppOnly";
@@ -52,23 +51,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <head>
-          <AppleSplashScreens />
-        </head>
-        <body
-          className={`${baskervville.variable} ${montserrat.variable} ${jetbrainsMono.variable} font-body antialiased`}
-        >
-          <AppOnly><LoadingScreen /></AppOnly>
-          {children}
-          <Toaster />
-          <AppOnly>
-            <InstallPrompt />
-            <ServiceWorkerRegistrar />
-          </AppOnly>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en">
+      <head>
+        <AppleSplashScreens />
+      </head>
+      <body
+        className={`${baskervville.variable} ${montserrat.variable} ${jetbrainsMono.variable} font-body antialiased`}
+      >
+        <AppOnly><LoadingScreen /></AppOnly>
+        {children}
+        <Toaster />
+        <AppOnly>
+          <InstallPrompt />
+          <ServiceWorkerRegistrar />
+        </AppOnly>
+      </body>
+    </html>
   );
 }

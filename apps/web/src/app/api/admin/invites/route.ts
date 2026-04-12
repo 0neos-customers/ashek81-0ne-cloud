@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
-import { getInstanceSlug, getUserPermissions } from '@0ne/auth/permissions'
+import { requireAdmin, AuthError } from '@/lib/auth-helpers'
 import { safeErrorResponse } from '@/lib/security'
 import { db, eq, and, desc } from '@0ne/db/server'
 import { invites } from '@0ne/db/server'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest) {
-  const { userId } = await auth.protect()
-  const slug = getInstanceSlug(request.headers.get('host') || undefined)
-  const permissions = await getUserPermissions(userId, slug)
-  if (!permissions.isAdmin) {
-    return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+export async function GET() {
+  try {
+    await requireAdmin()
+  } catch (e) {
+    if (e instanceof AuthError) {
+      return NextResponse.json({ error: e.message }, { status: e.status })
+    }
+    throw e
   }
 
   try {
@@ -28,11 +29,13 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const { userId } = await auth.protect()
-  const slug = getInstanceSlug(request.headers.get('host') || undefined)
-  const permissions = await getUserPermissions(userId, slug)
-  if (!permissions.isAdmin) {
-    return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+  try {
+    await requireAdmin()
+  } catch (e) {
+    if (e instanceof AuthError) {
+      return NextResponse.json({ error: e.message }, { status: e.status })
+    }
+    throw e
   }
 
   const body = await request.json()

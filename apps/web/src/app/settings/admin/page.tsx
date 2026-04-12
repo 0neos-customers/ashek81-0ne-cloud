@@ -18,7 +18,6 @@ import {
 } from '@0ne/ui'
 import { Search, Shield, Users, RefreshCw, Loader2, Mail, Copy, Check, Ban } from 'lucide-react'
 import { AppShell } from '@/components/shell'
-import { APPS, type AppId } from '@/lib/apps'
 
 interface User {
   id: string
@@ -26,8 +25,9 @@ interface User {
   firstName: string
   lastName: string
   imageUrl?: string
+  role: string
   permissions: {
-    apps: Record<AppId, boolean>
+    apps: Record<string, boolean>
     isAdmin: boolean
   }
 }
@@ -136,70 +136,6 @@ export default function AdminPermissionsPage() {
         .toLowerCase()
         .includes(searchQuery.toLowerCase())
   )
-
-  const toggleAppPermission = async (userId: string, appId: AppId) => {
-    const user = users.find((u) => u.id === userId)
-    if (!user) return
-
-    setSaving(userId)
-    const currentValue = user.permissions.apps[appId]
-
-    // Optimistic update
-    setUsers((prev) =>
-      prev.map((u) => {
-        if (u.id === userId) {
-          return {
-            ...u,
-            permissions: {
-              ...u.permissions,
-              apps: {
-                ...u.permissions.apps,
-                [appId]: !currentValue,
-              },
-            },
-          }
-        }
-        return u
-      })
-    )
-
-    try {
-      const response = await fetch('/api/admin/permissions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          targetUserId: userId,
-          appId,
-          enabled: !currentValue,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to update permissions')
-      }
-    } catch {
-      // Revert on error
-      setUsers((prev) =>
-        prev.map((u) => {
-          if (u.id === userId) {
-            return {
-              ...u,
-              permissions: {
-                ...u.permissions,
-                apps: {
-                  ...u.permissions.apps,
-                  [appId]: currentValue,
-                },
-              },
-            }
-          }
-          return u
-        })
-      )
-    } finally {
-      setSaving(null)
-    }
-  }
 
   const toggleAdminStatus = async (userId: string) => {
     const user = users.find((u) => u.id === userId)
@@ -441,11 +377,7 @@ export default function AdminPermissionsPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[250px]">User</TableHead>
-                      {APPS.map((app) => (
-                        <TableHead key={app.id} className="text-center">
-                          {app.name}
-                        </TableHead>
-                      ))}
+                      <TableHead className="text-center">Role</TableHead>
                       <TableHead className="text-center">Admin</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -468,15 +400,9 @@ export default function AdminPermissionsPage() {
                             </div>
                           </div>
                         </TableCell>
-                        {APPS.map((app) => (
-                          <TableCell key={app.id} className="text-center">
-                            <ToggleSwitch
-                              enabled={user.permissions?.apps?.[app.id] || false}
-                              onChange={() => toggleAppPermission(user.id, app.id)}
-                              loading={saving === user.id}
-                            />
-                          </TableCell>
-                        ))}
+                        <TableCell className="text-center text-sm text-muted-foreground capitalize">
+                          {user.role || 'member'}
+                        </TableCell>
                         <TableCell className="text-center">
                           <ToggleSwitch
                             enabled={user.permissions?.isAdmin || false}
@@ -490,7 +416,7 @@ export default function AdminPermissionsPage() {
                     {filteredUsers.length === 0 && !loading && (
                       <TableRow>
                         <TableCell
-                          colSpan={APPS.length + 2}
+                          colSpan={3}
                           className="h-24 text-center text-muted-foreground"
                         >
                           No users found

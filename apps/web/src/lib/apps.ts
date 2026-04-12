@@ -1,5 +1,14 @@
 import { type LucideIcon } from 'lucide-react'
-import type { AppId } from '@0ne/auth/permissions'
+
+/**
+ * App registry for the customer instance dashboard.
+ *
+ * Customers add their own apps here. The default template ships with no
+ * apps — the AppId union is intentionally empty so customers can extend it
+ * locally without conflicting with template updates.
+ */
+
+export type AppId = string
 
 export interface AppConfig {
   id: AppId
@@ -9,8 +18,6 @@ export interface AppConfig {
   href: string
   color: string
 }
-
-export type { AppId } from '@0ne/auth/permissions'
 
 export const APPS: AppConfig[] = []
 
@@ -24,6 +31,6 @@ export interface AppNavItem {
   icon: LucideIcon
 }
 
-export function getAppNavigation(appId: string): AppNavItem[] {
+export function getAppNavigation(_appId: string): AppNavItem[] {
   return []
 }

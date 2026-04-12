@@ -1,21 +1,22 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
-import { NextRequest, NextResponse } from 'next/server'
-import {
-  canAccessApp,
-  getInstanceSlug,
-  hasInstanceMembership,
-  readPermissions,
-  type AppId,
-  type UserPermissions,
-} from '@0ne/auth/permissions'
+/**
+ * Edge middleware — Better Auth session gate + domain routing.
+ *
+ * Replaces the old Clerk middleware. This file:
+ *   1. Handles marketing-site rewrites for the control plane root domain.
+ *   2. Bounces unauthenticated requests on protected routes to /sign-in.
+ *   3. Lets public routes (sign-in, sign-up, etc.) through.
+ *
+ * Membership/organization checks are handled in server components and route
+ * handlers — middleware only verifies the session cookie exists and is
+ * non-expired (cheap, no DB call). Better Auth's `getCookie` helper validates
+ * the cookie format without full session validation.
+ *
+ * The legacy publicMetadata.instances[slug] namespacing fix is gone — see
+ * the PRD for context.
+ */
 
-type InstanceMetadata = {
-  onboardingComplete?: boolean
-  subscriptionStatus?: string
-  role?: string
-  permissions?: UserPermissions
-  instances?: Record<string, UserPermissions>
-}
+import { NextRequest, NextResponse } from 'next/server'
+import { getSessionCookie } from 'better-auth/cookies'
 
 // Marketing site paths served on the canonical root domain
 const MARKETING_PATHS = ['/', '/install', '/diy-install', '/download', '/privacy', '/pricing', '/migrate', '/skills', '/preview']
@@ -69,118 +70,77 @@ function handleDomainRouting(request: NextRequest): NextResponse | null {
   return null
 }
 
-const isPublicRoute = createRouteMatcher([
-  '/sign-in(.*)',
-  '/sign-up(.*)',
+// Public routes that bypass the auth gate.
+const PUBLIC_PATTERNS: (string | RegExp)[] = [
+  '/sign-in',
+  '/sign-up',
+  '/forgot-password',
+  '/reset-password',
+  '/verify-email',
+  '/accept-invite',
   '/request-access',
-  '/embed(.*)',
   '/privacy',
   '/security-policy',
   '/access-control',
-  '/site(.*)', // Marketing site pages (no auth)
-  '/api/public(.*)',
-  '/api/cron(.*)',
-  '/api/download(.*)', // Marketing site download API (token auth)
-  '/api/external(.*)', // External API uses API key auth
-  '/api/extension(.*)', // Chrome extension uses API key auth
-  '/api/auth(.*)', // OAuth callbacks
-  '/api/webhooks(.*)', // Webhooks from external services
-  '/api/billing/webhooks', // Stripe billing webhooks (signature verified in handler)
-  '/api/widget(.*)', // Widget API uses its own token auth
-  '/api/admin/invites/validate', // Invite validation (pre-auth)
-  '/api/migrate/validate', // Legacy install migration (pre-auth, token-verified)
-  '/api/health', // Instance health check (public, no auth)
-  '/api/supdate/check', // Version check (token auth, not Clerk)
-  '/api/skills/registry', // Skill marketplace — public catalog browsing
-  '/api/skills/marketplace.json', // Anthropic-compatible marketplace manifest
-  '/api/skills/(.*)/download', // Skill download — uses its own Bearer auth
-])
+  '/unauthorized',
+  '/subscription-required',
+  /^\/site(\/|$)/,
+  /^\/embed(\/|$)/,
+  /^\/api\/auth(\/|$)/,
+  /^\/api\/public(\/|$)/,
+  /^\/api\/cron(\/|$)/,
+  /^\/api\/download(\/|$)/,
+  /^\/api\/external(\/|$)/,
+  /^\/api\/extension(\/|$)/,
+  /^\/api\/webhooks(\/|$)/,
+  '/api/billing/webhooks',
+  /^\/api\/widget(\/|$)/,
+  '/api/admin/invites/validate',
+  /^\/api\/migrate\/validate/,
+  '/api/health',
+  '/api/supdate/check',
+  '/api/skills/registry',
+  '/api/skills/marketplace.json',
+  /^\/api\/skills\/[^/]+\/download/,
+  /^\/api\/marketplace(\/|$)/,
+]
 
-const appRoutes: Record<string, AppId> = {
-  '/kpi': 'kpi',
-  '/prospector': 'prospector',
-  '/skool-sync': 'skoolSync',
-  '/skool': 'skoolScheduler',
-  '/media': 'ghlMedia',
+function isPublic(pathname: string): boolean {
+  for (const p of PUBLIC_PATTERNS) {
+    if (typeof p === 'string') {
+      if (pathname === p || pathname.startsWith(p + '/')) return true
+    } else if (p.test(pathname)) {
+      return true
+    }
+  }
+  return false
 }
 
-export default clerkMiddleware(async (auth, request) => {
-  // Handle domain routing (marketing site rewrites, redirects)
+export default function middleware(request: NextRequest) {
+  // Domain routing for marketing site / cross-domain redirects
   const domainResponse = handleDomainRouting(request)
   if (domainResponse) return domainResponse
 
   const { pathname } = request.nextUrl
 
-  if (isPublicRoute(request)) {
+  if (isPublic(pathname)) {
     return NextResponse.next()
   }
 
-  const { userId, sessionClaims } = await auth.protect()
-
-  const hostname = request.headers.get('host') || undefined
-  const slug = getInstanceSlug(hostname)
-  const metadata = sessionClaims?.metadata as InstanceMetadata | undefined
-
-  // Instance membership gate: user must be a member of THIS instance.
-  // Exempt: /unauthorized (the landing page for non-members), sign-out.
-  const skipMembershipCheck =
-    pathname.startsWith('/unauthorized') ||
-    pathname.startsWith('/sign-out') ||
-    pathname.startsWith('/api/public')
-
-  if (!skipMembershipCheck && !hasInstanceMembership(metadata, slug)) {
-    return NextResponse.redirect(new URL('/unauthorized', request.url))
-  }
-
-  const instancePermissions = readPermissions(metadata, slug)
-  const isInstanceAdmin = instancePermissions.isAdmin === true
-
-  // Onboarding redirect: if user hasn't completed onboarding on this instance, send them there
-  const skipOnboardingCheck =
-    pathname.startsWith('/api/') ||
-    pathname.startsWith('/onboarding') ||
-    pathname.startsWith('/unauthorized') ||
-    pathname.startsWith('/migrate-complete') ||
-    pathname.startsWith('/sign-out')
-
-  if (!skipOnboardingCheck) {
-    // Admins without onboardingComplete are treated as complete (existing users)
-    if (!metadata?.onboardingComplete && !isInstanceAdmin) {
-      return NextResponse.redirect(new URL('/onboarding', request.url))
+  // Better Auth cookie check — fast path, no DB roundtrip.
+  const sessionCookie = getSessionCookie(request)
+  if (!sessionCookie) {
+    const signInUrl = new URL('/sign-in', request.url)
+    if (pathname !== '/') {
+      signInUrl.searchParams.set('next', pathname)
     }
+    return NextResponse.redirect(signInUrl)
   }
 
-  // Subscription paywall: block access when subscription is not active.
-  // Exempt: API routes, settings (so users can manage account), sign-out, the paywall page itself.
-  const ACTIVE_STATUSES = ['active', 'trialing', 'comped']
-  const skipSubscriptionCheck =
-    pathname.startsWith('/api/') ||
-    pathname.startsWith('/settings') ||
-    pathname.startsWith('/sign-out') ||
-    pathname.startsWith('/unauthorized') ||
-    pathname.startsWith('/subscription-required') ||
-    pathname.startsWith('/onboarding') ||
-    pathname.startsWith('/migrate-complete')
-
-  if (!skipSubscriptionCheck) {
-    const hasPrivilegedRole = metadata?.role === 'admin' || metadata?.role === 'owner'
-    const status = metadata?.subscriptionStatus
-    if (status && !ACTIVE_STATUSES.includes(status) && !isInstanceAdmin && !hasPrivilegedRole) {
-      return NextResponse.redirect(new URL('/subscription-required', request.url))
-    }
-  }
-
-  for (const [route, appId] of Object.entries(appRoutes)) {
-    if (pathname.startsWith(route)) {
-      const hasAccess = await canAccessApp(userId, appId, slug)
-      if (!hasAccess) {
-        return NextResponse.redirect(new URL('/unauthorized', request.url))
-      }
-    }
-  }
-
+  // Authenticated requests fall through. Server components and route
+  // handlers do the deep org-membership / role checks via auth.api.getSession.
   return NextResponse.next()
-})
+}
 
 export const config = {
   matcher: [
