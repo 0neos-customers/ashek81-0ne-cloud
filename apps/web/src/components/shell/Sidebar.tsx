@@ -1,12 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { UserButton } from '@/components/UserButton'
+import { usePathname, useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
 import { cn } from '@0ne/ui'
 import {
   Home,
+  LogOut,
   Settings,
   Rocket,
   type LucideIcon
@@ -35,9 +35,16 @@ const accountNavigation: NavItem[] = [
 
 export function Sidebar({ navigation }: SidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const { isOpen, toggle } = useSidebar()
   const { data: session } = authClient.useSession()
   const user = session?.user
+
+  const handleSignOut = async () => {
+    await authClient.signOut()
+    router.push('/sign-in')
+    router.refresh()
+  }
 
   // Onboarding "Get Started" page dismiss state was previously stored in
   // Clerk publicMetadata. Better Auth doesn't ship a per-user metadata bag —
@@ -127,10 +134,12 @@ export function Sidebar({ navigation }: SidebarProps) {
           </svg>
         </button>
 
-        {/* User Info (like Relay's account switcher) */}
+        {/* User Info + Sign Out */}
         <div className="border-b border-sidebar-border px-4 pb-4">
           <div className="flex items-center gap-3">
-            <UserButton />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-primary font-semibold text-base">
+              {(user?.name || user?.email || '?').charAt(0).toUpperCase()}
+            </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-sidebar-foreground truncate">
                 {user?.name || 'User'}
@@ -140,6 +149,14 @@ export function Sidebar({ navigation }: SidebarProps) {
               </p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="mt-2 flex items-center gap-2 text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors"
+          >
+            <LogOut className="h-3 w-3" />
+            Sign Out
+          </button>
         </div>
 
         {/* Main Navigation */}
